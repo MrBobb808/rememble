@@ -13,7 +13,7 @@ export default async function handler(req: Request) {
     const { caption } = await req.json();
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini", // Changed from gpt-4o to gpt-4o-mini for faster results
       messages: [
         {
           role: "system",
