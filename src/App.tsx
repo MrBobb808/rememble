@@ -1,17 +1,48 @@
-import { Suspense, lazy } from "react"
+import { Suspense, lazy, useEffect } from "react"
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import { Loader2 } from "lucide-react"
 import * as Sentry from "@sentry/react"
+import { supabase } from "@/integrations/supabase/client"
 
 // Lazy load route components
 const Index = lazy(() => import("./pages/Index"))
 const Landing = lazy(() => import("./pages/Landing"))
 const Memorial = lazy(() => import("./pages/Memorial"))
+const Auth = lazy(() => import("./pages/Auth"))
+const AuthCallback = lazy(() => import("./pages/AuthCallback"))
+
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        navigate("/auth");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  return <>{children}</>;
+};
 
 // Configure React Query with caching strategies
 const queryClient = new QueryClient({
@@ -66,9 +97,17 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/landing" element={<Landing />} />
-                <Route path="/memorial" element={<Memorial />} />
+                <Route path="/" element={<Landing />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route 
+                  path="/memorial" 
+                  element={
+                    <ProtectedRoute>
+                      <Memorial />
+                    </ProtectedRoute>
+                  } 
+                />
               </Routes>
             </Suspense>
           </BrowserRouter>
