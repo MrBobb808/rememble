@@ -27,14 +27,46 @@ const Memorial = () => {
 
   const createMemorial = async () => {
     try {
-      const { data, error } = await supabase
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to create a memorial",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the memorial
+      const { data: memorialData, error: memorialError } = await supabase
         .from('memorials')
         .insert({ name: "In Loving Memory" })
         .select()
         .single();
 
-      if (error) throw error;
-      setMemorialId(data.id);
+      if (memorialError) throw memorialError;
+
+      // Create initial admin collaborator
+      const { error: collaboratorError } = await supabase
+        .from('memorial_collaborators')
+        .insert({
+          memorial_id: memorialData.id,
+          user_id: user.id,
+          email: user.email,
+          role: 'admin',
+          invitation_accepted: true
+        });
+
+      if (collaboratorError) throw collaboratorError;
+
+      setMemorialId(memorialData.id);
+      
+      toast({
+        title: "Memorial created",
+        description: "Your memorial has been created successfully.",
+      });
     } catch (error) {
       console.error('Error creating memorial:', error);
       toast({
@@ -145,7 +177,7 @@ const Memorial = () => {
               onShare={handleShare}
               onDownload={handleDownload}
             />
-            <CollaboratorsManagement memorialId={memorialId} />
+            {memorialId && <CollaboratorsManagement memorialId={memorialId} />}
           </div>
 
           <div className="grid lg:grid-cols-[1fr,300px] gap-8">
