@@ -51,7 +51,6 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
   };
 
   const handleImageSelect = (photo: Photo) => {
-    console.log("Selected image with reflection:", photo.aiReflection);
     setSelectedImage(photo);
     setIsImageDialogOpen(true);
   };
@@ -66,12 +65,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
         },
       });
 
-      if (error) {
-        console.error("Error generating reflection:", error);
-        throw error;
-      }
-
-      console.log("Generated reflection:", data.reflection);
+      if (error) throw error;
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
@@ -83,8 +77,23 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
     if (!selectedFile) return;
 
     try {
-      const imageUrl = URL.createObjectURL(selectedFile);
-      const aiReflection = await generateAIReflection(imageUrl, caption);
+      // First, upload the file to Supabase Storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('memorial-photos')
+        .upload(fileName, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL of the uploaded image
+      const { data: { publicUrl } } = supabase.storage
+        .from('memorial-photos')
+        .getPublicUrl(fileName);
+
+      // Generate AI reflection using the public URL
+      const aiReflection = await generateAIReflection(publicUrl, caption);
       
       if (!aiReflection) {
         throw new Error("No AI reflection generated");
