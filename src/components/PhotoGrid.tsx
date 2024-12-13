@@ -3,6 +3,7 @@ import { Image, Plus, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import PhotoUploadDialog from "./PhotoUploadDialog";
+import ImageDialog from "./ImageDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 
@@ -22,7 +23,9 @@ interface PhotoGridProps {
 const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<Photo | null>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState<Record<number, boolean>>({});
 
   // Create array of 25 cells (5x5 grid)
@@ -49,7 +52,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
     if (file) {
       if (file.type.startsWith('image/')) {
         setSelectedFile(file);
-        setIsDialogOpen(true);
+        setIsUploadDialogOpen(true);
       } else {
         toast({
           title: "Invalid file type",
@@ -58,6 +61,11 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
         });
       }
     }
+  };
+
+  const handleImageClick = (photo: Photo) => {
+    setSelectedImage(photo);
+    setIsImageDialogOpen(true);
   };
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
@@ -121,7 +129,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {Array(25).fill(null).map((_, index) => (
           <Skeleton key={index} className="aspect-square rounded-lg" />
         ))}
@@ -131,14 +139,17 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
 
   return (
     <>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {gridCells.map(({ id, photo }) => (
           <div
             key={id}
             className="relative aspect-square group"
           >
             {photo ? (
-              <div className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg">
+              <button
+                onClick={() => handleImageClick(photo)}
+                className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-memorial-blue"
+              >
                 {imageLoading[id] && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                     <Loader2 className="w-6 h-6 animate-spin text-memorial-blue" />
@@ -153,11 +164,11 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/40 backdrop-blur-sm">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/60 backdrop-blur-sm">
                     <p className="text-white text-sm line-clamp-2">{photo.caption}</p>
                   </div>
                 </div>
-              </div>
+              </button>
             ) : (
               <label className="w-full h-full flex items-center justify-center border border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-colors">
                 <input
@@ -174,10 +185,16 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
       </div>
 
       <PhotoUploadDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        open={isUploadDialogOpen}
+        onOpenChange={setIsUploadDialogOpen}
         imageFile={selectedFile}
         onSubmit={handleSubmit}
+      />
+
+      <ImageDialog
+        open={isImageDialogOpen}
+        onOpenChange={setIsImageDialogOpen}
+        image={selectedImage}
       />
     </>
   );
