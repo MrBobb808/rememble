@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Home,
@@ -8,9 +8,9 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InviteDialog } from "@/components/memorial/InviteDialog";
 
 export const ActionButtons = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
@@ -91,15 +91,9 @@ export const ActionButtons = () => {
           <Download className="w-4 h-4 mr-2" />
           Download
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(`/invite${memorialId ? `?memorial=${memorialId}` : ''}`)}
-          className="hidden md:inline-flex"
-        >
-          <Users className="w-4 h-4 mr-2" />
-          Invite Family
-        </Button>
+        {memorialId && (
+          <InviteDialog memorialId={memorialId} />
+        )}
       </div>
     </>
   );

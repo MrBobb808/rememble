@@ -14,7 +14,6 @@ const Landing = lazy(() => import("./pages/Landing"))
 const Memorial = lazy(() => import("./pages/Memorial"))
 const Auth = lazy(() => import("./pages/Auth"))
 const AuthCallback = lazy(() => import("./pages/AuthCallback"))
-const Invite = lazy(() => import("./pages/Invite"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,7 +71,6 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/memorial" element={<Memorial />} />
-                <Route path="/invite" element={<Invite />} />
               </Routes>
             </Suspense>
           </BrowserRouter>
