@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Image, Plus } from "lucide-react";
+import { Image, Plus, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import PhotoUploadDialog from "./PhotoUploadDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "./ui/skeleton";
 
 interface Photo {
   id: number;
@@ -15,18 +16,33 @@ interface Photo {
 interface PhotoGridProps {
   photos: Photo[];
   onPhotoAdd: (file: File, caption: string, aiReflection: string) => void;
+  isLoading?: boolean;
 }
 
-const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
+const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState<Record<number, boolean>>({});
 
   // Create array of 25 cells (5x5 grid)
   const gridCells = Array(25).fill(null).map((_, index) => {
     const photo = photos[index];
     return { id: index, photo };
   });
+
+  const handleImageLoad = (id: number) => {
+    setImageLoading(prev => ({ ...prev, [id]: false }));
+  };
+
+  const handleImageError = (id: number) => {
+    setImageLoading(prev => ({ ...prev, [id]: false }));
+    toast({
+      title: "Error loading image",
+      description: "There was a problem loading the image. Please try again later.",
+      variant: "destructive",
+    });
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,10 +69,7 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
         },
       });
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
@@ -68,13 +81,8 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
     if (!selectedFile) return;
 
     try {
-      // Create a temporary URL for the image
       const imageUrl = URL.createObjectURL(selectedFile);
-      
-      // Generate AI reflection
       const aiReflection = await generateAIReflection(imageUrl, caption);
-      
-      // Add the photo with caption and AI reflection
       onPhotoAdd(selectedFile, caption, aiReflection);
       
       toast({
@@ -90,7 +98,6 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
     }
   };
 
-  // Add real-time subscription for photos
   useEffect(() => {
     const channel = supabase
       .channel("photos-changes")
@@ -102,8 +109,6 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
           table: "memorial_photos",
         },
         (payload) => {
-          // Refresh the photos list when changes occur
-          // This will be handled by the parent component through React Query
           console.log("Photo changes detected:", payload);
         }
       )
@@ -113,6 +118,16 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-5 gap-4">
+        {Array(25).fill(null).map((_, index) => (
+          <Skeleton key={index} className="aspect-square rounded-lg" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -124,10 +139,18 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
           >
             {photo ? (
               <div className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg">
+                {imageLoading[id] && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <Loader2 className="w-6 h-6 animate-spin text-memorial-blue" />
+                  </div>
+                )}
                 <img
-                  src={photo.url}
+                  src={`${photo.url}?quality=80&width=400`}
                   alt={photo.caption}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onLoad={() => handleImageLoad(id)}
+                  onError={() => handleImageError(id)}
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/40 backdrop-blur-sm">

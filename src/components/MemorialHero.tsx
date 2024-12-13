@@ -1,4 +1,5 @@
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface MemorialHeroProps {
   name: string;
@@ -7,15 +8,24 @@ interface MemorialHeroProps {
 }
 
 const MemorialHero = ({ name, dates, photoUrl }: MemorialHeroProps) => {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <div className="relative w-full h-[80vh] min-h-[600px] mt-14">
       <div className="absolute inset-0 bg-black/20" />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <Loader2 className="w-8 h-8 animate-spin text-memorial-blue" />
+        </div>
+      )}
       <div 
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
         style={{ 
-          backgroundImage: `url(${photoUrl})`,
-          backgroundPosition: 'center 30%'
+          backgroundImage: `url(${photoUrl}?quality=80&width=1920)`,
+          backgroundPosition: 'center 30%',
+          display: isLoading ? 'none' : 'block'
         }}
+        onLoad={() => setIsLoading(false)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       
