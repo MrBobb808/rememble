@@ -21,21 +21,21 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-xl font-playfair">Memory Details</DialogTitle>
           <DialogDescription className="text-lg">{image.caption}</DialogDescription>
         </DialogHeader>
         <div className="mt-4 space-y-4">
-          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+          <div className="relative w-full overflow-hidden rounded-lg">
             <img
-              src={`${image.url}?quality=100&width=1200`}
+              src={image.url}
               alt={image.caption}
-              className="h-full w-full object-cover"
+              className="w-full h-auto object-cover"
             />
           </div>
           {image.aiReflection && (
-            <div className="mt-4 p-6 bg-memorial-beige-light rounded-lg border border-memorial-gray-dark/10">
+            <div className="mt-4 p-4 bg-memorial-beige-light rounded-lg border border-memorial-beige-dark/20">
               <h3 className="text-lg font-semibold mb-2 text-memorial-gray-dark">AI Reflection</h3>
               <p className="text-gray-700 italic leading-relaxed">{image.aiReflection}</p>
             </div>
