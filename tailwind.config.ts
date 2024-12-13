@@ -19,6 +19,7 @@ export default {
     },
     extend: {
       colors: {
+        // Brand colors
         memorial: {
           blue: {
             light: "#E6EEF7",
@@ -36,6 +37,7 @@ export default {
             dark: "#E6D0BA",
           },
         },
+        // System colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
