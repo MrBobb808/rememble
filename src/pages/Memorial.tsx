@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ interface Photo {
 }
 
 const Memorial = () => {
+  const navigate = useNavigate();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [memorialId, setMemorialId] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
@@ -21,13 +22,28 @@ const Memorial = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to access memorials",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
     const id = searchParams.get("id");
     if (id) {
       setMemorialId(id);
     } else {
       createMemorial();
     }
-  }, [searchParams]);
+  };
 
   const createMemorial = async () => {
     try {
@@ -39,6 +55,7 @@ const Memorial = () => {
           description: "Please sign in to create a memorial",
           variant: "destructive",
         });
+        navigate("/auth");
         return;
       }
 
