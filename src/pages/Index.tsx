@@ -8,13 +8,14 @@ interface Photo {
   id: number;
   url: string;
   caption: string;
+  aiReflection?: string;
 }
 
 const Index = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const { toast } = useToast();
 
-  const handlePhotoAdd = async (file: File) => {
+  const handlePhotoAdd = async (file: File, caption: string, aiReflection: string) => {
     try {
       // Create a temporary URL for the uploaded file
       const url = URL.createObjectURL(file);
@@ -23,19 +24,20 @@ const Index = () => {
       const newPhoto: Photo = {
         id: photos.length + 1,
         url,
-        caption: file.name, // You might want to add a proper caption input later
+        caption,
+        aiReflection,
       };
       
       setPhotos([...photos, newPhoto]);
       
       toast({
-        title: "Photo added successfully",
+        title: "Memory added successfully",
         description: "Your memory has been added to the memorial.",
       });
     } catch (error) {
       toast({
-        title: "Error adding photo",
-        description: "There was a problem adding your photo. Please try again.",
+        title: "Error adding memory",
+        description: "There was a problem adding your memory. Please try again.",
         variant: "destructive",
       });
     }
