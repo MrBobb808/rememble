@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Image, Plus, Loader2 } from "lucide-react";
-import { Button } from "./ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import PhotoUploadDialog from "./PhotoUploadDialog";
 import ImageDialog from "./ImageDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
+import GridCell from "./photo-grid/GridCell";
 
 interface Photo {
   id: number;
@@ -26,31 +25,19 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Photo | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
-  const [imageLoading, setImageLoading] = useState<Record<number, boolean>>({});
 
   // Create array of 25 cells (5x5 grid)
-  const gridCells = Array(25).fill(null).map((_, index) => {
-    const photo = photos[index];
-    return { id: index, photo };
-  });
-
-  const handleImageLoad = (id: number) => {
-    setImageLoading(prev => ({ ...prev, [id]: false }));
-  };
-
-  const handleImageError = (id: number) => {
-    setImageLoading(prev => ({ ...prev, [id]: false }));
-    toast({
-      title: "Error loading image",
-      description: "There was a problem loading the image. Please try again later.",
-      variant: "destructive",
+  const gridCells = Array(25)
+    .fill(null)
+    .map((_, index) => {
+      const photo = photos[index];
+      return { id: index, photo };
     });
-  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith("image/")) {
         setSelectedFile(file);
         setIsUploadDialogOpen(true);
       } else {
@@ -63,21 +50,28 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
     }
   };
 
-  const handleImageClick = (photo: Photo) => {
+  const handleImageSelect = (photo: Photo) => {
+    console.log("Selected image with reflection:", photo.aiReflection);
     setSelectedImage(photo);
     setIsImageDialogOpen(true);
   };
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('generate-reflection', {
+      console.log("Generating AI reflection for:", { imageUrl, caption });
+      const { data, error } = await supabase.functions.invoke("generate-reflection", {
         body: {
           imageUrl,
           caption,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error generating reflection:", error);
+        throw error;
+      }
+
+      console.log("Generated reflection:", data.reflection);
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
@@ -91,6 +85,11 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
     try {
       const imageUrl = URL.createObjectURL(selectedFile);
       const aiReflection = await generateAIReflection(imageUrl, caption);
+      
+      if (!aiReflection) {
+        throw new Error("No AI reflection generated");
+      }
+
       onPhotoAdd(selectedFile, caption, aiReflection);
       
       toast({
@@ -98,6 +97,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
         description: "Your memory has been added to the memorial.",
       });
     } catch (error) {
+      console.error("Error adding photo:", error);
       toast({
         title: "Error adding memory",
         description: "There was a problem adding your memory. Please try again.",
@@ -130,9 +130,11 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {Array(25).fill(null).map((_, index) => (
-          <Skeleton key={index} className="aspect-square rounded-lg" />
-        ))}
+        {Array(25)
+          .fill(null)
+          .map((_, index) => (
+            <Skeleton key={index} className="aspect-square rounded-lg" />
+          ))}
       </div>
     );
   }
@@ -141,45 +143,12 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {gridCells.map(({ id, photo }) => (
-          <div
-            key={id}
-            className="relative aspect-square group"
-          >
-            {photo ? (
-              <button
-                onClick={() => handleImageClick(photo)}
-                className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-memorial-blue"
-              >
-                {imageLoading[id] && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                    <Loader2 className="w-6 h-6 animate-spin text-memorial-blue" />
-                  </div>
-                )}
-                <img
-                  src={`${photo.url}?quality=80&width=400`}
-                  alt={photo.caption}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  onLoad={() => handleImageLoad(id)}
-                  onError={() => handleImageError(id)}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/60 backdrop-blur-sm">
-                    <p className="text-white text-sm line-clamp-2">{photo.caption}</p>
-                  </div>
-                </div>
-              </button>
-            ) : (
-              <label className="w-full h-full flex items-center justify-center border border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-colors">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-                <Plus className="w-6 h-6 text-memorial-gray-dark/50" />
-              </label>
-            )}
+          <div key={id} className="relative aspect-square group">
+            <GridCell
+              photo={photo}
+              onImageSelect={handleImageSelect}
+              onFileSelect={handleFileChange}
+            />
           </div>
         ))}
       </div>

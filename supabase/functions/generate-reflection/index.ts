@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { caption, imageUrl } = await req.json()
+    const { caption } = await req.json()
+    console.log("Generating reflection for caption:", caption)
 
-    // Call OpenAI API to generate reflection
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
