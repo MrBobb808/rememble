@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Image, Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -89,6 +89,30 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
       });
     }
   };
+
+  // Add real-time subscription for photos
+  useEffect(() => {
+    const channel = supabase
+      .channel("photos-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "memorial_photos",
+        },
+        (payload) => {
+          // Refresh the photos list when changes occur
+          // This will be handled by the parent component through React Query
+          console.log("Photo changes detected:", payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <>

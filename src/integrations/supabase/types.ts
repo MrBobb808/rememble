@@ -9,6 +9,79 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      memorial_collaborators: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invitation_accepted: boolean | null
+          invitation_token: string | null
+          memorial_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invitation_accepted?: boolean | null
+          invitation_token?: string | null
+          memorial_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invitation_accepted?: boolean | null
+          invitation_token?: string | null
+          memorial_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_collaborators_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memorial_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          photo_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          photo_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          photo_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "memorial_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorial_photos: {
         Row: {
           ai_reflection: string | null
@@ -79,7 +152,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "contributor" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never

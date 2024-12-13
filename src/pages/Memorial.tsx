@@ -3,6 +3,7 @@ import PhotoGrid from "@/components/PhotoGrid";
 import MemorialProgress from "@/components/MemorialProgress";
 import RecentActivity from "@/components/RecentActivity";
 import MemorialSummary from "@/components/MemorialSummary";
+import CollaboratorsManagement from "@/components/CollaboratorsManagement";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,11 +139,14 @@ const Memorial = () => {
       
       <main className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
-          <MemorialProgress 
-            photosCount={photos.length}
-            onShare={handleShare}
-            onDownload={handleDownload}
-          />
+          <div className="flex justify-between items-center mb-6">
+            <MemorialProgress 
+              photosCount={photos.length}
+              onShare={handleShare}
+              onDownload={handleDownload}
+            />
+            <CollaboratorsManagement memorialId={memorialId} />
+          </div>
 
           <div className="grid lg:grid-cols-[1fr,300px] gap-8">
             <div className="space-y-8">
