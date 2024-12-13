@@ -6,6 +6,7 @@ import { MemorialHeader } from "@/components/memorial/MemorialHeader";
 import { MemorialContent } from "@/components/memorial/MemorialContent";
 import { useMemorialAuth } from "@/hooks/useMemorialAuth";
 import { createNewMemorial } from "@/services/memorialService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Photo {
   id: number;
@@ -21,6 +22,36 @@ const Memorial = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { supabase } = useMemorialAuth();
+
+  // Fetch photos whenever memorialId changes
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      if (!memorialId) return;
+
+      const { data, error } = await supabase
+        .from('memorial_photos')
+        .select('*')
+        .eq('memorial_id', memorialId)
+        .order('position', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching photos:', error);
+        return;
+      }
+
+      if (data) {
+        const formattedPhotos = data.map(photo => ({
+          id: photo.position,
+          url: photo.image_url,
+          caption: photo.caption,
+          aiReflection: photo.ai_reflection
+        }));
+        setPhotos(formattedPhotos);
+      }
+    };
+
+    fetchPhotos();
+  }, [memorialId, supabase]);
 
   useEffect(() => {
     const initializeMemorial = async () => {
@@ -51,6 +82,52 @@ const Memorial = () => {
 
     initializeMemorial();
   }, [searchParams, toast, supabase.auth]);
+
+  // Set up real-time subscription for photos
+  useEffect(() => {
+    if (!memorialId) return;
+
+    const channel = supabase
+      .channel('memorial_photos_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'memorial_photos',
+          filter: `memorial_id=eq.${memorialId}`
+        },
+        async (payload) => {
+          console.log('Photo change detected:', payload);
+          // Refetch photos when changes occur
+          const { data, error } = await supabase
+            .from('memorial_photos')
+            .select('*')
+            .eq('memorial_id', memorialId)
+            .order('position', { ascending: true });
+
+          if (error) {
+            console.error('Error fetching photos:', error);
+            return;
+          }
+
+          if (data) {
+            const formattedPhotos = data.map(photo => ({
+              id: photo.position,
+              url: photo.image_url,
+              caption: photo.caption,
+              aiReflection: photo.ai_reflection
+            }));
+            setPhotos(formattedPhotos);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [memorialId, supabase]);
 
   const handlePhotoAdd = async (file: File, caption: string) => {
     if (!memorialId) return;
@@ -88,33 +165,12 @@ const Memorial = () => {
 
       if (photoError) throw photoError;
 
-      const newPhoto: Photo = {
-        id: photos.length + 1,
-        url: publicUrl,
-        caption,
-        aiReflection: reflectionResponse.data.reflection,
-      };
-      
-      setPhotos([...photos, newPhoto]);
-      
-      if (photos.length === 24) {
-        const summaryResponse = await supabase.functions.invoke('generate-summary', {
-          body: { memorialId },
-        });
+      toast({
+        title: "Memory added successfully",
+        description: "Your memory has been added to the memorial.",
+      });
 
-        if (summaryResponse.error) throw summaryResponse.error;
-        setSummary(summaryResponse.data.summary);
-
-        toast({
-          title: "Memorial Complete!",
-          description: "All memories have been added and a beautiful summary has been generated.",
-        });
-      } else {
-        toast({
-          title: "Memory added successfully",
-          description: "Your memory has been added to the memorial.",
-        });
-      }
+      // The photos will be updated automatically through the real-time subscription
     } catch (error) {
       console.error('Error adding photo:', error);
       toast({
