@@ -21,9 +21,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface InviteDialogProps {
   memorialId: string;
+  disabled?: boolean;
 }
 
-export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
+export const InviteDialog = ({ memorialId, disabled }: InviteDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "contributor" | "viewer">("viewer");
@@ -35,6 +36,15 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       toast({
         title: "Error",
         description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!memorialId) {
+      toast({
+        title: "Error",
+        description: "No memorial selected. Please create or select a memorial first.",
         variant: "destructive",
       });
       return;
@@ -90,7 +100,12 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          disabled={disabled}
+          title={disabled ? "Create or select a memorial first" : "Invite family members"}
+        >
           <Users className="w-4 h-4 mr-2" />
           Invite Family
         </Button>
