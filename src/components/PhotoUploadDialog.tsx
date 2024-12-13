@@ -51,18 +51,18 @@ const PhotoUploadDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[400px] p-4">
         <DialogHeader>
-          <DialogTitle className="text-xl font-playfair">Add a Memory</DialogTitle>
+          <DialogTitle className="text-lg font-playfair">Add a Memory</DialogTitle>
         </DialogHeader>
         {isSubmitting ? (
-          <div className="py-8">
+          <div className="py-4">
             <UploadProgress message="Generating AI reflection..." />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {imageFile && (
-              <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                 <img
                   src={URL.createObjectURL(imageFile)}
                   alt="Preview"
@@ -70,48 +70,55 @@ const PhotoUploadDialog = ({
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="contributorName">Your Name</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="contributorName" className="text-sm">Your Name</Label>
               <Input
                 id="contributorName"
                 value={contributorName}
                 onChange={(e) => setContributorName(e.target.value)}
                 placeholder={isProfileLoading ? "Loading..." : "Enter your name"}
                 disabled={isProfileLoading}
+                className="h-8"
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="relationship">Relationship</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="relationship" className="text-sm">Relationship</Label>
               <Input
                 id="relationship"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
                 placeholder={isProfileLoading ? "Loading..." : "e.g., Son, Daughter, Friend"}
                 disabled={isProfileLoading}
+                className="h-8"
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="caption">Caption</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="caption" className="text-sm">Caption</Label>
               <Textarea
                 id="caption"
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 placeholder="Share the story behind this memory..."
-                className="min-h-[100px]"
+                className="min-h-[80px] resize-none"
                 required
               />
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="h-8 px-3"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting || isProfileLoading}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || isProfileLoading}
+                className="h-8 px-3"
+              >
                 Upload
               </Button>
             </div>
