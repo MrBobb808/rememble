@@ -150,6 +150,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          relationship: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+          relationship: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          relationship?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import UploadProgress from "./photo-grid/UploadProgress";
+import { useProfile } from "@/hooks/useProfile";
 
 interface PhotoUploadDialogProps {
   open: boolean;
@@ -24,10 +25,18 @@ const PhotoUploadDialog = ({
   imageFile,
   onSubmit,
 }: PhotoUploadDialogProps) => {
+  const { data: profile, isLoading: isProfileLoading } = useProfile();
   const [caption, setCaption] = useState("");
   const [contributorName, setContributorName] = useState("");
   const [relationship, setRelationship] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setContributorName(profile.full_name);
+      setRelationship(profile.relationship);
+    }
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +46,6 @@ const PhotoUploadDialog = ({
     await onSubmit(caption, contributorName, relationship);
     setIsSubmitting(false);
     setCaption("");
-    setContributorName("");
-    setRelationship("");
     onOpenChange(false);
   };
 
@@ -69,7 +76,8 @@ const PhotoUploadDialog = ({
                 id="contributorName"
                 value={contributorName}
                 onChange={(e) => setContributorName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={isProfileLoading ? "Loading..." : "Enter your name"}
+                disabled={isProfileLoading}
                 required
               />
             </div>
@@ -79,7 +87,8 @@ const PhotoUploadDialog = ({
                 id="relationship"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                placeholder="e.g., Son, Daughter, Friend"
+                placeholder={isProfileLoading ? "Loading..." : "e.g., Son, Daughter, Friend"}
+                disabled={isProfileLoading}
                 required
               />
             </div>
@@ -102,7 +111,7 @@ const PhotoUploadDialog = ({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || isProfileLoading}>
                 Upload
               </Button>
             </div>
