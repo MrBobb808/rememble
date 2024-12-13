@@ -38,8 +38,10 @@ export const MemorialContent = ({
       />
       
       {memorialId && (
-        <div className="flex justify-center my-6">
-          <InviteDialog memorialId={memorialId} />
+        <div className="bg-white/80 backdrop-blur-sm border-b">
+          <div className="max-w-7xl mx-auto py-4 px-4 flex justify-center">
+            <InviteDialog memorialId={memorialId} />
+          </div>
         </div>
       )}
 
