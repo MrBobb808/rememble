@@ -6,7 +6,6 @@ import { MemorialHeader } from "@/components/memorial/MemorialHeader";
 import { MemorialContent } from "@/components/memorial/MemorialContent";
 import { useMemorialAuth } from "@/hooks/useMemorialAuth";
 import { createNewMemorial } from "@/services/memorialService";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Photo {
   id: number;
@@ -28,106 +27,64 @@ const Memorial = () => {
     const fetchPhotos = async () => {
       if (!memorialId) return;
 
-      const { data, error } = await supabase
-        .from('memorial_photos')
-        .select('*')
-        .eq('memorial_id', memorialId)
-        .order('position', { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from('memorial_photos')
+          .select('*')
+          .eq('memorial_id', memorialId)
+          .order('position', { ascending: true });
 
-      if (error) {
+        if (error) throw error;
+
+        if (data) {
+          console.log('Fetched photos:', data);
+          const formattedPhotos = data.map(photo => ({
+            id: photo.position,
+            url: photo.image_url,
+            caption: photo.caption,
+            aiReflection: photo.ai_reflection
+          }));
+          setPhotos(formattedPhotos);
+        }
+      } catch (error) {
         console.error('Error fetching photos:', error);
-        return;
-      }
-
-      if (data) {
-        const formattedPhotos = data.map(photo => ({
-          id: photo.position,
-          url: photo.image_url,
-          caption: photo.caption,
-          aiReflection: photo.ai_reflection
-        }));
-        setPhotos(formattedPhotos);
+        toast({
+          title: "Error fetching photos",
+          description: "There was a problem loading your memories.",
+          variant: "destructive",
+        });
       }
     };
 
     fetchPhotos();
-  }, [memorialId, supabase]);
+  }, [memorialId, supabase, toast]);
 
   useEffect(() => {
     const initializeMemorial = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const id = searchParams.get("id");
-      if (id) {
-        setMemorialId(id);
-      } else {
-        try {
-          const memorial = await createNewMemorial(user.id);
+      try {
+        const id = searchParams.get("id");
+        if (id) {
+          setMemorialId(id);
+        } else {
+          const memorial = await createNewMemorial("development-user");
           setMemorialId(memorial.id);
           toast({
             title: "Memorial created",
             description: "Your memorial has been created successfully.",
           });
-        } catch (error) {
-          console.error('Error creating memorial:', error);
-          toast({
-            title: "Error creating memorial",
-            description: "There was a problem creating the memorial. Please try again.",
-            variant: "destructive",
-          });
         }
+      } catch (error) {
+        console.error('Error initializing memorial:', error);
+        toast({
+          title: "Error creating memorial",
+          description: "There was a problem creating the memorial. Please try again.",
+          variant: "destructive",
+        });
       }
     };
 
     initializeMemorial();
-  }, [searchParams, toast, supabase.auth]);
-
-  // Set up real-time subscription for photos
-  useEffect(() => {
-    if (!memorialId) return;
-
-    const channel = supabase
-      .channel('memorial_photos_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'memorial_photos',
-          filter: `memorial_id=eq.${memorialId}`
-        },
-        async (payload) => {
-          console.log('Photo change detected:', payload);
-          // Refetch photos when changes occur
-          const { data, error } = await supabase
-            .from('memorial_photos')
-            .select('*')
-            .eq('memorial_id', memorialId)
-            .order('position', { ascending: true });
-
-          if (error) {
-            console.error('Error fetching photos:', error);
-            return;
-          }
-
-          if (data) {
-            const formattedPhotos = data.map(photo => ({
-              id: photo.position,
-              url: photo.image_url,
-              caption: photo.caption,
-              aiReflection: photo.ai_reflection
-            }));
-            setPhotos(formattedPhotos);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [memorialId, supabase]);
+  }, [searchParams, toast]);
 
   const handlePhotoAdd = async (file: File, caption: string) => {
     if (!memorialId) return;
@@ -135,22 +92,28 @@ const Memorial = () => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('memorial-photos')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('memorial-photos')
         .getPublicUrl(fileName);
 
-      const reflectionResponse = await supabase.functions.invoke('generate-reflection', {
-        body: { caption, imageContext: "This is a memorial photo" },
-      });
+      // Generate AI reflection
+      const { data: reflectionData, error: reflectionError } = await supabase.functions
+        .invoke('generate-reflection', {
+          body: { caption, imageContext: "This is a memorial photo" },
+        });
 
-      if (reflectionResponse.error) throw reflectionResponse.error;
+      if (reflectionError) throw reflectionError;
 
+      // Save photo metadata to database
       const { data: photoData, error: photoError } = await supabase
         .from('memorial_photos')
         .insert({
@@ -158,19 +121,27 @@ const Memorial = () => {
           position: photos.length,
           image_url: publicUrl,
           caption,
-          ai_reflection: reflectionResponse.data.reflection,
+          ai_reflection: reflectionData.reflection,
         })
         .select()
         .single();
 
       if (photoError) throw photoError;
 
+      // Update local state
+      const newPhoto = {
+        id: photos.length,
+        url: publicUrl,
+        caption,
+        aiReflection: reflectionData.reflection,
+      };
+      
+      setPhotos(prevPhotos => [...prevPhotos, newPhoto]);
+
       toast({
         title: "Memory added successfully",
         description: "Your memory has been added to the memorial.",
       });
-
-      // The photos will be updated automatically through the real-time subscription
     } catch (error) {
       console.error('Error adding photo:', error);
       toast({
