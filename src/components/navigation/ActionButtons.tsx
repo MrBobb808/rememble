@@ -2,10 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Home,
-  Image,
   Printer,
   Download,
-  HelpCircle,
   Share2,
   Users,
 } from "lucide-react";
@@ -61,14 +59,6 @@ export const ActionButtons = () => {
       </div>
       
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/add-photo")}
-        >
-          <Image className="w-4 h-4 mr-2" />
-          Add Photo
-        </Button>
         <Button
           variant="outline"
           size="sm"
