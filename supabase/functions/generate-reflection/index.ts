@@ -12,8 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const { caption } = await req.json()
-    console.log("Generating reflection for caption:", caption)
+    const { imageUrl, caption } = await req.json()
+    console.log("Generating reflection for:", { imageUrl, caption })
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -30,7 +30,16 @@ serve(async (req) => {
           },
           {
             role: "user",
-            content: `Generate a warm, thoughtful reflection for this memorial photo. Caption: "${caption}"`
+            content: [
+              {
+                type: "text",
+                text: `Generate a warm, thoughtful reflection for this memorial photo. Caption: "${caption}"`
+              },
+              {
+                type: "image_url",
+                image_url: imageUrl
+              }
+            ]
           }
         ],
       }),
