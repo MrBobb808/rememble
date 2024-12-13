@@ -34,7 +34,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Generate a warm, thoughtful reflection for this memorial photo. Caption: "${caption}". Please reference specific details you see in the image and connect them with the caption's context.`
+                text: `Generate a warm, thoughtful reflection for this memorial photo. Caption: "${caption}"`
               },
               {
                 type: "image_url",
@@ -59,7 +59,6 @@ serve(async (req) => {
     const data = await openAIResponse.json();
     console.log("OpenAI API Response:", data);
 
-    // Properly handle the response structure
     if (!data.choices?.[0]?.message?.content) {
       console.error("Unexpected OpenAI response format:", data);
       throw new Error("Invalid response format from OpenAI");
