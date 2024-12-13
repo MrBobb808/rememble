@@ -44,7 +44,9 @@ export const trackEvent = (eventName: string, properties?: Record<string, any>) 
   
   // Send to Vercel Analytics
   if (typeof window.va === 'function') {
-    window.va(eventName, properties);
+    // Map custom event names to Vercel Analytics event types
+    const vaEventType = eventName.startsWith('page_') ? 'pageview' : 'event';
+    window.va(vaEventType, properties);
   }
   
   // Send to Sentry

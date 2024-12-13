@@ -33,18 +33,27 @@ const LoadingFallback = () => (
 )
 
 // Error fallback component
-const ErrorFallback: Sentry.FallbackRender = (errorData) => (
-  <div className="min-h-screen flex flex-col items-center justify-center p-4">
-    <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-    <p className="text-gray-600 mb-4">{errorData.error.message}</p>
-    <button 
-      onClick={errorData.resetError}
-      className="px-4 py-2 bg-memorial-blue text-white rounded hover:bg-memorial-blue/90"
-    >
-      Try again
-    </button>
-  </div>
-)
+const ErrorFallback: Sentry.FallbackRender = (errorData) => {
+  // Type check the error object
+  const errorMessage = errorData.error && 
+    typeof errorData.error === 'object' && 
+    'message' in errorData.error
+    ? errorData.error.message
+    : 'An unexpected error occurred';
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
+      <p className="text-gray-600 mb-4">{errorMessage}</p>
+      <button 
+        onClick={errorData.resetError}
+        className="px-4 py-2 bg-memorial-blue text-white rounded hover:bg-memorial-blue/90"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
 
 const App = () => (
   <Sentry.ErrorBoundary fallback={ErrorFallback}>
