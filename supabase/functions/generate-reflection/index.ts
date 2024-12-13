@@ -52,7 +52,11 @@ serve(async (req) => {
       max_tokens: 300,
     })
 
-    const reflection = response.data.choices[0]?.message?.content || ''
+    if (!response.data.choices?.[0]?.message?.content) {
+      throw new Error('No reflection generated')
+    }
+
+    const reflection = response.data.choices[0].message.content
     console.log("Generated reflection:", reflection)
 
     return new Response(
