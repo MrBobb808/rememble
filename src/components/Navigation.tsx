@@ -4,18 +4,23 @@ import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
 import { ActionButtons } from "./navigation/ActionButtons";
+import { InviteDialog } from "./memorial/InviteDialog";
+import { useSearchParams } from "react-router-dom";
 
 const Navigation = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const memorialId = searchParams.get("id");
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center h-14"> {/* Added fixed height */}
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center h-14">
         <div className="flex items-center gap-8">
           <div className="text-2xl font-playfair text-gray-800">Memories</div>
         </div>
 
         <div className="flex items-center gap-4">
+          {memorialId && <InviteDialog memorialId={memorialId} />}
           <Button
             variant="ghost"
             size="sm"

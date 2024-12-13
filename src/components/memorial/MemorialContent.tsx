@@ -3,7 +3,6 @@ import MemorialSummary from "@/components/MemorialSummary";
 import UnifiedSidebar from "./UnifiedSidebar";
 import MemorialBanner from "./MemorialBanner";
 import { cn } from "@/lib/utils";
-import { InviteDialog } from "./InviteDialog";
 import { useSearchParams } from "react-router-dom";
 
 interface Photo {
@@ -36,14 +35,6 @@ export const MemorialContent = ({
         dates="1945 - 2024"
         photoUrl="/placeholder.svg"
       />
-      
-      {memorialId && (
-        <div className="bg-white/80 backdrop-blur-sm border-b">
-          <div className="max-w-7xl mx-auto py-4 px-4 flex justify-center">
-            <InviteDialog memorialId={memorialId} />
-          </div>
-        </div>
-      )}
 
       <div className={cn(
         "max-w-7xl mx-auto", // Center the grid
