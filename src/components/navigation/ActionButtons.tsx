@@ -1,16 +1,16 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Home,
   Printer,
   Download,
   Share2,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InviteDialog } from "@/components/memorial/InviteDialog";
 
 export const ActionButtons = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
