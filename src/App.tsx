@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import { Loader2 } from "lucide-react"
+import * as Sentry from "@sentry/react"
 
 // Lazy load route components
 const Index = lazy(() => import("./pages/Index"))
@@ -31,24 +32,40 @@ const LoadingFallback = () => (
   </div>
 )
 
+// Error fallback component
+const ErrorFallback = ({ error }: { error: Error }) => (
+  <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
+    <p className="text-gray-600 mb-4">{error.message}</p>
+    <button 
+      onClick={() => window.location.reload()} 
+      className="px-4 py-2 bg-memorial-blue text-white rounded hover:bg-memorial-blue/90"
+    >
+      Try again
+    </button>
+  </div>
+)
+
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/landing" element={<Landing />} />
-              <Route path="/memorial" element={<Memorial />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+  <Sentry.ErrorBoundary fallback={ErrorFallback}>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/landing" element={<Landing />} />
+                <Route path="/memorial" element={<Memorial />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  </Sentry.ErrorBoundary>
 )
 
 export default App
