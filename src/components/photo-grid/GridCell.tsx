@@ -42,7 +42,7 @@ const GridCell = ({ photo, onImageSelect, onFileSelect }: GridCellProps) => {
     return (
       <button
         onClick={() => onImageSelect(photo)}
-        className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-memorial-blue group"
+        className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-memorial-blue group bg-white"
       >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
@@ -70,7 +70,7 @@ const GridCell = ({ photo, onImageSelect, onFileSelect }: GridCellProps) => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <label className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-colors group">
+          <label className="w-full h-full flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border-2 border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-all duration-300 group shadow-sm hover:shadow-md">
             <input
               type="file"
               className="hidden"
