@@ -1,19 +1,20 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { imageUrl, caption } = await req.json()
-    console.log("Generating reflection for:", { imageUrl, caption })
+    const { imageUrl, caption } = await req.json();
+    console.log("Generating reflection for:", { imageUrl, caption });
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -26,51 +27,55 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a compassionate AI that generates thoughtful, warm reflections for memorial photos. Keep responses brief (2-3 sentences) and focus on the emotional connection and memories."
+            content: "You are a compassionate AI that generates thoughtful, warm reflections for memorial photos. Keep responses brief (2-3 sentences) and focus on the emotional connection and memories shown in both the image and caption."
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `Generate a warm, thoughtful reflection for this memorial photo. Caption: "${caption}". Please reference both the caption and what you see in the image in your reflection.`
+                text: `Generate a warm, thoughtful reflection for this memorial photo. Caption: "${caption}". Please reference specific details you see in the image and connect them with the caption's context.`
               },
               {
                 type: "image_url",
-                image_url: imageUrl
+                image_url: {
+                  url: imageUrl
+                }
               }
             ]
           }
         ],
         max_tokens: 150,
+        temperature: 0.7
       }),
-    })
+    });
 
     if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.json()
-      console.error("OpenAI API error:", errorData)
-      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`)
+      const errorData = await openAIResponse.json();
+      console.error("OpenAI API error:", errorData);
+      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
     }
 
-    const data = await openAIResponse.json()
-    console.log("OpenAI API Response:", data)
+    const data = await openAIResponse.json();
+    console.log("OpenAI API Response:", data);
 
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error("Unexpected OpenAI response format:", data)
-      throw new Error("Invalid response format from OpenAI")
+    // Properly handle the response structure
+    if (!data.choices?.[0]?.message?.content) {
+      console.error("Unexpected OpenAI response format:", data);
+      throw new Error("Invalid response format from OpenAI");
     }
 
-    const reflection = data.choices[0].message.content
+    const reflection = data.choices[0].message.content;
 
     return new Response(
       JSON.stringify({ reflection }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error("Error generating reflection:", error)
+    console.error("Error generating reflection:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-})
+});
