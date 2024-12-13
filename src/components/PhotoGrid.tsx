@@ -57,10 +57,12 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
     try {
-      console.log("Generating AI reflection for:", { imageUrl, caption });
+      // Remove any trailing colons from the URL
+      const cleanImageUrl = imageUrl.replace(/:+$/, '');
+      
       const { data, error } = await supabase.functions.invoke("generate-reflection", {
         body: {
-          imageUrl,
+          imageUrl: cleanImageUrl,
           caption,
         },
       });
