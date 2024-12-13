@@ -3,6 +3,7 @@ import { Image, Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
 import PhotoUploadDialog from "./PhotoUploadDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Photo {
   id: number;
@@ -46,22 +47,17 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
     try {
-      const response = await fetch("/api/generate-reflection", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-reflection', {
+        body: {
           imageUrl,
           caption,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate reflection");
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
