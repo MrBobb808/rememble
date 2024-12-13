@@ -35,8 +35,9 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
             />
           </div>
           {image.aiReflection && (
-            <div className="mt-4 p-4 bg-memorial-beige-light rounded-lg">
-              <p className="text-gray-700 italic">{image.aiReflection}</p>
+            <div className="mt-4 p-6 bg-memorial-beige-light rounded-lg border border-memorial-gray-dark/10">
+              <h3 className="text-lg font-semibold mb-2 text-memorial-gray-dark">AI Reflection</h3>
+              <p className="text-gray-700 italic leading-relaxed">{image.aiReflection}</p>
             </div>
           )}
         </div>
