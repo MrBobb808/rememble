@@ -105,7 +105,7 @@ const Navigation = () => {
         </div>
       </div>
 
-      <HelpDialog open={isHelpOpen} onOpenChange={setIsHelpOpen} />
+      <HelpDialog isOpen={isHelpOpen} onOpenChange={setIsHelpOpen} />
     </div>
   );
 };
