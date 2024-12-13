@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
-import { MemorialHeader } from "@/components/memorial/MemorialHeader";
 import { MemorialContent } from "@/components/memorial/MemorialContent";
 import { useMemorialAuth } from "@/hooks/useMemorialAuth";
 import { createNewMemorial } from "@/services/memorialService";
@@ -24,7 +23,6 @@ const Memorial = () => {
   const [searchParams] = useSearchParams();
   const { supabase } = useMemorialAuth();
 
-  // Fetch photos whenever memorialId changes
   useEffect(() => {
     const fetchPhotos = async () => {
       if (!memorialId) return;
@@ -97,19 +95,16 @@ const Memorial = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       
-      // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('memorial-photos')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('memorial-photos')
         .getPublicUrl(fileName);
 
-      // Generate AI reflection
       const { data: reflectionData, error: reflectionError } = await supabase.functions
         .invoke('generate-reflection', {
           body: { caption, imageContext: "This is a memorial photo" },
@@ -117,7 +112,6 @@ const Memorial = () => {
 
       if (reflectionError) throw reflectionError;
 
-      // Save photo metadata to database
       const { data: photoData, error: photoError } = await supabase
         .from('memorial_photos')
         .insert({
@@ -134,7 +128,6 @@ const Memorial = () => {
 
       if (photoError) throw photoError;
 
-      // Update local state
       const newPhoto = {
         id: photos.length,
         url: publicUrl,
@@ -160,38 +153,15 @@ const Memorial = () => {
     }
   };
 
-  const handleShare = () => {
-    toast({
-      title: "Share memorial",
-      description: "Share this memorial with loved ones.",
-    });
-  };
-
-  const handleDownload = () => {
-    toast({
-      title: "Download started",
-      description: "Your memorial is being prepared for download.",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
       <Navigation />
-      
       <main className="container mx-auto py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <MemorialHeader
-            photosCount={photos.length}
-            memorialId={memorialId}
-            onShare={handleShare}
-            onDownload={handleDownload}
-          />
-          
+        <div className="max-w-7xl mx-auto">
           <MemorialContent
             photos={photos}
             summary={summary}
             onPhotoAdd={handlePhotoAdd}
-            onDownload={handleDownload}
           />
         </div>
       </main>

@@ -10,7 +10,7 @@ const MemorialBanner = ({ name, dates, photoUrl = "/placeholder.svg" }: Memorial
   return (
     <div className="relative w-full h-[40vh] min-h-[300px] mb-8 overflow-hidden rounded-lg">
       <div 
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
+        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
         style={{ 
           backgroundImage: `url(${photoUrl})`,
           backgroundPosition: 'center 30%'

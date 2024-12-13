@@ -17,14 +17,12 @@ interface MemorialContentProps {
   photos: Photo[];
   summary: string | null;
   onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => Promise<void>;
-  onDownload: () => void;
 }
 
 export const MemorialContent = ({
   photos,
   summary,
   onPhotoAdd,
-  onDownload,
 }: MemorialContentProps) => {
   return (
     <>
@@ -44,7 +42,9 @@ export const MemorialContent = ({
           {photos.length === 25 && (
             <MemorialSummary 
               summary={summary}
-              onDownload={onDownload}
+              onDownload={() => {
+                console.log("Download memorial");
+              }}
             />
           )}
         </div>
