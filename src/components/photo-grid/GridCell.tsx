@@ -1,6 +1,12 @@
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Photo {
   id: number;
@@ -36,7 +42,7 @@ const GridCell = ({ photo, onImageSelect, onFileSelect }: GridCellProps) => {
     return (
       <button
         onClick={() => onImageSelect(photo)}
-        className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-memorial-blue"
+        className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-memorial-blue group"
       >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
@@ -61,15 +67,27 @@ const GridCell = ({ photo, onImageSelect, onFileSelect }: GridCellProps) => {
   }
 
   return (
-    <label className="w-full h-full flex items-center justify-center border border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-colors">
-      <input
-        type="file"
-        className="hidden"
-        accept="image/*"
-        onChange={onFileSelect}
-      />
-      <Plus className="w-6 h-6 text-memorial-gray-dark/50" />
-    </label>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <label className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-colors group">
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={onFileSelect}
+            />
+            <ImageIcon className="w-8 h-8 text-memorial-gray-dark/30 mb-2 group-hover:text-memorial-blue transition-colors" />
+            <span className="text-sm text-memorial-gray-dark/50 group-hover:text-memorial-blue transition-colors">
+              Add a memory
+            </span>
+          </label>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Click to share a cherished memory</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
