@@ -34,10 +34,11 @@ const LoadingFallback = () => (
 
 // Error fallback component
 const ErrorFallback: Sentry.FallbackRender = (errorData) => {
-  // Type check the error object
+  // Type check the error object and ensure we return a string
   const errorMessage = errorData.error && 
     typeof errorData.error === 'object' && 
-    'message' in errorData.error
+    'message' in errorData.error &&
+    typeof errorData.error.message === 'string'
     ? errorData.error.message
     : 'An unexpected error occurred';
 
