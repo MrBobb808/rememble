@@ -1,7 +1,5 @@
-project_id = "jrnfunsgzdymrdwxztgh"
+[functions.create-checkout]
+verify_jwt = true
 
-[functions.generate-reflection]
-verify_jwt = false
-
-[functions.generate-summary]
-verify_jwt = false
+[functions.check-subscription]
+verify_jwt = true
