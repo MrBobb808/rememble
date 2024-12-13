@@ -1,8 +1,14 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import UploadProgress from "./photo-grid/UploadProgress";
 
 interface PhotoUploadDialogProps {
   open: boolean;
@@ -18,67 +24,65 @@ const PhotoUploadDialog = ({
   onSubmit,
 }: PhotoUploadDialogProps) => {
   const [caption, setCaption] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Create preview URL when image file changes
-  useState(() => {
-    if (imageFile) {
-      const url = URL.createObjectURL(imageFile);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!imageFile) return;
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      await onSubmit(caption);
-      onOpenChange(false);
-      setCaption("");
-    } catch (error) {
-      console.error("Error submitting photo:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsSubmitting(true);
+    await onSubmit(caption);
+    setIsSubmitting(false);
+    setCaption("");
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a Memory</DialogTitle>
+          <DialogTitle className="text-xl font-playfair">Add a Memory</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          {previewUrl && (
-            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="h-full w-full object-cover"
+        {isSubmitting ? (
+          <div className="py-8">
+            <UploadProgress message="Generating AI reflection..." />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {imageFile && (
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Preview"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="caption">Caption</Label>
+              <Textarea
+                id="caption"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Share the story behind this memory..."
+                className="min-h-[100px]"
+                required
               />
             </div>
-          )}
-          <Textarea
-            placeholder="Share your memory..."
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={isLoading || !caption.trim()}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Memory
-            </Button>
-          </div>
-        </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                Upload
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

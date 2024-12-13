@@ -79,11 +79,6 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
       const imageUrl = URL.createObjectURL(selectedFile);
       const aiReflection = await generateAIReflection(imageUrl, caption);
       onPhotoAdd(selectedFile, caption, aiReflection);
-
-      toast({
-        title: "Memory added",
-        description: "Your memory has been added to the memorial.",
-      });
     } catch (error) {
       toast({
         title: "Error adding memory",
