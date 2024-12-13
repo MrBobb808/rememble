@@ -33,12 +33,12 @@ const LoadingFallback = () => (
 )
 
 // Error fallback component
-const ErrorFallback = ({ error, resetError }: { error: Error, resetError: () => void }) => (
+const ErrorFallback: Sentry.FallbackRender = (errorData) => (
   <div className="min-h-screen flex flex-col items-center justify-center p-4">
     <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-    <p className="text-gray-600 mb-4">{error.message}</p>
+    <p className="text-gray-600 mb-4">{errorData.error.message}</p>
     <button 
-      onClick={resetError}
+      onClick={errorData.resetError}
       className="px-4 py-2 bg-memorial-blue text-white rounded hover:bg-memorial-blue/90"
     >
       Try again
