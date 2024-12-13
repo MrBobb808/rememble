@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HelpCircle, Home, Printer, Download, Share2, Users } from "lucide-react";
+import { HelpCircle, Home, Printer, Download, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
@@ -48,8 +48,8 @@ const Navigation = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center h-14">
-        <div className="flex items-center gap-8">
+      <div className="container mx-auto py-4 px-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
           <div className="text-2xl font-playfair text-gray-800">Memories</div>
         </div>
 
@@ -63,7 +63,7 @@ const Navigation = () => {
             Home
           </Button>
 
-          <InviteDialog memorialId={memorialId || ""} />
+          {memorialId && <InviteDialog memorialId={memorialId} />}
 
           <Button
             variant="ghost"
@@ -105,7 +105,7 @@ const Navigation = () => {
         </div>
       </div>
 
-      <HelpDialog isOpen={isHelpOpen} onOpenChange={setIsHelpOpen} />
+      <HelpDialog open={isHelpOpen} onOpenChange={setIsHelpOpen} />
     </div>
   );
 };
