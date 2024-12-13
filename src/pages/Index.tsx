@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Share2, Heart } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Photo {
   id: number;
@@ -125,12 +126,20 @@ const Index = () => {
   };
 
   const handleDownload = () => {
-    // Implementation for downloading the memorial
     toast({
       title: "Download started",
       description: "Your memorial is being prepared for download.",
     });
   };
+
+  const handleShare = () => {
+    toast({
+      title: "Share memorial",
+      description: "Share this memorial with loved ones.",
+    });
+  };
+
+  const progress = (photos.length / 25) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-blue-light to-white">
@@ -142,18 +151,40 @@ const Index = () => {
       />
       
       <main className="container mx-auto py-16 px-4">
-        <div className="max-w-prose mx-auto text-center mb-12">
-          <h2 className="text-4xl font-playfair text-gray-800 mb-4">
-            Cherished Memories
+        <div className="max-w-4xl mx-auto text-center mb-12">
+          <h2 className="text-4xl font-playfair text-gray-800 mb-4 animate-fade-in">
+            Share Your Cherished Memories
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-8 animate-fade-in delay-100">
             Join us in celebrating a life well-lived by sharing your favorite memories
           </p>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8 animate-fade-in delay-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-left">
+                <h3 className="text-lg font-medium text-gray-800">Memorial Progress</h3>
+                <p className="text-sm text-gray-600">{photos.length}/25 memories shared</p>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleShare} variant="outline" size="sm">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+                <Button onClick={handleDownload} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+
           {summary && (
-            <div className="mt-8 p-6 bg-white rounded-lg shadow-sm">
+            <div className="mt-8 p-8 bg-white rounded-lg shadow-sm border border-memorial-blue animate-fade-in">
+              <Heart className="w-8 h-8 text-memorial-blue mx-auto mb-4" />
               <h3 className="text-2xl font-playfair text-gray-800 mb-4">Life Summary</h3>
-              <p className="text-gray-700 italic">{summary}</p>
-              <Button onClick={handleDownload} className="mt-4">
+              <p className="text-gray-700 italic leading-relaxed">{summary}</p>
+              <Button onClick={handleDownload} className="mt-6">
                 <Download className="w-4 h-4 mr-2" />
                 Download Memorial
               </Button>
@@ -170,9 +201,10 @@ const Index = () => {
               <div className="space-y-3">
                 {photos.length > 0 ? (
                   photos.slice(-3).map((photo, index) => (
-                    <p key={index} className="text-sm text-gray-600">
-                      A new memory was added {index === 0 ? "just now" : index === 1 ? "yesterday" : "last week"}
-                    </p>
+                    <div key={index} className="flex items-start gap-3 text-sm text-gray-600 animate-fade-in">
+                      <div className="w-2 h-2 rounded-full bg-memorial-blue mt-2" />
+                      <p>A new memory was added {index === 0 ? "just now" : index === 1 ? "yesterday" : "last week"}</p>
+                    </div>
                   ))
                 ) : (
                   <p className="text-sm text-gray-600">No recent activity</p>
