@@ -65,7 +65,6 @@ const LoadingFallback = () => (
 
 // Error fallback component
 const ErrorFallback: Sentry.FallbackRender = (errorData) => {
-  // Type check the error object and ensure we return a string
   const errorMessage = errorData.error && 
     typeof errorData.error === 'object' && 
     'message' in errorData.error &&
@@ -98,6 +97,7 @@ const App = () => (
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 <Route path="/" element={<Landing />} />
+                <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route 
