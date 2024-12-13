@@ -15,23 +15,42 @@ export const useCollaborators = (memorialId: string) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchCollaborators = async () => {
-      const { data, error } = await supabase
-        .from("memorial_collaborators")
-        .select("*")
-        .eq("memorial_id", memorialId);
+    if (!memorialId) {
+      console.log("No memorialId provided to useCollaborators");
+      setIsLoading(false);
+      return;
+    }
 
-      if (error) {
-        console.error("Error fetching collaborators:", error);
+    const fetchCollaborators = async () => {
+      console.log("Fetching collaborators for memorial:", memorialId);
+      try {
+        const { data, error } = await supabase
+          .from("memorial_collaborators")
+          .select("*")
+          .eq("memorial_id", memorialId);
+
+        if (error) {
+          console.error("Error fetching collaborators:", error);
+          toast({
+            title: "Error fetching collaborators",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log("Fetched collaborators:", data);
+        setCollaborators(data || []);
+      } catch (error) {
+        console.error("Unexpected error fetching collaborators:", error);
         toast({
           title: "Error fetching collaborators",
-          description: "Please try again later",
+          description: "An unexpected error occurred",
           variant: "destructive",
         });
-      } else {
-        setCollaborators(data);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     // Initial fetch
@@ -49,6 +68,7 @@ export const useCollaborators = (memorialId: string) => {
           filter: `memorial_id=eq.${memorialId}`,
         },
         (payload) => {
+          console.log("Collaborators change detected:", payload);
           fetchCollaborators();
         }
       )
@@ -57,9 +77,15 @@ export const useCollaborators = (memorialId: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [memorialId]);
+  }, [memorialId, toast]);
 
   const inviteCollaborator = async (email: string, role: Collaborator["role"]) => {
+    if (!memorialId) {
+      console.error("No memorialId provided to inviteCollaborator");
+      return null;
+    }
+
+    console.log("Inviting collaborator:", { email, role, memorialId });
     const { data, error } = await supabase
       .from("memorial_collaborators")
       .insert([
@@ -76,12 +102,13 @@ export const useCollaborators = (memorialId: string) => {
       console.error("Error inviting collaborator:", error);
       toast({
         title: "Error inviting collaborator",
-        description: "Please try again later",
+        description: error.message,
         variant: "destructive",
       });
       return null;
     }
 
+    console.log("Successfully invited collaborator:", data);
     toast({
       title: "Invitation sent",
       description: `An invitation has been sent to ${email}`,
@@ -94,6 +121,7 @@ export const useCollaborators = (memorialId: string) => {
     collaboratorId: string,
     newRole: Collaborator["role"]
   ) => {
+    console.log("Updating collaborator role:", { collaboratorId, newRole });
     const { error } = await supabase
       .from("memorial_collaborators")
       .update({ role: newRole })
@@ -103,12 +131,13 @@ export const useCollaborators = (memorialId: string) => {
       console.error("Error updating collaborator role:", error);
       toast({
         title: "Error updating role",
-        description: "Please try again later",
+        description: error.message,
         variant: "destructive",
       });
       return false;
     }
 
+    console.log("Successfully updated collaborator role");
     toast({
       title: "Role updated",
       description: "The collaborator's role has been updated",
@@ -118,6 +147,7 @@ export const useCollaborators = (memorialId: string) => {
   };
 
   const removeCollaborator = async (collaboratorId: string) => {
+    console.log("Removing collaborator:", collaboratorId);
     const { error } = await supabase
       .from("memorial_collaborators")
       .delete()
@@ -127,12 +157,13 @@ export const useCollaborators = (memorialId: string) => {
       console.error("Error removing collaborator:", error);
       toast({
         title: "Error removing collaborator",
-        description: "Please try again later",
+        description: error.message,
         variant: "destructive",
       });
       return false;
     }
 
+    console.log("Successfully removed collaborator");
     toast({
       title: "Collaborator removed",
       description: "The collaborator has been removed from the memorial",
