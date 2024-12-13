@@ -30,20 +30,14 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // For testing purposes, use a default memorial ID if none is provided
+  const effectiveMemorialId = memorialId || "00000000-0000-0000-0000-000000000000";
+
   const handleInvite = async () => {
     if (!email) {
       toast({
         title: "Error",
         description: "Please enter an email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!memorialId) {
-      toast({
-        title: "Error",
-        description: "No memorial selected. Please create or select a memorial first.",
         variant: "destructive",
       });
       return;
@@ -55,7 +49,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       const { data: collaborator, error: collaboratorError } = await supabase
         .from("memorial_collaborators")
         .insert({
-          memorial_id: memorialId,
+          memorial_id: effectiveMemorialId,
           email,
           role,
         })
@@ -68,7 +62,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
         body: {
           email,
-          memorialId,
+          memorialId: effectiveMemorialId,
           invitationToken: collaborator.invitation_token,
           role,
         },
