@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.3.0'
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,41 +14,43 @@ serve(async (req) => {
 
   try {
     const { imageUrl, caption } = await req.json()
-    console.log("Received request with imageUrl:", imageUrl)
+    console.log("Received request with caption:", caption)
 
-    if (!imageUrl) {
-      throw new Error('Image URL is required')
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured')
     }
 
-    // Clean the URL by removing any trailing colons and slashes
-    const cleanImageUrl = imageUrl.replace(/[:\/]+$/, '')
-    console.log("Cleaned image URL:", cleanImageUrl)
-
-    const configuration = new Configuration({
-      apiKey: Deno.env.get('OPENAI_API_KEY'),
-    })
-    const openai = new OpenAIApi(configuration)
-
-    const response = await openai.createChatCompletion({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a compassionate AI assistant helping to enhance memorial photos with thoughtful reflections. Generate a brief, meaningful reflection that complements the provided caption without changing its original sentiment."
-        },
-        {
-          role: "user",
-          content: `Please provide a thoughtful and empathetic reflection about this memorial photo. Consider the caption: "${caption}". Your reflection should be personal and touching, about 2-3 sentences long.`
-        }
-      ],
-      max_tokens: 300,
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a compassionate AI assistant helping to enhance memorial photos with thoughtful reflections. Generate a brief, meaningful reflection that complements the provided caption without changing its original sentiment."
+          },
+          {
+            role: "user",
+            content: `Please provide a thoughtful and empathetic reflection about this memorial photo. Consider the caption: "${caption}". Your reflection should be personal and touching, about 2-3 sentences long.`
+          }
+        ],
+        max_tokens: 300,
+      }),
     })
 
-    if (!response.data.choices?.[0]?.message?.content) {
+    const data = await response.json()
+    console.log("OpenAI API Response:", data)
+
+    if (!data.choices?.[0]?.message?.content) {
       throw new Error('No reflection generated')
     }
 
-    const reflection = response.data.choices[0].message.content
+    const reflection = data.choices[0].message.content
     console.log("Generated reflection:", reflection)
 
     return new Response(
