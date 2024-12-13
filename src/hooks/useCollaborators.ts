@@ -53,10 +53,8 @@ export const useCollaborators = (memorialId: string) => {
       }
     };
 
-    // Initial fetch
     fetchCollaborators();
 
-    // Subscribe to changes
     const channel = supabase
       .channel("collaborators-changes")
       .on(
@@ -86,20 +84,44 @@ export const useCollaborators = (memorialId: string) => {
     }
 
     console.log("Inviting collaborator:", { email, role, memorialId });
-    const { data, error } = await supabase
-      .from("memorial_collaborators")
-      .insert([
-        {
-          memorial_id: memorialId,
+    
+    try {
+      // First, create the collaborator record
+      const { data: collaborator, error: insertError } = await supabase
+        .from("memorial_collaborators")
+        .insert([
+          {
+            memorial_id: memorialId,
+            email,
+            role,
+          },
+        ])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Then, send the invitation email
+      const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
+        body: {
           email,
+          memorialId,
+          invitationToken: collaborator.invitation_token,
           role,
         },
-      ])
-      .select()
-      .single();
+      });
 
-    if (error) {
-      console.error("Error inviting collaborator:", error);
+      if (inviteError) throw inviteError;
+
+      console.log("Successfully invited collaborator:", collaborator);
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${email}`,
+      });
+
+      return collaborator;
+    } catch (error: any) {
+      console.error("Error in inviteCollaborator:", error);
       toast({
         title: "Error inviting collaborator",
         description: error.message,
@@ -107,14 +129,6 @@ export const useCollaborators = (memorialId: string) => {
       });
       return null;
     }
-
-    console.log("Successfully invited collaborator:", data);
-    toast({
-      title: "Invitation sent",
-      description: `An invitation has been sent to ${email}`,
-    });
-
-    return data;
   };
 
   const updateCollaboratorRole = async (
