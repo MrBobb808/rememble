@@ -63,7 +63,7 @@ const Navigation = () => {
             Home
           </Button>
 
-          {memorialId && <InviteDialog memorialId={memorialId} />}
+          <InviteDialog memorialId={memorialId || ""} />
 
           <Button
             variant="ghost"
