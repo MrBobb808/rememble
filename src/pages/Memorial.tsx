@@ -1,12 +1,10 @@
-import Navigation from "@/components/Navigation";
-import PhotoGrid from "@/components/PhotoGrid";
-import MemorialProgress from "@/components/MemorialProgress";
-import RecentActivity from "@/components/RecentActivity";
-import MemorialSummary from "@/components/MemorialSummary";
-import CollaboratorsManagement from "@/components/CollaboratorsManagement";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import Navigation from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { MemorialHeader } from "@/components/memorial/MemorialHeader";
+import { MemorialContent } from "@/components/memorial/MemorialContent";
 
 interface Photo {
   id: number;
@@ -20,14 +18,19 @@ const Memorial = () => {
   const [memorialId, setMemorialId] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    createMemorial();
-  }, []);
+    const id = searchParams.get("id");
+    if (id) {
+      setMemorialId(id);
+    } else {
+      createMemorial();
+    }
+  }, [searchParams]);
 
   const createMemorial = async () => {
     try {
-      // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -39,7 +42,6 @@ const Memorial = () => {
         return;
       }
 
-      // Create the memorial
       const { data: memorialData, error: memorialError } = await supabase
         .from('memorials')
         .insert({ name: "In Loving Memory" })
@@ -48,7 +50,6 @@ const Memorial = () => {
 
       if (memorialError) throw memorialError;
 
-      // Create initial admin collaborator
       const { error: collaboratorError } = await supabase
         .from('memorial_collaborators')
         .insert({
@@ -120,10 +121,9 @@ const Memorial = () => {
         aiReflection: reflectionResponse.data.reflection,
       };
       
-      const updatedPhotos = [...photos, newPhoto];
-      setPhotos(updatedPhotos);
+      setPhotos([...photos, newPhoto]);
       
-      if (updatedPhotos.length === 25) {
+      if (photos.length === 24) {
         const summaryResponse = await supabase.functions.invoke('generate-summary', {
           body: { memorialId },
         });
@@ -171,29 +171,19 @@ const Memorial = () => {
       
       <main className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <MemorialProgress 
-              photosCount={photos.length}
-              onShare={handleShare}
-              onDownload={handleDownload}
-            />
-            {memorialId && <CollaboratorsManagement memorialId={memorialId} />}
-          </div>
-
-          <div className="grid lg:grid-cols-[1fr,300px] gap-8">
-            <div className="space-y-8">
-              <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
-              {photos.length === 25 && (
-                <MemorialSummary 
-                  summary={summary}
-                  onDownload={handleDownload}
-                />
-              )}
-            </div>
-            <aside className="hidden lg:block">
-              <RecentActivity photos={photos} />
-            </aside>
-          </div>
+          <MemorialHeader
+            photosCount={photos.length}
+            memorialId={memorialId}
+            onShare={handleShare}
+            onDownload={handleDownload}
+          />
+          
+          <MemorialContent
+            photos={photos}
+            summary={summary}
+            onPhotoAdd={handlePhotoAdd}
+            onDownload={handleDownload}
+          />
         </div>
       </main>
     </div>
