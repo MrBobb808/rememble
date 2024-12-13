@@ -16,6 +16,10 @@ serve(async (req) => {
     const { imageUrl, caption } = await req.json();
     console.log("Generating reflection for:", { imageUrl, caption });
 
+    if (!imageUrl) {
+      throw new Error("Image URL is required");
+    }
+
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
