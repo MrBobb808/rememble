@@ -133,35 +133,31 @@ const Memorial = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-memorial-blue-light to-white">
+    <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
       <Navigation />
       
-      <main className="container mx-auto py-16 px-4">
-        <div className="max-w-4xl mx-auto mb-12">
-          <h2 className="text-4xl font-playfair text-gray-800 mb-4 animate-fade-in">
-            Share Your Cherished Memories
-          </h2>
-          <p className="text-gray-600 mb-8 animate-fade-in delay-100">
-            Join us in celebrating a life well-lived by sharing your favorite memories
-          </p>
-          
+      <main className="container mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto">
           <MemorialProgress 
             photosCount={photos.length}
             onShare={handleShare}
             onDownload={handleDownload}
           />
 
-          <MemorialSummary 
-            summary={summary}
-            onDownload={handleDownload}
-          />
-        </div>
-
-        <div className="grid lg:grid-cols-[1fr,300px] gap-8">
-          <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
-          <aside>
-            <RecentActivity photos={photos} />
-          </aside>
+          <div className="grid lg:grid-cols-[1fr,300px] gap-8">
+            <div className="space-y-8">
+              <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
+              {photos.length === 25 && (
+                <MemorialSummary 
+                  summary={summary}
+                  onDownload={handleDownload}
+                />
+              )}
+            </div>
+            <aside className="hidden lg:block">
+              <RecentActivity photos={photos} />
+            </aside>
+          </div>
         </div>
       </main>
     </div>

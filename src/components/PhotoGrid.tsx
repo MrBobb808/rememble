@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Image, Plus } from "lucide-react";
 import { Button } from "./ui/button";
-import { useToast } from "./ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import PhotoUploadDialog from "./PhotoUploadDialog";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,7 +19,6 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
   const { toast } = useToast();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -98,36 +97,29 @@ const PhotoGrid = ({ photos, onPhotoAdd }: PhotoGridProps) => {
           <div
             key={id}
             className="relative aspect-square group"
-            onMouseEnter={() => setHoveredIndex(id)}
-            onMouseLeave={() => setHoveredIndex(null)}
           >
             {photo ? (
-              <div className="w-full h-full relative overflow-hidden rounded-lg shadow-md">
+              <div className="w-full h-full relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg">
                 <img
                   src={photo.url}
                   alt={photo.caption}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-                    <p className="text-white text-sm">{photo.caption}</p>
-                    {photo.aiReflection && (
-                      <p className="text-white/80 text-xs italic">
-                        {photo.aiReflection}
-                      </p>
-                    )}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/40 backdrop-blur-sm">
+                    <p className="text-white text-sm line-clamp-2">{photo.caption}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <label className="w-full h-full flex items-center justify-center border-2 border-dashed border-memorial-gray rounded-lg cursor-pointer hover:bg-memorial-gray-light/20 transition-colors">
+              <label className="w-full h-full flex items-center justify-center border border-dashed border-memorial-gray-dark/30 rounded-lg cursor-pointer hover:bg-memorial-gray-light/10 transition-colors">
                 <input
                   type="file"
                   className="hidden"
                   accept="image/*"
                   onChange={handleFileChange}
                 />
-                <Plus className="w-8 h-8 text-memorial-gray-dark" />
+                <Plus className="w-6 h-6 text-memorial-gray-dark/50" />
               </label>
             )}
           </div>

@@ -22,8 +22,8 @@ export default {
         memorial: {
           blue: {
             light: "#E6EEF7",
-            DEFAULT: "#B4C7E7",
-            dark: "#8BA6D3",
+            DEFAULT: "#6C91C2",
+            dark: "#4A6A9D",
           },
           gray: {
             light: "#F5F5F5",
