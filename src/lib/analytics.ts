@@ -1,6 +1,8 @@
 import { inject } from '@vercel/analytics';
 import * as Sentry from "@sentry/react";
-import { ReportHandler } from 'web-vitals';
+import { Replay } from "@sentry/replay";
+import { BrowserTracing } from "@sentry/browser";
+import type { Metric } from 'web-vitals';
 
 // Initialize Vercel Analytics
 export const initializeAnalytics = () => {
@@ -12,10 +14,10 @@ export const initializeSentry = () => {
   Sentry.init({
     dsn: "YOUR_SENTRY_DSN", // Replace with your Sentry DSN
     integrations: [
-      new Sentry.BrowserTracing({
+      new BrowserTracing({
         tracePropagationTargets: ["localhost", /^https:\/\/lovable\.dev/],
       }),
-      new Sentry.Replay(),
+      new Replay(),
     ],
     tracesSampleRate: 1.0,
     replaysSessionSampleRate: 0.1,
@@ -24,7 +26,7 @@ export const initializeSentry = () => {
 };
 
 // Report web vitals for performance monitoring
-export const reportWebVitals = (onPerfEntry?: ReportHandler) => {
+export const reportWebVitals = (onPerfEntry?: (metric: Metric) => void) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
       onCLS(onPerfEntry);
@@ -44,7 +46,7 @@ export const trackEvent = (eventName: string, properties?: Record<string, any>) 
   }
   
   // Send to Vercel Analytics
-  if (window.va) {
+  if (typeof window.va?.track === 'function') {
     window.va.track(eventName, properties);
   }
   

@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-      gcTime: 1000 * 60 * 30, // Cache persists for 30 minutes (renamed from cacheTime)
+      gcTime: 1000 * 60 * 30, // Cache persists for 30 minutes
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -33,12 +33,12 @@ const LoadingFallback = () => (
 )
 
 // Error fallback component
-const ErrorFallback = ({ error }: { error: Error }) => (
+const ErrorFallback = ({ error, resetError }: { error: Error, resetError: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center p-4">
     <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
     <p className="text-gray-600 mb-4">{error.message}</p>
     <button 
-      onClick={() => window.location.reload()} 
+      onClick={resetError}
       className="px-4 py-2 bg-memorial-blue text-white rounded hover:bg-memorial-blue/90"
     >
       Try again
