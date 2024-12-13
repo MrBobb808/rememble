@@ -25,7 +25,7 @@ export const MemorialContent = ({
   onPhotoAdd,
 }: MemorialContentProps) => {
   return (
-    <>
+    <div className="pt-14"> {/* Add padding-top to account for fixed navbar */}
       <MemorialBanner 
         name="John Doe"
         dates="1945 - 2024"
@@ -33,9 +33,9 @@ export const MemorialContent = ({
       />
       
       <div className={cn(
-        "grid lg:grid-cols-[1fr,300px] gap-8",
+        "grid lg:grid-cols-[1fr,300px] gap-8 mt-8", // Added margin-top
         "bg-gradient-to-b from-memorial-beige-light/50 to-white/50",
-        "rounded-lg shadow-sm p-6"
+        "rounded-lg shadow-sm p-6 mx-4" // Added horizontal margin
       )}>
         <div className="space-y-8">
           <PhotoGrid photos={photos} onPhotoAdd={onPhotoAdd} />
@@ -52,6 +52,6 @@ export const MemorialContent = ({
           <UnifiedSidebar photos={photos} />
         </aside>
       </div>
-    </>
+    </div>
   );
 };

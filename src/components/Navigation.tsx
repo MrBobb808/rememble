@@ -10,7 +10,7 @@ const Navigation = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center h-14"> {/* Added fixed height */}
         <div className="flex items-center gap-8">
           <div className="text-2xl font-playfair text-gray-800">Memories</div>
         </div>
