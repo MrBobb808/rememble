@@ -7,12 +7,14 @@ interface Photo {
   url: string;
   caption: string;
   aiReflection?: string;
+  contributorName?: string;
+  relationship?: string;
 }
 
 interface MemorialContentProps {
   photos: Photo[];
   summary: string | null;
-  onPhotoAdd: (file: File, caption: string) => Promise<void>;
+  onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => Promise<void>;
   onDownload: () => void;
 }
 

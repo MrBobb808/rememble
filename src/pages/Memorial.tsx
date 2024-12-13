@@ -12,6 +12,8 @@ interface Photo {
   url: string;
   caption: string;
   aiReflection?: string;
+  contributorName?: string;
+  relationship?: string;
 }
 
 const Memorial = () => {
@@ -42,7 +44,9 @@ const Memorial = () => {
             id: photo.position,
             url: photo.image_url,
             caption: photo.caption,
-            aiReflection: photo.ai_reflection
+            aiReflection: photo.ai_reflection,
+            contributorName: photo.contributor_name,
+            relationship: photo.relationship
           }));
           setPhotos(formattedPhotos);
         }
@@ -86,7 +90,7 @@ const Memorial = () => {
     initializeMemorial();
   }, [searchParams, toast]);
 
-  const handlePhotoAdd = async (file: File, caption: string) => {
+  const handlePhotoAdd = async (file: File, caption: string, contributorName: string, relationship: string) => {
     if (!memorialId) return;
 
     try {
@@ -122,6 +126,8 @@ const Memorial = () => {
           image_url: publicUrl,
           caption,
           ai_reflection: reflectionData.reflection,
+          contributor_name: contributorName,
+          relationship: relationship
         })
         .select()
         .single();
@@ -134,6 +140,8 @@ const Memorial = () => {
         url: publicUrl,
         caption,
         aiReflection: reflectionData.reflection,
+        contributorName,
+        relationship
       };
       
       setPhotos(prevPhotos => [...prevPhotos, newPhoto]);
