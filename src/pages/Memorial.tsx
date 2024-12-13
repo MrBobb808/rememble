@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { MemorialHeader } from "@/components/memorial/MemorialHeader";
 import { MemorialContent } from "@/components/memorial/MemorialContent";
+import { useMemorialAuth } from "@/hooks/useMemorialAuth";
+import { createNewMemorial } from "@/services/memorialService";
 
 interface Photo {
   id: number;
@@ -14,86 +15,42 @@ interface Photo {
 }
 
 const Memorial = () => {
-  const navigate = useNavigate();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [memorialId, setMemorialId] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { supabase } = useMemorialAuth();
 
   useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to access memorials",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    const id = searchParams.get("id");
-    if (id) {
-      setMemorialId(id);
-    } else {
-      createMemorial();
-    }
-  };
-
-  const createMemorial = async () => {
-    try {
+    const initializeMemorial = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to create a memorial",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
+      if (!user) return;
+
+      const id = searchParams.get("id");
+      if (id) {
+        setMemorialId(id);
+      } else {
+        try {
+          const memorial = await createNewMemorial(user.id);
+          setMemorialId(memorial.id);
+          toast({
+            title: "Memorial created",
+            description: "Your memorial has been created successfully.",
+          });
+        } catch (error) {
+          console.error('Error creating memorial:', error);
+          toast({
+            title: "Error creating memorial",
+            description: "There was a problem creating the memorial. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
+    };
 
-      const { data: memorialData, error: memorialError } = await supabase
-        .from('memorials')
-        .insert({ name: "In Loving Memory" })
-        .select()
-        .single();
-
-      if (memorialError) throw memorialError;
-
-      const { error: collaboratorError } = await supabase
-        .from('memorial_collaborators')
-        .insert({
-          memorial_id: memorialData.id,
-          user_id: user.id,
-          email: user.email,
-          role: 'admin',
-          invitation_accepted: true
-        });
-
-      if (collaboratorError) throw collaboratorError;
-
-      setMemorialId(memorialData.id);
-      
-      toast({
-        title: "Memorial created",
-        description: "Your memorial has been created successfully.",
-      });
-    } catch (error) {
-      console.error('Error creating memorial:', error);
-      toast({
-        title: "Error creating memorial",
-        description: "There was a problem creating the memorial. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+    initializeMemorial();
+  }, [searchParams, toast, supabase.auth]);
 
   const handlePhotoAdd = async (file: File, caption: string) => {
     if (!memorialId) return;
