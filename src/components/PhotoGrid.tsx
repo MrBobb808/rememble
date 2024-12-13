@@ -11,11 +11,13 @@ interface Photo {
   url: string;
   caption: string;
   aiReflection?: string;
+  contributorName?: string;
+  relationship?: string;
 }
 
 interface PhotoGridProps {
   photos: Photo[];
-  onPhotoAdd: (file: File, caption: string, aiReflection: string) => void;
+  onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => void;
   isLoading?: boolean;
 }
 
@@ -57,23 +59,14 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
     try {
-      // Clean the URL by removing any trailing colons and slashes
-      const cleanImageUrl = imageUrl.replace(/[:\/]+$/, '');
-      console.log("Cleaned image URL:", cleanImageUrl);
-      
       const { data, error } = await supabase.functions.invoke("generate-reflection", {
         body: {
-          imageUrl: cleanImageUrl,
+          imageUrl,
           caption,
         },
       });
 
-      if (error) {
-        console.error("Error from edge function:", error);
-        throw error;
-      }
-      
-      console.log("AI reflection generated:", data);
+      if (error) throw error;
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
@@ -81,7 +74,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
     }
   };
 
-  const handleSubmit = async (caption: string) => {
+  const handleSubmit = async (caption: string, contributorName: string, relationship: string) => {
     if (!selectedFile) return;
 
     try {
@@ -109,7 +102,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
         throw new Error("No AI reflection generated");
       }
 
-      onPhotoAdd(selectedFile, caption, aiReflection);
+      onPhotoAdd(selectedFile, caption, contributorName, relationship);
       
       toast({
         title: "Memory added",

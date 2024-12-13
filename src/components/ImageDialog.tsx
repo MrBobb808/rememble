@@ -13,6 +13,8 @@ interface ImageDialogProps {
     url: string;
     caption: string;
     aiReflection?: string;
+    contributorName?: string;
+    relationship?: string;
   } | null;
 }
 
@@ -34,6 +36,12 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
               className="w-full h-auto object-cover"
             />
           </div>
+          {image.contributorName && image.relationship && (
+            <div className="mt-4 text-sm text-memorial-gray-dark">
+              <p>Shared by {image.contributorName}</p>
+              <p className="italic">Relationship: {image.relationship}</p>
+            </div>
+          )}
           {image.aiReflection && (
             <div className="mt-4 p-4 bg-memorial-beige-light rounded-lg border border-memorial-beige-dark/20">
               <h3 className="text-lg font-semibold mb-2 text-memorial-gray-dark">AI Reflection</h3>

@@ -86,29 +86,35 @@ export type Database = {
         Row: {
           ai_reflection: string | null
           caption: string
+          contributor_name: string
           created_at: string
           id: string
           image_url: string
           memorial_id: string
           position: number
+          relationship: string
         }
         Insert: {
           ai_reflection?: string | null
           caption: string
+          contributor_name: string
           created_at?: string
           id?: string
           image_url: string
           memorial_id: string
           position: number
+          relationship: string
         }
         Update: {
           ai_reflection?: string | null
           caption?: string
+          contributor_name?: string
           created_at?: string
           id?: string
           image_url?: string
           memorial_id?: string
           position?: number
+          relationship?: string
         }
         Relationships: [
           {

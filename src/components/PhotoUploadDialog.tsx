@@ -8,13 +8,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import UploadProgress from "./photo-grid/UploadProgress";
 
 interface PhotoUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   imageFile: File | null;
-  onSubmit: (caption: string) => Promise<void>;
+  onSubmit: (caption: string, contributorName: string, relationship: string) => Promise<void>;
 }
 
 const PhotoUploadDialog = ({
@@ -24,6 +25,8 @@ const PhotoUploadDialog = ({
   onSubmit,
 }: PhotoUploadDialogProps) => {
   const [caption, setCaption] = useState("");
+  const [contributorName, setContributorName] = useState("");
+  const [relationship, setRelationship] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,9 +34,11 @@ const PhotoUploadDialog = ({
     if (!imageFile) return;
 
     setIsSubmitting(true);
-    await onSubmit(caption);
+    await onSubmit(caption, contributorName, relationship);
     setIsSubmitting(false);
     setCaption("");
+    setContributorName("");
+    setRelationship("");
     onOpenChange(false);
   };
 
@@ -58,6 +63,26 @@ const PhotoUploadDialog = ({
                 />
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="contributorName">Your Name</Label>
+              <Input
+                id="contributorName"
+                value={contributorName}
+                onChange={(e) => setContributorName(e.target.value)}
+                placeholder="Enter your name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="relationship">Relationship</Label>
+              <Input
+                id="relationship"
+                value={relationship}
+                onChange={(e) => setRelationship(e.target.value)}
+                placeholder="e.g., Son, Daughter, Friend"
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="caption">Caption</Label>
               <Textarea
