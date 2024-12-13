@@ -3,6 +3,8 @@ import MemorialSummary from "@/components/MemorialSummary";
 import UnifiedSidebar from "./UnifiedSidebar";
 import MemorialBanner from "./MemorialBanner";
 import { cn } from "@/lib/utils";
+import { InviteDialog } from "./InviteDialog";
+import { useSearchParams } from "react-router-dom";
 
 interface Photo {
   id: number;
@@ -24,6 +26,9 @@ export const MemorialContent = ({
   summary,
   onPhotoAdd,
 }: MemorialContentProps) => {
+  const [searchParams] = useSearchParams();
+  const memorialId = searchParams.get("id");
+
   return (
     <div className="pt-14"> {/* Add padding-top to account for fixed navbar */}
       <MemorialBanner 
@@ -32,10 +37,17 @@ export const MemorialContent = ({
         photoUrl="/placeholder.svg"
       />
       
+      {memorialId && (
+        <div className="flex justify-center my-6">
+          <InviteDialog memorialId={memorialId} />
+        </div>
+      )}
+
       <div className={cn(
-        "grid lg:grid-cols-[1fr,300px] gap-8 mt-8", // Added margin-top
+        "max-w-7xl mx-auto", // Center the grid
+        "grid lg:grid-cols-[1fr,300px] gap-8 mt-8",
         "bg-gradient-to-b from-memorial-beige-light/50 to-white/50",
-        "rounded-lg shadow-sm p-6 mx-4" // Added horizontal margin
+        "rounded-lg shadow-sm p-6 mx-4"
       )}>
         <div className="space-y-8">
           <PhotoGrid photos={photos} onPhotoAdd={onPhotoAdd} />
