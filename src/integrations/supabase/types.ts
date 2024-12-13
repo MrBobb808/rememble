@@ -9,7 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      memorial_photos: {
+        Row: {
+          ai_reflection: string | null
+          caption: string
+          created_at: string
+          id: string
+          image_url: string
+          memorial_id: string
+          position: number
+        }
+        Insert: {
+          ai_reflection?: string | null
+          caption: string
+          created_at?: string
+          id?: string
+          image_url: string
+          memorial_id: string
+          position: number
+        }
+        Update: {
+          ai_reflection?: string | null
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          memorial_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_photos_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memorials: {
+        Row: {
+          created_at: string
+          id: string
+          is_complete: boolean | null
+          name: string
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_complete?: boolean | null
+          name: string
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_complete?: boolean | null
+          name?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
