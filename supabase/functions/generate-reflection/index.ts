@@ -33,20 +33,12 @@ serve(async (req) => {
       model: "gpt-4o-mini",
       messages: [
         {
+          role: "system",
+          content: "You are a compassionate AI assistant helping to enhance memorial photos with thoughtful reflections. Generate a brief, meaningful reflection that complements the provided caption without changing its original sentiment."
+        },
+        {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Please provide a thoughtful and empathetic reflection about this memorial photo. Consider the caption: "${caption}". Your reflection should be personal and touching, about 2-3 sentences long.`
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: cleanImageUrl,
-                detail: "low"
-              }
-            }
-          ]
+          content: `Please provide a thoughtful and empathetic reflection about this memorial photo. Consider the caption: "${caption}". Your reflection should be personal and touching, about 2-3 sentences long.`
         }
       ],
       max_tokens: 300,
