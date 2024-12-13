@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Home,
@@ -11,7 +11,12 @@ import { Button } from "@/components/ui/button";
 
 export const ActionButtons = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // Extract memorial ID from URL if we're on the memorial page
+  const memorialId = location.pathname === "/memorial" ? 
+    new URLSearchParams(location.search).get("id") : null;
 
   const handleShare = async () => {
     try {
@@ -89,7 +94,7 @@ export const ActionButtons = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate("/invite")}
+          onClick={() => navigate(`/invite${memorialId ? `?memorial=${memorialId}` : ''}`)}
           className="hidden md:inline-flex"
         >
           <Users className="w-4 h-4 mr-2" />
