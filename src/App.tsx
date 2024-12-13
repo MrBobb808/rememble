@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import Index from "./pages/Index"
+import Landing from "./pages/Landing"
+import Memorial from "./pages/Memorial"
 
 const queryClient = new QueryClient()
 
@@ -17,6 +19,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/memorial" element={<Memorial />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
