@@ -57,8 +57,9 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
     try {
-      // Remove any trailing colons from the URL
-      const cleanImageUrl = imageUrl.replace(/:+$/, '');
+      // Clean the URL by removing any trailing colons and slashes
+      const cleanImageUrl = imageUrl.replace(/[:\/]+$/, '');
+      console.log("Cleaned image URL:", cleanImageUrl);
       
       const { data, error } = await supabase.functions.invoke("generate-reflection", {
         body: {
@@ -67,7 +68,12 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error from edge function:", error);
+        throw error;
+      }
+      
+      console.log("AI reflection generated:", data);
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
@@ -93,6 +99,8 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
       const { data: { publicUrl } } = supabase.storage
         .from('memorial-photos')
         .getPublicUrl(fileName);
+
+      console.log("Generated public URL:", publicUrl);
 
       // Generate AI reflection using the public URL
       const aiReflection = await generateAIReflection(publicUrl, caption);

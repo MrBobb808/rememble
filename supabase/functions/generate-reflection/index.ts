@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.3.0'
 
 const corsHeaders = {
@@ -15,24 +14,23 @@ serve(async (req) => {
 
   try {
     const { imageUrl, caption } = await req.json()
+    console.log("Received request with imageUrl:", imageUrl)
 
     if (!imageUrl) {
       throw new Error('Image URL is required')
     }
 
-    // Clean the URL by removing any trailing colons
-    const cleanImageUrl = imageUrl.replace(/:+$/, '')
+    // Clean the URL by removing any trailing colons and slashes
+    const cleanImageUrl = imageUrl.replace(/[:\/]+$/, '')
+    console.log("Cleaned image URL:", cleanImageUrl)
 
     const configuration = new Configuration({
       apiKey: Deno.env.get('OPENAI_API_KEY'),
     })
     const openai = new OpenAIApi(configuration)
 
-    console.log('Generating reflection for image:', cleanImageUrl)
-    console.log('Caption:', caption)
-
     const response = await openai.createChatCompletion({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
@@ -55,7 +53,7 @@ serve(async (req) => {
     })
 
     const reflection = response.data.choices[0]?.message?.content || ''
-    console.log('Generated reflection:', reflection)
+    console.log("Generated reflection:", reflection)
 
     return new Response(
       JSON.stringify({ reflection }),
@@ -67,7 +65,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in generate-reflection function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
