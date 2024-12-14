@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { LinkGenerator } from "./LinkGenerator";
 
 interface Memorial {
   id: string;
@@ -31,44 +32,47 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
             {memorials.map((memorial) => (
               <div
                 key={memorial.id}
-                className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-gray-50"
+                className="flex flex-col gap-4 p-4 border-b last:border-0 hover:bg-gray-50"
               >
-                <div>
-                  <h3 className="font-medium">{memorial.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    Created: {new Date(memorial.created_at).toLocaleDateString()}
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">{memorial.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      Created: {new Date(memorial.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={memorial.is_complete ? "default" : "secondary"}
+                      className={memorial.is_complete ? "bg-green-500" : "bg-blue-500"}
+                    >
+                      {memorial.is_complete ? 'Completed' : 'Active'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/memorial?id=${memorial.id}`)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/memorial/edit?id=${memorial.id}`)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(memorial.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={memorial.is_complete ? "default" : "secondary"}
-                    className={memorial.is_complete ? "bg-green-500" : "bg-blue-500"}
-                  >
-                    {memorial.is_complete ? 'Completed' : 'Active'}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/memorial?id=${memorial.id}`)}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/memorial/edit?id=${memorial.id}`)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(memorial.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                <LinkGenerator memorialId={memorial.id} isComplete={memorial.is_complete} />
               </div>
             ))}
           </div>

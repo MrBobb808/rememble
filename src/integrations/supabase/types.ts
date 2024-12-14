@@ -123,6 +123,44 @@ export type Database = {
           },
         ]
       }
+      memorial_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          memorial_id: string
+          token: string
+          type: Database["public"]["Enums"]["link_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          memorial_id: string
+          token?: string
+          type: Database["public"]["Enums"]["link_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          memorial_id?: string
+          token?: string
+          type?: Database["public"]["Enums"]["link_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_links_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorial_photos: {
         Row: {
           ai_reflection: string | null
@@ -261,6 +299,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      link_type: "collaborator" | "viewer"
       token_status: "pending" | "used" | "expired"
       user_role: "admin" | "contributor" | "viewer"
     }
