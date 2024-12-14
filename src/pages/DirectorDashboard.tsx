@@ -10,7 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -128,7 +128,7 @@ const DirectorDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-playfair text-gray-800">Funeral Director Dashboard</h1>
           <div className="flex gap-4">
-            <Input
+            <SearchInput
               placeholder="Search memorials..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
