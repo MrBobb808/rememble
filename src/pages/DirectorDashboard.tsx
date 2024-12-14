@@ -1,9 +1,12 @@
 import { DashboardMetrics } from "@/components/director/DashboardMetrics";
 import { DashboardCharts } from "@/components/director/DashboardCharts";
 import { MemorialsList } from "@/components/director/MemorialsList";
+import DirectorSettings from "@/components/director/settings/DirectorSettings";
 import Navigation from "@/components/Navigation";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LayoutDashboard, Settings } from "lucide-react";
 
 const DirectorDashboard = () => {
   // Fetch memorials data
@@ -74,13 +77,36 @@ const DirectorDashboard = () => {
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
       <Navigation />
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-playfair text-gray-800">Funeral Director Dashboard</h1>
-        </div>
-        
-        <DashboardMetrics {...metrics} />
-        <DashboardCharts barData={barData} pieData={pieData} />
-        <MemorialsList memorials={memorials} onDelete={handleDelete} />
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard">
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-playfair text-gray-800">
+                  Funeral Director Dashboard
+                </h1>
+              </div>
+
+              <DashboardMetrics {...metrics} />
+              <DashboardCharts barData={barData} pieData={pieData} />
+              <MemorialsList memorials={memorials} onDelete={handleDelete} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <DirectorSettings />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
