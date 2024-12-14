@@ -62,42 +62,50 @@ const Auth = () => {
     checkAuth();
   }, [navigate, searchParams, toast]);
 
-  const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
-    if (event === "SIGNED_IN" && session) {
-      if (signupToken && tokenData) {
-        try {
-          // Add user to memorial_collaborators
-          await supabase
-            .from("memorial_collaborators")
-            .insert({
-              memorial_id: tokenData.memorial_id,
-              user_id: session.user.id,
-              email: session.user.email,
-              role: tokenData.role,
-              invitation_accepted: true
-            });
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        if (event === "SIGNED_IN" && session) {
+          if (signupToken && tokenData) {
+            try {
+              // Add user to memorial_collaborators
+              await supabase
+                .from("memorial_collaborators")
+                .insert({
+                  memorial_id: tokenData.memorial_id,
+                  user_id: session.user.id,
+                  email: session.user.email,
+                  role: tokenData.role,
+                  invitation_accepted: true
+                });
 
-          // Update token status
-          await supabase
-            .from("signup_tokens")
-            .update({ status: "used" })
-            .eq("token", signupToken);
+              // Update token status
+              await supabase
+                .from("signup_tokens")
+                .update({ status: "used" })
+                .eq("token", signupToken);
 
-          // Navigate to the memorial
-          navigate(`/memorial?id=${tokenData.memorial_id}`);
-        } catch (error: any) {
-          console.error("Error processing signup:", error);
-          toast({
-            title: "Error",
-            description: "There was a problem completing your signup. Please try again.",
-            variant: "destructive",
-          });
+              // Navigate to the memorial
+              navigate(`/memorial?id=${tokenData.memorial_id}`);
+            } catch (error: any) {
+              console.error("Error processing signup:", error);
+              toast({
+                title: "Error",
+                description: "There was a problem completing your signup. Please try again.",
+                variant: "destructive",
+              });
+            }
+          } else {
+            navigate("/memorial");
+          }
         }
-      } else {
-        navigate("/memorial");
       }
-    }
-  };
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, signupToken, tokenData, toast]);
 
   if (isLoading) {
     return (
@@ -136,7 +144,6 @@ const Auth = () => {
             },
           }}
           providers={[]}
-          onAuthStateChange={handleAuthChange}
         />
       </div>
     </div>
