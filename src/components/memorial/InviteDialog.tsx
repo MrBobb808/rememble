@@ -30,9 +30,6 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // For testing purposes, use a default memorial ID if none is provided
-  const effectiveMemorialId = memorialId || "00000000-0000-0000-0000-000000000000";
-
   const handleInvite = async () => {
     if (!email) {
       toast({
@@ -43,15 +40,27 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       return;
     }
 
+    // Check authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to invite collaborators.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Create collaborator record
+      // Create collaborator record with user_id
       const { data: collaborator, error: collaboratorError } = await supabase
         .from("memorial_collaborators")
         .insert({
-          memorial_id: effectiveMemorialId,
+          memorial_id: memorialId,
           email,
           role,
+          user_id: session.user.id, // Set the authenticated user's ID
         })
         .select()
         .single();
@@ -62,7 +71,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
         body: {
           email,
-          memorialId: effectiveMemorialId,
+          memorialId,
           invitationToken: collaborator.invitation_token,
           role,
         },
