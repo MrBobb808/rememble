@@ -31,7 +31,16 @@ export const PreviewMemorialDialog = ({
         .order('position', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+
+      // Transform the data to match the Photo interface expected by PhotoGrid
+      return (data || []).map(photo => ({
+        id: photo.position,
+        url: photo.image_url,
+        caption: photo.caption,
+        aiReflection: photo.ai_reflection,
+        contributorName: photo.contributor_name,
+        relationship: photo.relationship
+      }));
     },
     enabled: !!memorial,
   });
