@@ -1,18 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const createNewMemorial = async () => {
-  console.log("Creating new memorial...");
-  
-  // Get the current user's session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    throw new Error("User must be authenticated to create a memorial");
-  }
-
-  // Create the memorial
+export const createNewMemorial = async (userId: string) => {
+  // Create a new memorial
   const { data: memorialData, error: memorialError } = await supabase
-    .from('memorials')
-    .insert({ name: "In Loving Memory" })
+    .from("memorials")
+    .insert({
+      name: "Untitled Memorial",
+    })
     .select()
     .single();
 
@@ -21,21 +15,25 @@ export const createNewMemorial = async () => {
     throw memorialError;
   }
 
-  console.log("Memorial created:", memorialData);
+  if (!memorialData) {
+    throw new Error("No memorial data returned");
+  }
 
-  // Create the first collaborator as admin
+  // Add the creator as an admin collaborator
   const { error: collaboratorError } = await supabase
-    .from('memorial_collaborators')
+    .from("memorial_collaborators")
     .insert({
       memorial_id: memorialData.id,
-      user_id: session.user.id,
-      email: session.user.email,
-      role: 'admin',
-      invitation_accepted: true
+      user_id: userId,
+      email: (await supabase.auth.getUser()).data.user?.email || "",
+      role: "admin",
+      invitation_accepted: true,
     });
 
   if (collaboratorError) {
     console.error("Error creating collaborator:", collaboratorError);
+    // Clean up the memorial if collaborator creation fails
+    await supabase.from("memorials").delete().eq("id", memorialData.id);
     throw collaboratorError;
   }
 

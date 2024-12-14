@@ -68,7 +68,10 @@ const Memorial = () => {
         if (id) {
           setMemorialId(id);
         } else {
-          const memorial = await createNewMemorial("development-user");
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error("No authenticated user");
+          
+          const memorial = await createNewMemorial(user.id);
           setMemorialId(memorial.id);
           toast({
             title: "Memorial created",
@@ -86,7 +89,7 @@ const Memorial = () => {
     };
 
     initializeMemorial();
-  }, [searchParams, toast]);
+  }, [searchParams, toast, supabase.auth]);
 
   const handlePhotoAdd = async (file: File, caption: string, contributorName: string, relationship: string) => {
     if (!memorialId) return;
@@ -167,6 +170,7 @@ const Memorial = () => {
       </main>
     </div>
   );
+
 };
 
 export default Memorial;
