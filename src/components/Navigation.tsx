@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { HelpCircle, Home, Printer, Download, Share2 } from "lucide-react";
+import { HelpCircle, Home, Printer, Download, Share2, LayoutDashboard } from "lucide-react";
 import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
-import { InviteDialog } from "./memorial/InviteDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 
 const Navigation = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [searchParams] = useSearchParams();
-  const memorialId = searchParams.get("id");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: profile } = useProfile();
 
   const handleShare = async () => {
     try {
@@ -63,7 +63,17 @@ const Navigation = () => {
             Home
           </Button>
 
-          <InviteDialog memorialId={memorialId || ""} />
+          {/* Show Dashboard button only for director accounts */}
+          {profile?.relationship === 'director' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/director")}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Dashboard
+            </Button>
+          )}
 
           <Button
             variant="ghost"
