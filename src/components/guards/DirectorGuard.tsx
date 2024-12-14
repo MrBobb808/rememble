@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useMemorialAuth } from "@/hooks/useMemorialAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DirectorGuardProps {
@@ -10,11 +9,12 @@ interface DirectorGuardProps {
 const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated } = useMemorialAuth();
 
   useEffect(() => {
     const checkAccess = async () => {
-      if (!isAuthenticated) {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
         navigate("/auth");
         return;
       }
@@ -65,7 +65,7 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
     };
 
     checkAccess();
-  }, [isAuthenticated, navigate, searchParams]);
+  }, [navigate, searchParams]);
 
   return <>{children}</>;
 };
