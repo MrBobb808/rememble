@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import { Loader2 } from "lucide-react"
 import * as Sentry from "@sentry/react"
+import DirectorGuard from "./components/guards/DirectorGuard"
 
 // Lazy load route components
 const Index = lazy(() => import("./pages/Index"))
@@ -72,7 +73,14 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/memorial" element={<Memorial />} />
-                <Route path="/director" element={<DirectorDashboard />} />
+                <Route 
+                  path="/director" 
+                  element={
+                    <DirectorGuard>
+                      <DirectorDashboard />
+                    </DirectorGuard>
+                  } 
+                />
               </Routes>
             </Suspense>
           </BrowserRouter>
