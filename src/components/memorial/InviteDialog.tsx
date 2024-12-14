@@ -51,16 +51,32 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       return;
     }
 
+    // Check if user has admin rights
+    const { data: collaborator } = await supabase
+      .from('memorial_collaborators')
+      .select('role')
+      .eq('memorial_id', memorialId)
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!collaborator || collaborator.role !== 'admin') {
+      toast({
+        title: "Permission denied",
+        description: "Only admins can invite collaborators.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Create collaborator record with user_id
-      const { data: collaborator, error: collaboratorError } = await supabase
+      // Create collaborator record
+      const { data: newCollaborator, error: collaboratorError } = await supabase
         .from("memorial_collaborators")
         .insert({
           memorial_id: memorialId,
           email,
           role,
-          user_id: session.user.id, // Set the authenticated user's ID
         })
         .select()
         .single();
@@ -72,7 +88,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         body: {
           email,
           memorialId,
-          invitationToken: collaborator.invitation_token,
+          invitationToken: newCollaborator.invitation_token,
           role,
         },
       });
@@ -82,6 +98,15 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       toast({
         title: "Invitation sent",
         description: `An invitation has been sent to ${email}`,
+      });
+
+      // Log the activity
+      await supabase.from('memorial_activity_log').insert({
+        memorial_id: memorialId,
+        actor_id: session.user.id,
+        action_type: 'invite_sent',
+        target_email: email,
+        target_role: role,
       });
 
       setIsOpen(false);
@@ -99,6 +124,19 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
     }
   };
 
+  const getRoleDescription = (selectedRole: string) => {
+    switch (selectedRole) {
+      case "admin":
+        return "Can manage memorial and invite others";
+      case "contributor":
+        return "Can add photos and comments";
+      case "viewer":
+        return "Can view the memorial";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -109,7 +147,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Invite Family Member</DialogTitle>
+          <DialogTitle className="font-playfair text-2xl">Invite Family Member</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -141,14 +179,12 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
               </SelectContent>
             </Select>
             <p className="mt-1 text-sm text-gray-500">
-              {role === "admin" && "Can manage memorial and invite others"}
-              {role === "contributor" && "Can add photos and comments"}
-              {role === "viewer" && "Can view the memorial"}
+              {getRoleDescription(role)}
             </p>
           </div>
 
           <Button 
-            className="w-full" 
+            className="w-full bg-memorial-blue hover:bg-memorial-blue-dark" 
             onClick={handleInvite}
             disabled={isLoading}
           >
