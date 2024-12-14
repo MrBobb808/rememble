@@ -30,6 +30,12 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const validateMemorialId = (id: string) => {
+    // UUID regex pattern
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidPattern.test(id);
+  };
+
   const handleInvite = async () => {
     if (!email) {
       toast({
@@ -40,9 +46,24 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       return;
     }
 
+    if (!validateMemorialId(memorialId)) {
+      console.error("Invalid memorial ID:", memorialId);
+      toast({
+        title: "Error",
+        description: "Invalid memorial ID. Please ensure you are working with a valid memorial.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      console.log("Creating collaborator record...");
+      console.log("Creating collaborator record with:", {
+        memorial_id: memorialId,
+        email,
+        role,
+      });
+
       const { data: newCollaborator, error: collaboratorError } = await supabase
         .from("memorial_collaborators")
         .insert({
@@ -58,14 +79,16 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         throw new Error(collaboratorError.message);
       }
 
+      console.log("Successfully created collaborator:", newCollaborator);
+
       console.log("Sending invitation email...");
       const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
-        body: JSON.stringify({
+        body: {
           email,
           memorialId,
           invitationToken: newCollaborator.invitation_token,
           role,
-        }),
+        },
       });
 
       if (inviteError) {

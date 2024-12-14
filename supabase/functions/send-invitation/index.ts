@@ -6,25 +6,41 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { email, memorialId, invitationToken, role } = await req.json();
-    console.log("Received invitation request:", { email, memorialId, role });
+    
+    // Validate inputs
+    if (!email || !memorialId || !invitationToken || !role) {
+      console.error("Missing required fields:", { email, memorialId, invitationToken, role });
+      throw new Error("Missing required fields for invitation");
+    }
 
-    // For testing purposes, we'll just log the invitation details
-    console.log("Would send email to:", email);
-    console.log("Memorial ID:", memorialId);
-    console.log("Invitation Token:", invitationToken);
-    console.log("Role:", role);
+    // Log the invitation details
+    console.log("Processing invitation request:", {
+      email,
+      memorialId,
+      invitationToken,
+      role,
+      timestamp: new Date().toISOString()
+    });
 
+    // For testing, we're just logging the invitation
+    // In production, you would send an actual email here
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Invitation would be sent to ${email} (disabled for testing)` 
+        message: `Invitation would be sent to ${email}`,
+        details: {
+          email,
+          memorialId,
+          invitationToken,
+          role,
+          timestamp: new Date().toISOString()
+        }
       }),
       { 
         headers: { 
@@ -34,9 +50,12 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error in send-invitation function:", error);
+    console.error("Error processing invitation:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { 
         status: 500,
         headers: { 
