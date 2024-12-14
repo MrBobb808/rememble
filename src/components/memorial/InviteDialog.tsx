@@ -42,7 +42,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
 
     setIsLoading(true);
     try {
-      // Create collaborator record
+      console.log("Creating collaborator record...");
       const { data: newCollaborator, error: collaboratorError } = await supabase
         .from("memorial_collaborators")
         .insert({
@@ -54,29 +54,26 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         .single();
 
       if (collaboratorError) {
+        console.error("Error creating collaborator:", collaboratorError);
         throw new Error(collaboratorError.message);
       }
 
-      // Send invitation email
+      console.log("Sending invitation email...");
       const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
-        body: {
+        body: JSON.stringify({
           email,
           memorialId,
           invitationToken: newCollaborator.invitation_token,
           role,
-        },
+        }),
       });
 
       if (inviteError) {
+        console.error("Error sending invitation:", inviteError);
         throw new Error(inviteError.message);
       }
 
-      toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${email}`,
-      });
-
-      // Log the activity (without user ID for now)
+      console.log("Logging activity...");
       await supabase.from('memorial_activity_log').insert({
         memorial_id: memorialId,
         action_type: 'invite_sent',
@@ -84,11 +81,16 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         target_role: role,
       });
 
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${email}`,
+      });
+
       setIsOpen(false);
       setEmail("");
       setRole("viewer");
     } catch (error: any) {
-      console.error("Error sending invitation:", error);
+      console.error("Error in handleInvite:", error);
       toast({
         title: "Error sending invitation",
         description: error.message,
