@@ -21,7 +21,9 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
 
       // Check if user came from a collaborator link
       const token = searchParams.get("token");
-      if (token) {
+      const memorialId = searchParams.get("id");
+      
+      if (token && memorialId) {
         // Query the memorial_links table to find the associated memorial
         const { data: linkData, error: linkError } = await supabase
           .from("memorial_links")
@@ -30,9 +32,9 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
           .single();
 
         if (!linkError && linkData) {
-          // If it's a collaborator link, redirect to the memorial page
-          if (linkData.type === "collaborator") {
-            navigate(`/memorial?id=${linkData.memorial_id}`);
+          // Verify this token matches the memorial ID
+          if (linkData.memorial_id === memorialId) {
+            navigate(`/memorial?id=${memorialId}&token=${token}`);
             return;
           }
         }

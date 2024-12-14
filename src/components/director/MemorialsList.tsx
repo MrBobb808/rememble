@@ -70,18 +70,26 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
         }
       }
 
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
           memorial_id: memorialId,
           type,
+          created_by: user?.id,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      const shareUrl = `${window.location.origin}/memorial?token=${link.token}`;
+      if (!link) {
+        throw new Error('No link was generated');
+      }
+
+      const shareUrl = `${window.location.origin}/memorial?id=${memorialId}&token=${link.token}`;
       await navigator.clipboard.writeText(shareUrl);
 
       toast({
@@ -89,6 +97,7 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
         description: `${type.charAt(0).toUpperCase() + type.slice(1)} link has been copied to clipboard.`,
       });
     } catch (error: any) {
+      console.error('Error generating link:', error);
       toast({
         title: "Error generating link",
         description: error.message || "There was a problem generating the link.",
