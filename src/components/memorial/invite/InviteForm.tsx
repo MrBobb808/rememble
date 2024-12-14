@@ -8,23 +8,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { CollaboratorRole, InviteFormData } from "@/types/collaborator";
 
 interface InviteFormProps {
-  onSubmit: (email: string, role: string) => void;
+  onSubmit: (data: InviteFormData) => void;
   isLoading: boolean;
 }
 
 export const InviteForm = ({ onSubmit, isLoading }: InviteFormProps) => {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "contributor" | "viewer">("viewer");
+  const [role, setRole] = useState<CollaboratorRole>("viewer");
 
   const handleSubmit = () => {
-    onSubmit(email, role);
+    onSubmit({ email, role });
     setEmail("");
     setRole("viewer");
   };
 
-  const getRoleDescription = (selectedRole: string) => {
+  const getRoleDescription = (selectedRole: CollaboratorRole) => {
     switch (selectedRole) {
       case "admin":
         return "Can manage memorial and invite others";
@@ -32,8 +33,6 @@ export const InviteForm = ({ onSubmit, isLoading }: InviteFormProps) => {
         return "Can add photos and comments";
       case "viewer":
         return "Can view the memorial";
-      default:
-        return "";
     }
   };
 
@@ -57,7 +56,7 @@ export const InviteForm = ({ onSubmit, isLoading }: InviteFormProps) => {
         <label htmlFor="role" className="block text-sm font-medium text-gray-700">
           Role
         </label>
-        <Select value={role} onValueChange={(value: any) => setRole(value)}>
+        <Select value={role} onValueChange={(value: CollaboratorRole) => setRole(value)}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>

@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
+import { CollaboratorRole } from "@/types/collaborator";
+import { validateUUID } from "@/utils/validation";
 
-export const createCollaborator = async (memorialId: string, email: string, role: string) => {
+export const createCollaborator = async (memorialId: string, email: string, role: CollaboratorRole) => {
+  if (!validateUUID(memorialId)) {
+    throw new Error("Invalid memorial ID");
+  }
+
   const { data: newCollaborator, error: collaboratorError } = await supabase
     .from("memorial_collaborators")
     .insert({
@@ -23,7 +29,7 @@ export const sendInvitation = async (
   email: string,
   memorialId: string,
   invitationToken: string,
-  role: string
+  role: CollaboratorRole
 ) => {
   const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
     body: {
@@ -40,7 +46,7 @@ export const sendInvitation = async (
   }
 };
 
-export const logInviteActivity = async (memorialId: string, email: string, role: string) => {
+export const logInviteActivity = async (memorialId: string, email: string, role: CollaboratorRole) => {
   await supabase.from('memorial_activity_log').insert({
     memorial_id: memorialId,
     action_type: 'invite_sent',

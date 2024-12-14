@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { validateUUID } from "@/utils/validation";
 import { InviteForm } from "./invite/InviteForm";
 import { createCollaborator, sendInvitation, logInviteActivity } from "@/services/inviteService";
+import { InviteFormData } from "@/types/collaborator";
 
 interface InviteDialogProps {
   memorialId: string;
@@ -22,7 +23,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleInvite = async (email: string, role: string) => {
+  const handleInvite = async ({ email, role }: InviteFormData) => {
     if (!email) {
       toast({
         title: "Error",
