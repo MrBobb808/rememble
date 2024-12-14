@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { MemorialContent } from "@/components/memorial/MemorialContent";
@@ -19,9 +19,60 @@ const Memorial = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [memorialId, setMemorialId] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { supabase } = useMemorialAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuthAndInitialize = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log("No authenticated session found");
+          navigate("/auth");
+          return;
+        }
+
+        const id = searchParams.get("id");
+        if (id) {
+          setMemorialId(id);
+          setIsLoading(false);
+        } else {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            throw new Error("No authenticated user");
+          }
+          
+          console.log("Creating new memorial for user:", user.id);
+          const memorial = await createNewMemorial(user.id);
+          setMemorialId(memorial.id);
+          
+          // Update URL with new memorial ID
+          navigate(`/memorial?id=${memorial.id}`, { replace: true });
+          
+          toast({
+            title: "Memorial created",
+            description: "Your memorial has been created successfully.",
+          });
+        }
+      } catch (error: any) {
+        console.error("Error initializing memorial:", error);
+        toast({
+          title: "Error creating memorial",
+          description: error.message || "There was a problem creating the memorial. Please try again.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthAndInitialize();
+  }, [searchParams, toast, supabase.auth, navigate]);
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -48,7 +99,7 @@ const Memorial = () => {
           }));
           setPhotos(formattedPhotos);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching photos:', error);
         toast({
           title: "Error fetching photos",
@@ -60,36 +111,6 @@ const Memorial = () => {
 
     fetchPhotos();
   }, [memorialId, supabase, toast]);
-
-  useEffect(() => {
-    const initializeMemorial = async () => {
-      try {
-        const id = searchParams.get("id");
-        if (id) {
-          setMemorialId(id);
-        } else {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error("No authenticated user");
-          
-          const memorial = await createNewMemorial(user.id);
-          setMemorialId(memorial.id);
-          toast({
-            title: "Memorial created",
-            description: "Your memorial has been created successfully.",
-          });
-        }
-      } catch (error) {
-        console.error('Error initializing memorial:', error);
-        toast({
-          title: "Error creating memorial",
-          description: "There was a problem creating the memorial. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    initializeMemorial();
-  }, [searchParams, toast, supabase.auth]);
 
   const handlePhotoAdd = async (file: File, caption: string, contributorName: string, relationship: string) => {
     if (!memorialId) return;
@@ -146,15 +167,28 @@ const Memorial = () => {
         title: "Memory added successfully",
         description: "Your memory has been added to the memorial.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding photo:', error);
       toast({
         title: "Error adding memory",
-        description: "There was a problem adding your memory. Please try again.",
+        description: error.message || "There was a problem adding your memory. Please try again.",
         variant: "destructive",
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
+        <Navigation />
+        <main className="container mx-auto py-8 px-4">
+          <div className="flex items-center justify-center h-[60vh]">
+            <div className="animate-pulse text-memorial-blue">Loading...</div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
@@ -170,7 +204,6 @@ const Memorial = () => {
       </main>
     </div>
   );
-
 };
 
 export default Memorial;
