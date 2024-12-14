@@ -5,11 +5,10 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Temporarily bypass authentication and redirect directly to director dashboard
+    // Immediately redirect to director dashboard
     navigate('/director');
   }, [navigate]);
 
-  // Return null since we're immediately redirecting
   return null;
 };
 
