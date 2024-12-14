@@ -5,6 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -61,8 +62,8 @@ const Auth = () => {
     checkAuth();
   }, [navigate, searchParams, toast]);
 
-  const handleAuthChange = async (event: any, session: any) => {
-    if (event === "SIGNED_IN") {
+  const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
+    if (event === "SIGNED_IN" && session) {
       if (signupToken && tokenData) {
         try {
           // Add user to memorial_collaborators

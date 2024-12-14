@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { validateUUID } from "@/utils/validation";
 import { InviteForm } from "./invite/InviteForm";
 import { supabase } from "@/integrations/supabase/client";
+import { CollaboratorRole } from "@/types/collaborator";
 
 interface InviteDialogProps {
   memorialId: string;
@@ -22,7 +23,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleInvite = async ({ email, role }: { email: string; role: string }) => {
+  const handleInvite = async ({ email, role }: { email: string; role: CollaboratorRole }) => {
     if (!email) {
       toast({
         title: "Error",
@@ -50,7 +51,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         .insert({
           memorial_id: memorialId,
           email,
-          role,
+          role: role as "admin" | "contributor" | "viewer",
         })
         .select()
         .single();
