@@ -7,15 +7,18 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const DirectorDashboard = () => {
-  // Fetch memorials data
-  const { data: memorials = [] } = useQuery({
+  const { toast } = useToast();
+
+  // Fetch memorials with real-time updates
+  const { data: memorials = [], isError: isMemorialsError } = useQuery({
     queryKey: ['memorials'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('memorials')
-        .select('*')
+        .select('*, memorial_collaborators(*)')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -23,7 +26,22 @@ const DirectorDashboard = () => {
     }
   });
 
-  // Calculate metrics
+  // Fetch activity logs
+  const { data: activityLogs = [] } = useQuery({
+    queryKey: ['activity_logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('memorial_activity_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Calculate metrics from real data
   const metrics = {
     totalMemorials: memorials.length,
     activeMemorials: memorials.filter(m => !m.is_complete).length,
@@ -39,7 +57,7 @@ const DirectorDashboard = () => {
     }).length
   };
 
-  // Prepare chart data
+  // Prepare chart data from real data
   const barData = memorials.reduce((acc: any[], memorial) => {
     const date = new Date(memorial.created_at).toLocaleDateString();
     const existingEntry = acc.find(entry => entry.date === date);
@@ -67,11 +85,27 @@ const DirectorDashboard = () => {
       
       if (error) throw error;
       
-      // Refetch data automatically through React Query
-    } catch (error) {
+      toast({
+        title: "Memorial deleted",
+        description: "The memorial has been successfully deleted.",
+      });
+    } catch (error: any) {
       console.error('Error deleting memorial:', error);
+      toast({
+        title: "Error deleting memorial",
+        description: error.message || "There was a problem deleting the memorial.",
+        variant: "destructive",
+      });
     }
   };
+
+  if (isMemorialsError) {
+    toast({
+      title: "Error loading dashboard",
+      description: "There was a problem loading the dashboard data. Please try again.",
+      variant: "destructive",
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
