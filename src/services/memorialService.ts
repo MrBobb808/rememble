@@ -1,11 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Using a fixed UUID for development testing
-const DEVELOPMENT_USER_ID = "00000000-0000-0000-0000-000000000000";
-
-export const createNewMemorial = async (userId: string) => {
+export const createNewMemorial = async () => {
   console.log("Creating new memorial...");
   
+  // Get the current user's session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error("User must be authenticated to create a memorial");
+  }
+
+  // Create the memorial
   const { data: memorialData, error: memorialError } = await supabase
     .from('memorials')
     .insert({ name: "In Loving Memory" })
@@ -19,12 +23,13 @@ export const createNewMemorial = async (userId: string) => {
 
   console.log("Memorial created:", memorialData);
 
+  // Create the first collaborator as admin
   const { error: collaboratorError } = await supabase
     .from('memorial_collaborators')
     .insert({
       memorial_id: memorialData.id,
-      user_id: DEVELOPMENT_USER_ID,
-      email: "development@example.com",
+      user_id: session.user.id,
+      email: session.user.email,
       role: 'admin',
       invitation_accepted: true
     });
