@@ -53,7 +53,9 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         .select()
         .single();
 
-      if (collaboratorError) throw collaboratorError;
+      if (collaboratorError) {
+        throw new Error(collaboratorError.message);
+      }
 
       // Send invitation email
       const { error: inviteError } = await supabase.functions.invoke("send-invitation", {
@@ -65,7 +67,9 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         },
       });
 
-      if (inviteError) throw inviteError;
+      if (inviteError) {
+        throw new Error(inviteError.message);
+      }
 
       toast({
         title: "Invitation sent",
