@@ -19,9 +19,10 @@ interface PhotoGridProps {
   photos: Photo[];
   onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => void;
   isLoading?: boolean;
+  isPreview?: boolean;
 }
 
-const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) => {
+const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }: PhotoGridProps) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -159,24 +160,29 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false }: PhotoGridProps) =>
             <GridCell
               photo={photo}
               onImageSelect={handleImageSelect}
-              onFileSelect={handleFileChange}
+              onFileSelect={isPreview ? undefined : handleFileChange}
+              isPreview={isPreview}
             />
           </div>
         ))}
       </div>
 
-      <PhotoUploadDialog
-        open={isUploadDialogOpen}
-        onOpenChange={setIsUploadDialogOpen}
-        imageFile={selectedFile}
-        onSubmit={handleSubmit}
-      />
+      {!isPreview && (
+        <>
+          <PhotoUploadDialog
+            open={isUploadDialogOpen}
+            onOpenChange={setIsUploadDialogOpen}
+            imageFile={selectedFile}
+            onSubmit={handleSubmit}
+          />
 
-      <ImageDialog
-        open={isImageDialogOpen}
-        onOpenChange={setIsImageDialogOpen}
-        image={selectedImage}
-      />
+          <ImageDialog
+            open={isImageDialogOpen}
+            onOpenChange={setIsImageDialogOpen}
+            image={selectedImage}
+          />
+        </>
+      )}
     </>
   );
 };
