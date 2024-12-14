@@ -3,7 +3,7 @@ import { DashboardCharts } from "@/components/director/DashboardCharts";
 import { MemorialsList } from "@/components/director/MemorialsList";
 import DirectorSettings from "@/components/director/settings/DirectorSettings";
 import Navigation from "@/components/Navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Settings } from "lucide-react";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch memorials with real-time updates
   const { data: memorials = [], isError: isMemorialsError } = useQuery({
@@ -84,6 +85,10 @@ const DirectorDashboard = () => {
         .eq('id', id);
       
       if (error) throw error;
+
+      // Invalidate and refetch queries
+      await queryClient.invalidateQueries({ queryKey: ['memorials'] });
+      await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
       
       toast({
         title: "Memorial deleted",
