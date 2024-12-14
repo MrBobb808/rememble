@@ -39,6 +39,6 @@ export const createNewMemorial = async () => {
     throw collaboratorError;
   }
 
-  console.log("Collaborator created successfully");
+  console.log("Admin collaborator created successfully");
   return memorialData;
 };

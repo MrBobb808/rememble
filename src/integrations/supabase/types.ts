@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      memorial_activity_log: {
+        Row: {
+          action_type: string
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          memorial_id: string | null
+          target_email: string | null
+          target_role: string | null
+        }
+        Insert: {
+          action_type: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          memorial_id?: string | null
+          target_email?: string | null
+          target_role?: string | null
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          memorial_id?: string | null
+          target_email?: string | null
+          target_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_activity_log_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorial_collaborators: {
         Row: {
           created_at: string
