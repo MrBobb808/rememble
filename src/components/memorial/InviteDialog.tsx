@@ -40,34 +40,6 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
       return;
     }
 
-    // Check authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to invite collaborators.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if user has admin rights
-    const { data: collaborator } = await supabase
-      .from('memorial_collaborators')
-      .select('role')
-      .eq('memorial_id', memorialId)
-      .eq('user_id', session.user.id)
-      .single();
-
-    if (!collaborator || collaborator.role !== 'admin') {
-      toast({
-        title: "Permission denied",
-        description: "Only admins can invite collaborators.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       // Create collaborator record
@@ -100,10 +72,9 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
         description: `An invitation has been sent to ${email}`,
       });
 
-      // Log the activity
+      // Log the activity (without user ID for now)
       await supabase.from('memorial_activity_log').insert({
         memorial_id: memorialId,
-        actor_id: session.user.id,
         action_type: 'invite_sent',
         target_email: email,
         target_role: role,
