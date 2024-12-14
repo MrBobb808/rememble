@@ -212,6 +212,47 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          memorial_id: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["token_status"]
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          memorial_id: string
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["token_status"]
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          memorial_id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["token_status"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signup_tokens_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -220,6 +261,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      token_status: "pending" | "used" | "expired"
       user_role: "admin" | "contributor" | "viewer"
     }
     CompositeTypes: {

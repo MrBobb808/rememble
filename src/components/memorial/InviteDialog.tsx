@@ -11,8 +11,7 @@ import { Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { validateUUID } from "@/utils/validation";
 import { InviteForm } from "./invite/InviteForm";
-import { createCollaborator, sendInvitation, logInviteActivity } from "@/services/inviteService";
-import { InviteFormData } from "@/types/collaborator";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InviteDialogProps {
   memorialId: string;
@@ -23,7 +22,7 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleInvite = async ({ email, role }: InviteFormData) => {
+  const handleInvite = async ({ email, role }: { email: string; role: string }) => {
     if (!email) {
       toast({
         title: "Error",
@@ -45,9 +44,29 @@ export const InviteDialog = ({ memorialId }: InviteDialogProps) => {
 
     setIsLoading(true);
     try {
-      const newCollaborator = await createCollaborator(memorialId, email, role);
-      await sendInvitation(email, memorialId, newCollaborator.invitation_token, role);
-      await logInviteActivity(memorialId, email, role);
+      // Create signup token
+      const { data: tokenData, error: tokenError } = await supabase
+        .from("signup_tokens")
+        .insert({
+          memorial_id: memorialId,
+          email,
+          role,
+        })
+        .select()
+        .single();
+
+      if (tokenError) throw tokenError;
+
+      // Send invitation email
+      const { error: emailError } = await supabase.functions.invoke("send-signup-invitation", {
+        body: {
+          email,
+          token: tokenData.token,
+          role,
+        },
+      });
+
+      if (emailError) throw emailError;
 
       toast({
         title: "Invitation sent",
