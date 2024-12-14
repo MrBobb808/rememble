@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, Shield, Eye, Copy, Check } from "lucide-react";
+import { Link, Shield, Eye } from "lucide-react";
 
 interface LinkGeneratorProps {
   memorialId: string;
@@ -25,17 +25,37 @@ export const LinkGenerator = ({ memorialId, isComplete = false }: LinkGeneratorP
         return;
       }
 
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to generate links.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the link
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
           memorial_id: memorialId,
           type,
-          created_by: (await supabase.auth.getUser()).data.user?.id,
+          created_by: user.id,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error generating link:', error);
+        throw error;
+      }
+
+      if (!link) {
+        throw new Error('No link was generated');
+      }
 
       const baseUrl = window.location.origin;
       const fullLink = `${baseUrl}/memorial/${type}?token=${link.token}`;
