@@ -8,16 +8,18 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { type, photos } = await req.json()
-
     if (!PRINTFUL_API_KEY) {
       throw new Error('Printful API key not configured')
     }
+
+    const { type, memorialId, photos } = await req.json()
+    console.log('Creating Printful product:', { type, memorialId, photoCount: photos.length })
 
     const encodedKey = btoa(PRINTFUL_API_KEY)
     
@@ -40,6 +42,7 @@ serve(async (req) => {
     })
 
     const mockupData = await mockupResponse.json()
+    console.log('Mockup created:', mockupData)
 
     // Create sync product
     const productResponse = await fetch("https://api.printful.com/store/products", {
@@ -66,6 +69,7 @@ serve(async (req) => {
     })
 
     const productData = await productResponse.json()
+    console.log('Product created:', productData)
 
     return new Response(
       JSON.stringify({
@@ -77,6 +81,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

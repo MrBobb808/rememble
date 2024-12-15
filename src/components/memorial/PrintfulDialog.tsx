@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Book, Shirt } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PrintfulDialogProps {
   open: boolean;
@@ -18,26 +19,18 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
   const handleCreateProduct = async (type: 'photo-book' | 'quilt') => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/create-printful-product', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('create-printful-product', {
+        body: {
           type,
           memorialId,
           photos: photos.map(photo => ({
             url: photo.url,
             caption: photo.caption
           }))
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create product');
-      }
-
-      const data = await response.json();
+      if (error) throw error;
       
       // Redirect to Printful checkout
       window.location.href = data.checkoutUrl;
