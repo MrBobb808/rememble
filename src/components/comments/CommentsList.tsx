@@ -91,8 +91,9 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
     if (!newComment.trim()) return;
 
     setIsLoading(true);
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
+    const { data: userData } = await supabase.auth.getUser();
+    
+    if (!userData.user) {
       toast({
         title: "Error",
         description: "You must be logged in to comment",
@@ -103,15 +104,24 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
     }
 
     try {
+      console.log('Attempting to insert comment with:', {
+        photo_id: photoId,
+        content: newComment.trim(),
+        user_id: userData.user.id
+      });
+
       const { error } = await supabase
         .from('memorial_image_comments')
         .insert({
           photo_id: photoId,
           content: newComment.trim(),
-          user_id: user.user.id
+          user_id: userData.user.id
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       setNewComment("");
       toast({
