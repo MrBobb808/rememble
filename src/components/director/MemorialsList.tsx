@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { MemorialItem } from "./memorials/MemorialItem";
 import { EditMemorialDialog } from "./memorials/EditMemorialDialog";
 import { PreviewMemorialDialog } from "./memorials/PreviewMemorialDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Memorial {
   id: string;
@@ -81,6 +82,48 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
     }
   };
 
+  const handleGenerateLink = async (memorialId: string, type: 'collaborator' | 'viewer') => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to generate links.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: link, error } = await supabase
+        .from('memorial_links')
+        .insert({
+          memorial_id: memorialId,
+          type,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const baseUrl = window.location.origin;
+      const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
+
+      await navigator.clipboard.writeText(fullLink);
+      toast({
+        title: "Link generated",
+        description: "The link has been copied to your clipboard.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error generating link",
+        description: error.message || "There was a problem generating the link.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -102,6 +145,7 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
                     onEdit={() => handleEdit(memorial)}
                     onDelete={() => handleDelete(memorial.id)}
                     onPreview={() => handlePreview(memorial)}
+                    onGenerateLink={handleGenerateLink}
                   />
                 ))}
               </div>
@@ -114,16 +158,18 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
         <EditMemorialDialog
           memorial={editingMemorial}
           newName={newName}
-          setNewName={setNewName}
-          onClose={() => setEditingMemorial(null)}
-          onSave={handleUpdateName}
+          onNameChange={setNewName}
+          onUpdate={handleUpdateName}
+          onOpenChange={() => setEditingMemorial(null)}
         />
       )}
       
       {previewMemorial && (
         <PreviewMemorialDialog
           memorial={previewMemorial}
-          onClose={() => setPreviewMemorial(null)}
+          onOpenChange={(open) => {
+            if (!open) setPreviewMemorial(null);
+          }}
         />
       )}
     </Card>
