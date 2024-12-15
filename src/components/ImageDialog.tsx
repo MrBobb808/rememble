@@ -25,12 +25,12 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px]">
+      <DialogContent className="max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
           <DialogDescription className="text-base">{image.caption}</DialogDescription>
         </DialogHeader>
-        <div className="mt-2 space-y-6">
+        <div className="mt-2 space-y-4">
           <div className="relative w-full overflow-hidden rounded-lg">
             <img
               src={image.url}
