@@ -32,7 +32,7 @@ export const useMemorialData = (memorialId: string | null) => {
         if (data) {
           console.log('Fetched photos data:', data);
           const formattedPhotos = data.map(photo => ({
-            id: String(photo.position), // Convert to string to match Photo interface
+            id: String(photo.position),
             url: photo.image_url,
             caption: photo.caption,
             aiReflection: photo.ai_reflection,
@@ -55,7 +55,7 @@ export const useMemorialData = (memorialId: string | null) => {
     fetchPhotos();
   }, [memorialId, toast]);
 
-  const handlePhotoAdd = async (file: File, caption: string, contributorName: string, relationship: string) => {
+  const handlePhotoAdd = async (file: File, caption: string, contributorName: string, relationship: string, position: number) => {
     if (!memorialId) return;
 
     try {
@@ -79,7 +79,24 @@ export const useMemorialData = (memorialId: string | null) => {
 
       if (reflectionError) throw reflectionError;
 
-      const position = photos.length;
+      // Check if position is already taken
+      const { data: existingPhoto } = await supabase
+        .from('memorial_photos')
+        .select('position')
+        .eq('memorial_id', memorialId)
+        .eq('position', position)
+        .single();
+
+      if (existingPhoto) {
+        // If position is taken, show error
+        toast({
+          title: "Position already taken",
+          description: "Please choose another position for your photo.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: photoData, error: photoError } = await supabase
         .from('memorial_photos')
         .insert({

@@ -4,12 +4,13 @@ import { Photo } from "@/types/photo";
 
 interface GridCellProps {
   photo?: Photo;
+  position: number;
   onImageSelect?: (photo: Photo) => void;
-  onFileSelect?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileSelect?: (event: React.ChangeEvent<HTMLInputElement>, position: number) => void;
   isPreview?: boolean;
 }
 
-const GridCell = ({ photo, onImageSelect, onFileSelect, isPreview = false }: GridCellProps) => {
+const GridCell = ({ photo, position, onImageSelect, onFileSelect, isPreview = false }: GridCellProps) => {
   if (photo) {
     return (
       <AspectRatio ratio={1} className="overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -47,7 +48,7 @@ const GridCell = ({ photo, onImageSelect, onFileSelect, isPreview = false }: Gri
           type="file"
           className="hidden"
           accept="image/*"
-          onChange={onFileSelect}
+          onChange={(e) => onFileSelect?.(e, position)}
         />
         <div className="text-memorial-gray-dark/40">
           <Plus className="w-6 h-6" />
