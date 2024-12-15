@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 export const usePhotoUpload = (
-  onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => void,
+  onSubmit: (caption: string, contributorName: string, relationship: string) => void,
 ) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -24,10 +24,8 @@ export const usePhotoUpload = (
   };
 
   const handleSubmit = async (caption: string, contributorName: string, relationship: string) => {
-    if (!selectedFile) return;
-
     try {
-      await onPhotoAdd(selectedFile, caption, contributorName, relationship);
+      await onSubmit(caption, contributorName, relationship);
       setSelectedFile(null);
       setIsUploadDialogOpen(false);
       

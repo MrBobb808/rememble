@@ -7,7 +7,7 @@ import { Photo } from "@/types/photo";
 
 interface MemorialContentProps {
   photos: Photo[];
-  handlePhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => Promise<void>;
+  handlePhotoAdd: (file: File, caption: string, contributorName: string, relationship: string, position: number) => Promise<void>;
   isLoading: boolean;
   memorial?: {
     name: string;
@@ -41,7 +41,7 @@ export const MemorialContent = ({
         "rounded-lg shadow-sm p-4 mx-auto my-6"
       )}>
         <div className="space-y-6">
-          <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
+          <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} isLoading={isLoading} />
           {photos.length === 25 && (
             <MemorialSummary 
               summary={null}
