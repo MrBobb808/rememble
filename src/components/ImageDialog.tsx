@@ -4,7 +4,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import CommentsList from "./comments/CommentsList";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "./ui/badge";
@@ -65,10 +64,9 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
             />
           </div>
 
-          {/* Details and Comments Section */}
+          {/* Details Section */}
           <div className="flex flex-col h-[50vh] md:h-[90vh] overflow-hidden">
-            {/* Memory Details */}
-            <div className="p-4 space-y-3 bg-white border-b">
+            <div className="p-4 space-y-3 bg-white">
               <DialogHeader className="flex flex-row items-center justify-between">
                 <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
                 <Badge variant="secondary" className="flex items-center gap-1">
@@ -92,16 +90,6 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
                   <p className="text-sm text-gray-700 italic leading-relaxed">{image.aiReflection}</p>
                 </div>
               )}
-            </div>
-
-            {/* Comments Section */}
-            <div className="flex-1 overflow-hidden bg-gray-50">
-              <div className="h-full overflow-y-auto">
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Comments</h3>
-                  <CommentsList photoId={image.id} />
-                </div>
-              </div>
             </div>
           </div>
         </div>
