@@ -2,6 +2,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface Memorial {
   id: string;
@@ -34,6 +38,46 @@ export const EditMemorialDialog = ({
   onBirthYearChange,
   onDeathYearChange,
 }: EditMemorialDialogProps) => {
+  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !memorial) return;
+
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('memorial-photos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('memorial-photos')
+        .getPublicUrl(fileName);
+
+      onBannerChange?.(publicUrl);
+      
+      toast({
+        title: "Banner uploaded",
+        description: "The memorial banner has been updated successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error uploading banner:', error);
+      toast({
+        title: "Error uploading banner",
+        description: error.message || "There was a problem uploading the banner image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <Dialog open={!!memorial} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -52,13 +96,27 @@ export const EditMemorialDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="banner">Banner Image URL</Label>
-            <Input
-              id="banner"
-              value={memorial?.banner_image_url || ''}
-              onChange={(e) => onBannerChange?.(e.target.value)}
-              placeholder="Enter banner image URL"
-            />
+            <Label htmlFor="banner">Banner Image</Label>
+            <div className="flex flex-col gap-2">
+              {memorial?.banner_image_url && (
+                <img 
+                  src={memorial.banner_image_url} 
+                  alt="Memorial banner" 
+                  className="w-full h-32 object-cover rounded-md"
+                />
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  id="banner"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                  className="flex-1"
+                />
+                {isUploading && <Loader2 className="w-4 h-4 animate-spin" />}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
