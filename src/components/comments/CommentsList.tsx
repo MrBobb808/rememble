@@ -4,6 +4,7 @@ import CommentItem from "./CommentItem";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { validateUUID } from "@/utils/validation";
 
 interface CommentsListProps {
   photoId: string;
@@ -97,6 +98,18 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
       toast({
         title: "Error",
         description: "You must be logged in to comment",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate photoId is a valid UUID
+    if (!validateUUID(photoId)) {
+      console.error('Invalid photo ID:', photoId);
+      toast({
+        title: "Error",
+        description: "Invalid photo reference. Please try again.",
         variant: "destructive",
       });
       setIsLoading(false);
