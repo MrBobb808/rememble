@@ -5,18 +5,47 @@ import { MemorialContent } from "./MemorialContent";
 import UnifiedSidebar from "./UnifiedSidebar";
 import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FuneralHomeSettings {
+  name: string;
+  logo_url: string | null;
+}
 
 const MemorialContainer = () => {
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
   const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState<FuneralHomeSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data, error } = await supabase
+        .from('funeral_home_settings')
+        .select('name, logo_url')
+        .single();
+
+      if (error) {
+        console.error('Error fetching funeral home settings:', error);
+        return;
+      }
+
+      setSettings(data);
+    };
+
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     if (photos.length > 0) {
       setIsLoading(false);
     }
   }, [photos]);
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -26,6 +55,8 @@ const MemorialContainer = () => {
             photos={photos}
             handlePhotoAdd={handlePhotoAdd}
             isLoading={isLoading}
+            funeralHomeName={settings?.name}
+            funeralHomeLogo={settings?.logo_url}
           />
           <UnifiedSidebar photos={photos} />
         </div>
