@@ -4,12 +4,7 @@ import { Button } from "@/components/ui/button";
 import { InviteDialog } from "./InviteDialog";
 import CollaboratorsManagement from "../CollaboratorsManagement";
 import { useSearchParams } from "react-router-dom";
-
-interface Photo {
-  id: number;
-  url: string;
-  caption: string;
-}
+import { Photo } from "@/types/photo";
 
 interface UnifiedSidebarProps {
   photos: Photo[];
@@ -66,7 +61,7 @@ const UnifiedSidebar = ({ photos }: UnifiedSidebarProps) => {
           {photos.length > 0 ? (
             photos.slice(-3).map((photo, index) => (
               <div 
-                key={index} 
+                key={photo.id} 
                 className="flex items-start gap-3 text-sm text-gray-600 animate-fade-in"
               >
                 <Avatar className="w-8 h-8">
