@@ -3,6 +3,7 @@ import { useSearchParams, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 import { ProductHeader } from "@/components/printful/ProductHeader";
 import { ProductVariants } from "@/components/printful/ProductVariants";
 import { PhotoGrid } from "@/components/printful/PhotoGrid";
