@@ -25,18 +25,18 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1000px] max-h-[90vh] p-0 gap-0 overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="flex flex-col md:grid md:grid-cols-2">
           {/* Image Section */}
           <div className="relative w-full bg-black flex items-center">
             <img
               src={image.url}
               alt={image.caption}
-              className="w-full h-auto object-contain max-h-[90vh] md:max-h-[600px]"
+              className="w-full h-auto object-contain max-h-[50vh] md:max-h-[600px]"
             />
           </div>
 
           {/* Details and Comments Section */}
-          <div className="p-6 flex flex-col h-full max-h-[90vh] md:max-h-[600px]">
+          <div className="p-6 flex flex-col h-full max-h-[50vh] md:max-h-[600px]">
             <DialogHeader>
               <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
             </DialogHeader>
