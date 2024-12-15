@@ -25,6 +25,8 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log("CommentsList - Received photoId:", photoId); // Add logging
+
   useEffect(() => {
     const fetchComments = async () => {
       const { data: commentsData, error } = await supabase

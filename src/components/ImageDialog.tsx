@@ -23,6 +23,8 @@ interface ImageDialogProps {
 const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
   if (!image) return null;
 
+  console.log("ImageDialog - image.id:", image.id); // Add logging
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[600px] max-h-[80vh] overflow-y-auto">
