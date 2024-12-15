@@ -1,15 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-interface Variant {
-  id: number;
-  name: string;
-  price: string;
-  description: string;
-}
+import { PrintfulVariant } from "./variants";
 
 interface ProductVariantsProps {
-  variants: Variant[];
+  variants: PrintfulVariant[];
   selectedVariant: number | null;
   onVariantSelect: (id: number) => void;
 }

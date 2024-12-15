@@ -1,5 +1,12 @@
+export interface PrintfulVariant {
+  id: number;
+  name: string;
+  price: string;
+  description: string;
+}
+
 // Real Printful variant IDs for photo books
-export const PHOTO_BOOK_VARIANTS = [
+export const PHOTO_BOOK_VARIANTS: PrintfulVariant[] = [
   {
     id: 438,
     name: "Standard Photo Book",
@@ -18,13 +25,13 @@ export const PHOTO_BOOK_VARIANTS = [
     price: "$49.99",
     description: "12\" x 12\", 40 pages"
   }
-] as const;
+];
 
-export const QUILT_VARIANTS = [
+export const QUILT_VARIANTS: PrintfulVariant[] = [
   {
     id: 441,
     name: "Standard Memory Quilt",
     price: "$79.99",
     description: "50\" x 60\", Cotton blend"
   }
-] as const;
+];
