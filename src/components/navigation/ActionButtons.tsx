@@ -8,15 +8,38 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InviteDialog } from "@/components/memorial/InviteDialog";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ActionButtons = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Extract memorial ID from URL if we're on the memorial page
   const memorialId = location.pathname === "/memorial" ? 
     new URLSearchParams(location.search).get("id") : null;
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!memorialId) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userRole } = await supabase
+        .from("memorial_collaborators")
+        .select("role")
+        .eq("memorial_id", memorialId)
+        .eq("user_id", user.id)
+        .single();
+
+      setIsAdmin(userRole?.role === "admin");
+    };
+
+    checkUserRole();
+  }, [memorialId]);
 
   const handleShare = async () => {
     try {
@@ -91,7 +114,7 @@ export const ActionButtons = () => {
           <Download className="w-4 h-4 mr-2" />
           Download
         </Button>
-        {memorialId && (
+        {memorialId && isAdmin && (
           <InviteDialog memorialId={memorialId} />
         )}
       </div>
