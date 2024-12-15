@@ -34,14 +34,14 @@ serve(async (req) => {
       throw new Error('No variant ID specified')
     }
 
-    const encodedKey = btoa(PRINTFUL_API_KEY)
-    
+    // Properly encode the API key for Basic Auth
+    const authHeader = `Basic ${btoa(PRINTFUL_API_KEY)}`
     console.log('Creating mockup with variant ID:', variantId)
     
     // Test the API key first with a simple request
     const testResponse = await fetch("https://api.printful.com/store/products", {
       headers: {
-        "Authorization": `Basic ${encodedKey}`,
+        "Authorization": authHeader,
       },
     });
 
@@ -54,7 +54,7 @@ serve(async (req) => {
     const mockupResponse = await fetch("https://api.printful.com/mockup-generator/create-task", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${encodedKey}`,
+        "Authorization": authHeader,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -96,7 +96,7 @@ serve(async (req) => {
     while (attempts < maxAttempts) {
       const resultResponse = await fetch(`https://api.printful.com/mockup-generator/task?task_key=${taskKey}`, {
         headers: {
-          "Authorization": `Basic ${encodedKey}`,
+          "Authorization": authHeader,
         },
       })
       
