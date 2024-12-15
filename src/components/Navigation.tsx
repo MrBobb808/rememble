@@ -1,25 +1,19 @@
 import { useState } from "react";
-import { HelpCircle, Home, Printer, Download, Share2, LayoutDashboard } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
 import { PrintfulDialog } from "./memorial/PrintfulDialog";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useToast } from "./ui/use-toast";
-import { useProfile } from "@/hooks/useProfile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NavigationButtons } from "./navigation/NavigationButtons";
 
 const Navigation = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { data: profile } = useProfile();
   
   const currentMemorialId = searchParams.get("id");
-  const token = searchParams.get("token");
 
   // Fetch photos for the current memorial
   const { data: photos = [] } = useQuery({
@@ -41,57 +35,6 @@ const Navigation = () => {
     enabled: !!currentMemorialId
   });
 
-  const handleHomeClick = () => {
-    const isDirector = profile?.relationship === 'director';
-    
-    if (isDirector) {
-      // Directors are redirected to the dashboard
-      navigate("/director");
-    } else {
-      // Regular users get the normal memorial navigation
-      if (currentMemorialId) {
-        const params = new URLSearchParams();
-        params.set("id", currentMemorialId);
-        if (token) {
-          params.set("token", token);
-        }
-        navigate(`/memorial?${params.toString()}`);
-      } else {
-        navigate("/memorial");
-      }
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied!",
-        description: "Memorial link has been copied to your clipboard.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error sharing",
-        description: "Could not copy the link. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handlePrint = () => {
-    setIsPrintDialogOpen(true);
-  };
-
-  const handleDownload = () => {
-    toast({
-      title: "Download started",
-      description: "Your memorial will be downloaded as a PDF shortly.",
-    });
-    // TODO: Implement PDF generation
-  };
-
-  const isDirector = profile?.relationship === 'director';
-
   return (
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b">
       <div className="container mx-auto py-4 px-4 flex justify-between items-center">
@@ -100,51 +43,7 @@ const Navigation = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleHomeClick}
-          >
-            <Home className="w-4 h-4 mr-2" />
-            {isDirector ? 'Dashboard' : 'Home'}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePrint}
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Print Memorial
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDownload}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShare}
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsHelpOpen(true)}
-          >
-            <HelpCircle className="w-4 h-4 mr-2" />
-            Help
-          </Button>
-
+          <NavigationButtons />
           <UserMenu />
         </div>
       </div>
