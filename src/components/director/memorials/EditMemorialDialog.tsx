@@ -40,6 +40,8 @@ export const EditMemorialDialog = ({
 }: EditMemorialDialogProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  const [birthYear, setBirthYear] = useState(memorial?.birth_year || '');
+  const [deathYear, setDeathYear] = useState(memorial?.death_year || '');
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -76,6 +78,16 @@ export const EditMemorialDialog = ({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleBirthYearChange = (value: string) => {
+    setBirthYear(value);
+    onBirthYearChange?.(value);
+  };
+
+  const handleDeathYearChange = (value: string) => {
+    setDeathYear(value);
+    onDeathYearChange?.(value);
   };
 
   return (
@@ -124,8 +136,8 @@ export const EditMemorialDialog = ({
               <Label htmlFor="birthYear">Birth Year</Label>
               <Input
                 id="birthYear"
-                value={memorial?.birth_year || ''}
-                onChange={(e) => onBirthYearChange?.(e.target.value)}
+                value={birthYear}
+                onChange={(e) => handleBirthYearChange(e.target.value)}
                 placeholder="YYYY"
               />
             </div>
@@ -134,8 +146,8 @@ export const EditMemorialDialog = ({
               <Label htmlFor="deathYear">Death Year</Label>
               <Input
                 id="deathYear"
-                value={memorial?.death_year || ''}
-                onChange={(e) => onDeathYearChange?.(e.target.value)}
+                value={deathYear}
+                onChange={(e) => handleDeathYearChange(e.target.value)}
                 placeholder="YYYY"
               />
             </div>
