@@ -25,9 +25,9 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
     handleFileChange,
     handleSubmit,
     setIsUploadDialogOpen
-  } = usePhotoUpload((file, caption, contributorName, relationship) => {
-    if (selectedPosition !== null) {
-      onPhotoAdd(file, caption, contributorName, relationship, selectedPosition);
+  } = usePhotoUpload((caption: string, contributorName: string, relationship: string) => {
+    if (selectedPosition !== null && selectedFile) {
+      onPhotoAdd(selectedFile, caption, contributorName, relationship, selectedPosition);
     }
   });
 
