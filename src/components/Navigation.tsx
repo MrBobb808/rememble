@@ -13,6 +13,25 @@ const Navigation = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: profile } = useProfile();
+  
+  // Get the current memorial ID and token from URL
+  const currentMemorialId = searchParams.get("id");
+  const token = searchParams.get("token");
+
+  const handleHomeClick = () => {
+    // If we have a memorial ID, navigate back to it with the token if present
+    if (currentMemorialId) {
+      const params = new URLSearchParams();
+      params.set("id", currentMemorialId);
+      if (token) {
+        params.set("token", token);
+      }
+      navigate(`/memorial?${params.toString()}`);
+    } else {
+      // If no memorial ID, just go to memorial page (this shouldn't happen often)
+      navigate("/memorial");
+    }
+  };
 
   const handleShare = async () => {
     try {
@@ -57,7 +76,7 @@ const Navigation = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/memorial")}
+            onClick={handleHomeClick}
           >
             <Home className="w-4 h-4 mr-2" />
             Home
