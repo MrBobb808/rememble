@@ -42,17 +42,23 @@ const Navigation = () => {
   });
 
   const handleHomeClick = () => {
-    // If we have a memorial ID, navigate back to it with the token if present
-    if (currentMemorialId) {
-      const params = new URLSearchParams();
-      params.set("id", currentMemorialId);
-      if (token) {
-        params.set("token", token);
-      }
-      navigate(`/memorial?${params.toString()}`);
+    const isDirector = profile?.relationship === 'director';
+    
+    if (isDirector) {
+      // Directors are redirected to the dashboard
+      navigate("/director");
     } else {
-      // If no memorial ID, just go to memorial page (this shouldn't happen often)
-      navigate("/memorial");
+      // Regular users get the normal memorial navigation
+      if (currentMemorialId) {
+        const params = new URLSearchParams();
+        params.set("id", currentMemorialId);
+        if (token) {
+          params.set("token", token);
+        }
+        navigate(`/memorial?${params.toString()}`);
+      } else {
+        navigate("/memorial");
+      }
     }
   };
 
@@ -94,29 +100,14 @@ const Navigation = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Show Home button only for non-director accounts */}
-          {!isDirector && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleHomeClick}
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Home
-            </Button>
-          )}
-
-          {/* Show Dashboard button for director accounts */}
-          {isDirector && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/director")}
-            >
-              <LayoutDashboard className="w-4 h-4 mr-2" />
-              Dashboard
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleHomeClick}
+          >
+            <Home className="w-4 h-4 mr-2" />
+            {isDirector ? 'Dashboard' : 'Home'}
+          </Button>
 
           <Button
             variant="ghost"
