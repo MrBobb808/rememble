@@ -1,14 +1,6 @@
 import { Plus } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-
-interface Photo {
-  id: number;
-  url: string;
-  caption: string;
-  aiReflection?: string;
-  contributorName?: string;
-  relationship?: string;
-}
+import { Photo } from "@/types/photo";
 
 interface GridCellProps {
   photo?: Photo;

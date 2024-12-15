@@ -1,19 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import PhotoUploadDialog from "./PhotoUploadDialog";
 import ImageDialog from "./ImageDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
 import GridCell from "./photo-grid/GridCell";
-
-interface Photo {
-  id: number;
-  url: string;
-  caption: string;
-  aiReflection?: string;
-  contributorName?: string;
-  relationship?: string;
-}
+import { usePhotoUpload } from "@/hooks/usePhotoUpload";
+import { Photo } from "@/types/photo";
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -24,139 +17,28 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }: PhotoGridProps) => {
   const { toast } = useToast();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Photo | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const { 
+    selectedFile,
+    isUploadDialogOpen,
+    handleFileChange,
+    handleSubmit,
+    setIsUploadDialogOpen
+  } = usePhotoUpload(onPhotoAdd, toast);
 
   // Create array of 25 cells (5x5 grid)
   const gridCells = Array(25)
     .fill(null)
     .map((_, index) => {
       const photo = photos[index];
-      return { id: index, photo };
+      return { id: String(index), photo };
     });
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type.startsWith("image/")) {
-        setSelectedFile(file);
-        setIsUploadDialogOpen(true);
-      } else {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file",
-          variant: "destructive",
-        });
-      }
-    }
-  };
 
   const handleImageSelect = (photo: Photo) => {
     setSelectedImage(photo);
     setIsImageDialogOpen(true);
   };
-
-  const generateAIReflection = async (imageUrl: string, caption: string) => {
-    try {
-      console.log("Generating AI reflection for image:", imageUrl);
-      const { data, error } = await supabase.functions.invoke("generate-reflection", {
-        body: {
-          imageUrl,
-          caption,
-        },
-      });
-
-      if (error) {
-        console.error("Error generating reflection:", error);
-        throw error;
-      }
-
-      console.log("Generated reflection:", data.reflection);
-      return data.reflection;
-    } catch (error) {
-      console.error("Error generating reflection:", error);
-      throw error;
-    }
-  };
-
-  const handleSubmit = async (caption: string, contributorName: string, relationship: string) => {
-    if (!selectedFile) return;
-
-    try {
-      console.log("Starting file upload process...");
-      
-      // First, upload the file to Supabase Storage
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('memorial-photos')
-        .upload(fileName, selectedFile);
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw uploadError;
-      }
-
-      console.log("File uploaded successfully:", uploadData);
-
-      // Get the public URL of the uploaded image
-      const { data: { publicUrl } } = supabase.storage
-        .from('memorial-photos')
-        .getPublicUrl(fileName);
-
-      console.log("Generated public URL:", publicUrl);
-
-      // Generate AI reflection using the public URL
-      const aiReflection = await generateAIReflection(publicUrl, caption);
-      
-      if (!aiReflection) {
-        throw new Error("No AI reflection generated");
-      }
-
-      // Call the parent component's onPhotoAdd with all necessary data
-      await onPhotoAdd(selectedFile, caption, contributorName, relationship);
-      
-      // Reset state and show success message
-      setSelectedFile(null);
-      setIsUploadDialogOpen(false);
-      
-      toast({
-        title: "Memory added",
-        description: "Your memory has been added to the memorial.",
-      });
-    } catch (error) {
-      console.error("Error adding photo:", error);
-      toast({
-        title: "Error adding memory",
-        description: "There was a problem adding your memory. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("photos-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "memorial_photos",
-        },
-        (payload) => {
-          console.log("Photo changes detected:", payload);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   if (isLoading) {
     return (
