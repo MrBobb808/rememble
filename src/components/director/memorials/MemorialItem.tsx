@@ -8,6 +8,9 @@ interface Memorial {
   name: string;
   created_at: string;
   is_complete: boolean;
+  banner_image_url?: string;
+  birth_year?: string;
+  death_year?: string;
 }
 
 interface MemorialItemProps {
@@ -40,6 +43,11 @@ export const MemorialItem = ({
           <p className="text-sm text-gray-500">
             Created: {new Date(memorial.created_at).toLocaleDateString()}
           </p>
+          {memorial.birth_year && memorial.death_year && (
+            <p className="text-sm text-gray-500">
+              {memorial.birth_year} - {memorial.death_year}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Badge

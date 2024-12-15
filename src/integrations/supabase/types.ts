@@ -340,21 +340,30 @@ export type Database = {
       }
       memorials: {
         Row: {
+          banner_image_url: string | null
+          birth_year: string | null
           created_at: string
+          death_year: string | null
           id: string
           is_complete: boolean | null
           name: string
           summary: string | null
         }
         Insert: {
+          banner_image_url?: string | null
+          birth_year?: string | null
           created_at?: string
+          death_year?: string | null
           id?: string
           is_complete?: boolean | null
           name: string
           summary?: string | null
         }
         Update: {
+          banner_image_url?: string | null
+          birth_year?: string | null
           created_at?: string
+          death_year?: string | null
           id?: string
           is_complete?: boolean | null
           name?: string
