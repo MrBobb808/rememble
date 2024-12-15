@@ -142,7 +142,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
         {Array(25)
           .fill(null)
           .map((_, index) => (
@@ -154,7 +154,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
         {gridCells.map(({ id, photo }) => (
           <div key={id} className="relative group">
             <GridCell

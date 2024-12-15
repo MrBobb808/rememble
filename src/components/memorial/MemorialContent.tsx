@@ -33,7 +33,7 @@ export const MemorialContent = ({
   const memorialId = searchParams.get("id");
 
   return (
-    <div className="pt-14">
+    <div className="pt-8">
       <MemorialBanner 
         name={funeralHomeName || "My Funeral Home"}
         dates="1945 - 2024"
@@ -41,12 +41,12 @@ export const MemorialContent = ({
       />
 
       <div className={cn(
-        "max-w-7xl mx-auto",
-        "grid lg:grid-cols-[1fr,300px] gap-8 mt-8",
+        "max-w-[1400px] mx-auto",
+        "grid lg:grid-cols-[1fr,300px] gap-6",
         "bg-gradient-to-b from-memorial-beige-light to-white/50",
-        "rounded-lg shadow-sm p-6 mx-4"
+        "rounded-lg shadow-sm p-4 mx-auto my-6"
       )}>
-        <div className="space-y-8">
+        <div className="space-y-6">
           <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
           {photos.length === 25 && (
             <MemorialSummary 

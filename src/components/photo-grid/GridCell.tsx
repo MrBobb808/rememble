@@ -20,7 +20,7 @@ interface GridCellProps {
 const GridCell = ({ photo, onImageSelect, onFileSelect, isPreview = false }: GridCellProps) => {
   if (photo) {
     return (
-      <AspectRatio ratio={1} className="overflow-hidden rounded-lg">
+      <AspectRatio ratio={1} className="overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
         <button
           onClick={() => !isPreview && onImageSelect?.(photo)}
           className="w-full h-full relative focus:outline-none focus:ring-2 focus:ring-memorial-beige-dark"
@@ -38,7 +38,7 @@ const GridCell = ({ photo, onImageSelect, onFileSelect, isPreview = false }: Gri
 
   if (isPreview) {
     return (
-      <AspectRatio ratio={1} className="overflow-hidden rounded-lg">
+      <AspectRatio ratio={1} className="overflow-hidden rounded-lg shadow-sm">
         <div className="w-full h-full bg-memorial-beige-light/50 rounded-lg border-2 border-dashed border-memorial-beige-dark/20 flex items-center justify-center">
           <div className="text-memorial-gray-dark/40">
             <Plus className="w-6 h-6" />
@@ -49,7 +49,7 @@ const GridCell = ({ photo, onImageSelect, onFileSelect, isPreview = false }: Gri
   }
 
   return (
-    <AspectRatio ratio={1} className="overflow-hidden rounded-lg">
+    <AspectRatio ratio={1} className="overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
       <label className="w-full h-full bg-memorial-beige-light/50 rounded-lg border-2 border-dashed border-memorial-beige-dark/20 flex items-center justify-center cursor-pointer hover:bg-memorial-beige-light/70 transition-colors duration-200">
         <input
           type="file"
