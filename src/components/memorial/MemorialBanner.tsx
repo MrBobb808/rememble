@@ -2,11 +2,19 @@ import { Heart } from "lucide-react";
 
 interface MemorialBannerProps {
   name: string;
-  dates: string;
+  birthYear?: string;
+  deathYear?: string;
   photoUrl?: string;
 }
 
-const MemorialBanner = ({ name, dates, photoUrl }: MemorialBannerProps) => {
+const MemorialBanner = ({ name, birthYear, deathYear, photoUrl }: MemorialBannerProps) => {
+  const formatDates = () => {
+    if (birthYear && deathYear) {
+      return `${birthYear} - ${deathYear}`;
+    }
+    return "";
+  };
+
   return (
     <div className="relative w-full h-[50vh] min-h-[400px] mb-8">
       <div className="absolute inset-0 bg-black/20" />
@@ -23,9 +31,11 @@ const MemorialBanner = ({ name, dates, photoUrl }: MemorialBannerProps) => {
         <h1 className="text-5xl md:text-6xl font-playfair mb-4 animate-fade-in">
           {name}
         </h1>
-        <p className="text-xl md:text-2xl font-inter mb-6 animate-fade-in opacity-90">
-          {dates}
-        </p>
+        {(birthYear || deathYear) && (
+          <p className="text-xl md:text-2xl font-inter mb-6 animate-fade-in opacity-90">
+            {formatDates()}
+          </p>
+        )}
         <Heart className="mx-auto w-10 h-10 text-white/90 animate-pulse" />
       </div>
     </div>

@@ -9,16 +9,19 @@ interface MemorialContentProps {
   photos: Photo[];
   handlePhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => Promise<void>;
   isLoading: boolean;
-  funeralHomeName?: string;
-  funeralHomeLogo?: string | null;
+  memorial?: {
+    name: string;
+    banner_image_url?: string;
+    birth_year?: string;
+    death_year?: string;
+  };
 }
 
 export const MemorialContent = ({
   photos,
   handlePhotoAdd,
   isLoading,
-  funeralHomeName,
-  funeralHomeLogo,
+  memorial,
 }: MemorialContentProps) => {
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
@@ -26,9 +29,10 @@ export const MemorialContent = ({
   return (
     <div className="pt-8">
       <MemorialBanner 
-        name={funeralHomeName || "My Funeral Home"}
-        dates="1945 - 2024"
-        photoUrl={funeralHomeLogo || "/placeholder.svg"}
+        name={memorial?.name || "Memorial"}
+        birthYear={memorial?.birth_year}
+        deathYear={memorial?.death_year}
+        photoUrl={memorial?.banner_image_url}
       />
 
       <div className={cn(
