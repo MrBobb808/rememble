@@ -30,11 +30,11 @@ serve(async (req) => {
       throw new Error('No email found')
     }
 
+    // Get customer by email
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
 
-    // Get customer by email
     const customers = await stripe.customers.list({
       email: email,
       limit: 1
