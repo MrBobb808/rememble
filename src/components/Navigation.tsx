@@ -7,6 +7,8 @@ import { PrintfulDialog } from "./memorial/PrintfulDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -16,9 +18,28 @@ const Navigation = () => {
   const { toast } = useToast();
   const { data: profile } = useProfile();
   
-  // Get the current memorial ID and token from URL
   const currentMemorialId = searchParams.get("id");
   const token = searchParams.get("token");
+
+  // Fetch photos for the current memorial
+  const { data: photos = [] } = useQuery({
+    queryKey: ['memorial-photos', currentMemorialId],
+    queryFn: async () => {
+      if (!currentMemorialId) return [];
+      const { data, error } = await supabase
+        .from('memorial_photos')
+        .select('*')
+        .eq('memorial_id', currentMemorialId)
+        .order('position', { ascending: true });
+      
+      if (error) throw error;
+      return data.map(photo => ({
+        url: photo.image_url,
+        caption: photo.caption
+      }));
+    },
+    enabled: !!currentMemorialId
+  });
 
   const handleHomeClick = () => {
     // If we have a memorial ID, navigate back to it with the token if present
@@ -91,7 +112,6 @@ const Navigation = () => {
               Dashboard
             </Button>
           )}
-
           <Button
             variant="ghost"
             size="sm"
@@ -100,7 +120,6 @@ const Navigation = () => {
             <Printer className="w-4 h-4 mr-2" />
             Print Memorial
           </Button>
-
           <Button
             variant="ghost"
             size="sm"
@@ -137,7 +156,7 @@ const Navigation = () => {
         open={isPrintDialogOpen} 
         onOpenChange={setIsPrintDialogOpen}
         memorialId={currentMemorialId || ''}
-        photos={[]} // TODO: Pass actual photos from memorial context
+        photos={photos}
       />
     </div>
   );

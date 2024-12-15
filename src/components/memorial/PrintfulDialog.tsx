@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Book, Shirt } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface PrintfulDialogProps {
   open: boolean;
@@ -14,10 +14,11 @@ interface PrintfulDialogProps {
 
 export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: PrintfulDialogProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreateProduct = async (type: 'photo-book' | 'quilt') => {
-    if (photos.length === 0) {
+  const handleProductSelection = (type: 'photo-book' | 'quilt') => {
+    if (!photos || photos.length === 0) {
       toast({
         title: "No photos available",
         description: "Please add some photos to the memorial before creating a print product.",
@@ -26,38 +27,11 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-printful-product', {
-        body: {
-          type,
-          memorialId,
-          photos: photos.map(photo => ({
-            url: photo.url,
-            caption: photo.caption
-          }))
-        },
-      });
-
-      if (error) throw error;
-      
-      if (!data?.checkoutUrl) {
-        throw new Error('No checkout URL received from Printful');
-      }
-
-      // Redirect to Printful checkout
-      window.location.href = data.checkoutUrl;
-      
-    } catch (error) {
-      console.error('Error creating product:', error);
-      toast({
-        title: "Error creating product",
-        description: "There was a problem creating your product. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Close the dialog
+    onOpenChange(false);
+    
+    // Navigate to the appropriate product page with the memorial ID
+    navigate(`/print/${type}?memorial=${memorialId}`);
   };
 
   return (
@@ -72,7 +46,7 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
           <Button
             variant="outline"
             className="h-32 flex flex-col items-center justify-center gap-2"
-            onClick={() => handleCreateProduct('photo-book')}
+            onClick={() => handleProductSelection('photo-book')}
             disabled={isLoading}
           >
             <Book className="h-8 w-8" />
@@ -81,7 +55,7 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
           <Button
             variant="outline"
             className="h-32 flex flex-col items-center justify-center gap-2"
-            onClick={() => handleCreateProduct('quilt')}
+            onClick={() => handleProductSelection('quilt')}
             disabled={isLoading}
           >
             <Shirt className="h-8 w-8" />
