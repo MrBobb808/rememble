@@ -1,37 +1,8 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Building2, Globe, Mail, Phone } from "lucide-react";
-
-interface FuneralHomeSettings {
-  name: string;
-  phone_number: string | null;
-  email_address: string | null;
-  website: string | null;
-  logo_url: string | null;
-}
+import { useFuneralHomeSettings } from "@/hooks/useFuneralHomeSettings";
 
 const Footer = () => {
-  const [settings, setSettings] = useState<FuneralHomeSettings | null>(null);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      const { data, error } = await supabase
-        .from('funeral_home_settings')
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error('Error fetching funeral home settings:', error);
-        return;
-      }
-
-      if (data) {
-        setSettings(data);
-      }
-    };
-
-    fetchSettings();
-  }, []);
+  const { settings } = useFuneralHomeSettings();
 
   if (!settings) return null;
 
