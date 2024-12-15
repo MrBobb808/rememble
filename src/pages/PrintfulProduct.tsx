@@ -2,14 +2,11 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft } from "lucide-react";
 import { ProductHeader } from "@/components/printful/ProductHeader";
 import { ProductVariants } from "@/components/printful/ProductVariants";
 import { PhotoGrid } from "@/components/printful/PhotoGrid";
-import { InteractivePreview } from "@/components/printful/InteractivePreview";
-import { ActionButtons } from "@/components/printful/ActionButtons";
+import { LoadingState } from "@/components/memorial/LoadingState";
 import { PHOTO_BOOK_VARIANTS, QUILT_VARIANTS } from "@/components/printful/variants";
 
 export const PrintfulProduct = () => {
@@ -20,6 +17,7 @@ export const PrintfulProduct = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [edmLoaded, setEdmLoaded] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
+  const [edm, setEdm] = useState<any>(null);
   
   const memorialId = searchParams.get("memorial");
 
@@ -44,99 +42,108 @@ export const PrintfulProduct = () => {
   });
 
   useEffect(() => {
-    // Initialize Printful EDM
+    let scriptElement: HTMLScriptElement | null = null;
+
     const initializeEDM = () => {
       if (!window.PrintfulEDM || !selectedVariant) {
         console.log('Printful EDM not loaded or no variant selected');
         return;
       }
 
-      const edm = new window.PrintfulEDM({
-        elementId: 'printful-edm',
-        productId: selectedVariant,
-        customization: {
-          theme: {
-            primary_color: '#4F46E5',
-            secondary_color: '#E5E7EB',
-          },
-          hide_elements: ['powered_by'],
+      try {
+        // Clean up previous EDM instance if it exists
+        if (edm) {
+          edm.destroy?.();
         }
-      });
 
-      edm.on('editor.loaded', () => {
-        setEdmLoaded(true);
-        console.log('EDM loaded successfully');
-        
-        // Auto-import photos when EDM is ready
-        if (photos.length > 0) {
-          photos.forEach(photo => {
-            edm.addImage({
-              type: 'url',
-              url: photo.url,
-              name: photo.caption || 'Memorial photo'
+        const newEdm = new window.PrintfulEDM({
+          elementId: 'printful-edm',
+          productId: selectedVariant,
+          customization: {
+            theme: {
+              primary_color: '#4F46E5',
+              secondary_color: '#E5E7EB',
+            },
+            hide_elements: ['powered_by'],
+          }
+        });
+
+        setEdm(newEdm);
+
+        newEdm.on('editor.loaded', () => {
+          setEdmLoaded(true);
+          setIsLoading(false);
+          console.log('EDM loaded successfully');
+          
+          // Auto-import photos when EDM is ready
+          if (photos.length > 0) {
+            photos.forEach(photo => {
+              newEdm.addImage({
+                type: 'url',
+                url: photo.url,
+                name: photo.caption || 'Memorial photo'
+              });
             });
-          });
-        }
-      });
+          }
+        });
 
-      edm.on('editor.error', (error) => {
-        console.error('EDM error:', error);
+        newEdm.on('editor.error', (error: any) => {
+          console.error('EDM error:', error);
+          setIsLoading(false);
+          toast({
+            title: "Error loading design editor",
+            description: "There was a problem loading the design editor. Please try again.",
+            variant: "destructive"
+          });
+        });
+
+      } catch (error) {
+        console.error('Error initializing EDM:', error);
+        setIsLoading(false);
         toast({
-          title: "Error loading design editor",
-          description: "There was a problem loading the design editor. Please try again.",
+          title: "Error initializing design editor",
+          description: "There was a problem setting up the design editor. Please try again.",
           variant: "destructive"
         });
-      });
-
-      // Handle design save
-      edm.on('design.save', (design) => {
-        console.log('Design saved:', design);
-        // Here you could save the design to your database
-      });
+      }
     };
 
     if (selectedVariant) {
+      setIsLoading(true);
+      setEdmLoaded(false);
+      
       // Load Printful EDM script
-      const script = document.createElement('script');
-      script.src = 'https://tools.printful.com/js/edm/v1/edm.js';
-      script.async = true;
-      script.onload = initializeEDM;
-      document.body.appendChild(script);
-
-      return () => {
-        document.body.removeChild(script);
-      };
+      scriptElement = document.createElement('script');
+      scriptElement.src = 'https://tools.printful.com/js/edm/v1/edm.js';
+      scriptElement.async = true;
+      scriptElement.onload = initializeEDM;
+      document.body.appendChild(scriptElement);
     }
+
+    return () => {
+      if (scriptElement && document.body.contains(scriptElement)) {
+        document.body.removeChild(scriptElement);
+      }
+      if (edm) {
+        edm.destroy?.();
+      }
+    };
   }, [selectedVariant, photos, toast]);
 
   const variants = productType === 'photo-book' ? PHOTO_BOOK_VARIANTS : QUILT_VARIANTS;
 
   const handleVariantSelect = (variantId: number) => {
     setSelectedVariant(variantId);
-    setEdmLoaded(false); // Reset EDM loaded state when variant changes
   };
 
   if (isLoadingPhotos) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <ProductHeader productType={productType || ''} />
-        </div>
+        <ProductHeader productType={productType || ''} />
 
         <ProductVariants
           variants={variants}
@@ -145,18 +152,15 @@ export const PrintfulProduct = () => {
         />
 
         {selectedVariant ? (
-          <div 
-            id="printful-edm" 
-            className="w-full min-h-[800px] bg-white rounded-lg shadow-lg mb-8"
-          />
+          <>
+            <div 
+              id="printful-edm" 
+              className={`w-full min-h-[800px] bg-white rounded-lg shadow-lg mb-8 ${!edmLoaded ? 'hidden' : ''}`}
+            />
+            {isLoading && <LoadingState />}
+          </>
         ) : (
           <PhotoGrid photos={photos} />
-        )}
-
-        {!edmLoaded && selectedVariant && (
-          <div className="flex items-center justify-center h-[800px]">
-            <Loader2 className="w-8 h-8 animate-spin" />
-          </div>
         )}
       </div>
     </div>
