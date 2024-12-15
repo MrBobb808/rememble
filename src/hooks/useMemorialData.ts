@@ -18,7 +18,12 @@ export const useMemorialData = (memorialId: string | null) => {
 
   useEffect(() => {
     const fetchPhotos = async () => {
-      if (!memorialId) return;
+      console.log("Fetching photos for memorialId:", memorialId);
+      
+      if (!memorialId) {
+        console.log("No memorialId provided");
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -27,10 +32,13 @@ export const useMemorialData = (memorialId: string | null) => {
           .eq('memorial_id', memorialId)
           .order('position', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching photos:', error);
+          throw error;
+        }
 
         if (data) {
-          console.log('Fetched photos:', data);
+          console.log('Fetched photos data:', data);
           const formattedPhotos = data.map(photo => ({
             id: photo.position,
             url: photo.image_url,
@@ -39,10 +47,11 @@ export const useMemorialData = (memorialId: string | null) => {
             contributorName: photo.contributor_name,
             relationship: photo.relationship
           }));
+          console.log('Formatted photos:', formattedPhotos);
           setPhotos(formattedPhotos);
         }
       } catch (error: any) {
-        console.error('Error fetching photos:', error);
+        console.error('Error in fetchPhotos:', error);
         toast({
           title: "Error fetching photos",
           description: "There was a problem loading your memories.",

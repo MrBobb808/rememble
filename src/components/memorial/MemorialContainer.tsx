@@ -14,13 +14,19 @@ const MemorialContainer = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { settings } = useFuneralHomeSettings();
 
+  console.log("MemorialContainer - memorialId:", memorialId);
+  console.log("MemorialContainer - photos:", photos);
+  console.log("MemorialContainer - settings:", settings);
+
   useEffect(() => {
-    if (photos.length > 0) {
+    if (photos.length >= 0) {  // Changed from > 0 to >= 0 to handle empty memorials
+      console.log("Setting isLoading to false");
       setIsLoading(false);
     }
   }, [photos]);
 
   if (isLoading) {
+    console.log("Rendering LoadingState");
     return <LoadingState />;
   }
 
