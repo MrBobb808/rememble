@@ -8,6 +8,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -37,6 +38,19 @@ serve(async (req) => {
     
     console.log('Creating mockup with variant ID:', variantId)
     
+    // Test the API key first with a simple request
+    const testResponse = await fetch("https://api.printful.com/store/products", {
+      headers: {
+        "Authorization": `Basic ${encodedKey}`,
+      },
+    });
+
+    if (!testResponse.ok) {
+      const errorData = await testResponse.json();
+      console.error('Printful API key validation failed:', errorData);
+      throw new Error('Invalid Printful API key. Please check your API key configuration.');
+    }
+    
     const mockupResponse = await fetch("https://api.printful.com/mockup-generator/create-task", {
       method: "POST",
       headers: {
@@ -48,7 +62,15 @@ serve(async (req) => {
         format: 'jpg',
         files: photos.map(photo => ({
           placement: 'default',
-          image_url: photo.url
+          image_url: photo.url,
+          position: {
+            area_width: 1800,
+            area_height: 1800,
+            width: 1800,
+            height: 1800,
+            top: 0,
+            left: 0,
+          }
         })),
       }),
     })
