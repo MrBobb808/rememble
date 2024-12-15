@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Photo {
-  id: number;
-  url: string;
-  caption: string;
-  aiReflection?: string;
-  contributorName?: string;
-  relationship?: string;
-}
+import { Photo } from "@/types/photo";
 
 export const useMemorialData = (memorialId: string | null) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -40,7 +32,7 @@ export const useMemorialData = (memorialId: string | null) => {
         if (data) {
           console.log('Fetched photos data:', data);
           const formattedPhotos = data.map(photo => ({
-            id: photo.position,
+            id: String(photo.position), // Convert to string to match Photo interface
             url: photo.image_url,
             caption: photo.caption,
             aiReflection: photo.ai_reflection,
@@ -87,11 +79,12 @@ export const useMemorialData = (memorialId: string | null) => {
 
       if (reflectionError) throw reflectionError;
 
+      const position = photos.length;
       const { data: photoData, error: photoError } = await supabase
         .from('memorial_photos')
         .insert({
           memorial_id: memorialId,
-          position: photos.length,
+          position,
           image_url: publicUrl,
           caption,
           ai_reflection: reflectionData.reflection,
@@ -103,8 +96,8 @@ export const useMemorialData = (memorialId: string | null) => {
 
       if (photoError) throw photoError;
 
-      const newPhoto = {
-        id: photos.length,
+      const newPhoto: Photo = {
+        id: String(position),
         url: publicUrl,
         caption,
         aiReflection: reflectionData.reflection,
