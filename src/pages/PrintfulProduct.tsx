@@ -1,12 +1,35 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft, Book, Shirt, ShoppingCart } from "lucide-react";
-import Navigation from "@/components/Navigation";
+import { Loader2 } from "lucide-react";
+import { ProductHeader } from "@/components/printful/ProductHeader";
+import { ProductVariants } from "@/components/printful/ProductVariants";
+import { PhotoGrid } from "@/components/printful/PhotoGrid";
+import { ActionButtons } from "@/components/printful/ActionButtons";
 import { Card } from "@/components/ui/card";
+
+const PHOTO_BOOK_VARIANTS = [
+  {
+    id: 438,
+    name: "Standard Photo Book",
+    price: "$29.99",
+    description: "8.5\" x 8.5\", 20 pages"
+  },
+  {
+    id: 439,
+    name: "Premium Photo Book",
+    price: "$39.99",
+    description: "10\" x 10\", 30 pages"
+  },
+  {
+    id: 440,
+    name: "Deluxe Photo Book",
+    price: "$49.99",
+    description: "12\" x 12\", 40 pages"
+  }
+];
 
 export const PrintfulProduct = () => {
   const [searchParams] = useSearchParams();
@@ -15,6 +38,7 @@ export const PrintfulProduct = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [mockupUrl, setMockupUrl] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
   
   const memorialId = searchParams.get("memorial");
 
@@ -30,7 +54,7 @@ export const PrintfulProduct = () => {
       
       if (error) throw error;
       return data.map(photo => ({
-        url: photo.image_url, // Map image_url to url for consistency
+        url: photo.image_url,
         caption: photo.caption
       }));
     },
@@ -38,6 +62,15 @@ export const PrintfulProduct = () => {
   });
 
   const handleCreateProduct = async () => {
+    if (!selectedVariant) {
+      toast({
+        title: "No variant selected",
+        description: "Please select a product option before continuing.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (photos.length === 0) {
       toast({
         title: "No photos available",
@@ -54,6 +87,7 @@ export const PrintfulProduct = () => {
       const { data, error } = await supabase.functions.invoke('create-printful-mockup', {
         body: {
           type: productType,
+          variantId: selectedVariant,
           photos: photos.map(photo => ({
             url: photo.url,
             caption: photo.caption
@@ -87,11 +121,14 @@ export const PrintfulProduct = () => {
   };
 
   const handleProceedToCheckout = async () => {
+    if (!selectedVariant) return;
+    
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-printful-product', {
         body: {
           type: productType,
+          variantId: selectedVariant,
           photos: photos.map(photo => ({
             url: photo.url,
             caption: photo.caption
@@ -129,38 +166,16 @@ export const PrintfulProduct = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
-      <Navigation />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          {productType === 'photo-book' ? (
-            <Book className="w-8 h-8 text-memorial-blue" />
-          ) : (
-            <Shirt className="w-8 h-8 text-memorial-blue" />
-          )}
-          <h1 className="text-3xl font-playfair">
-            {productType === 'photo-book' ? 'Create Memorial Photo Book' : 'Create Memory Quilt'}
-          </h1>
-        </div>
+        <ProductHeader productType={productType || ''} />
+        
+        <ProductVariants
+          variants={PHOTO_BOOK_VARIANTS}
+          selectedVariant={selectedVariant}
+          onVariantSelect={setSelectedVariant}
+        />
 
-        <Card className="p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Selected Photos</h2>
-          <p className="text-gray-600 mb-4">
-            {productType === 'photo-book' 
-              ? 'These photos will be beautifully arranged in your memorial photo book.'
-              : 'These photos will be carefully arranged on your memory quilt.'}
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {photos.map((photo, index) => (
-              <div key={index} className="aspect-square rounded-lg overflow-hidden shadow-md">
-                <img 
-                  src={photo.url} 
-                  alt={photo.caption} 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
+        <PhotoGrid photos={photos} />
 
         {mockupUrl && (
           <Card className="p-6 mb-8">
@@ -173,47 +188,12 @@ export const PrintfulProduct = () => {
           </Card>
         )}
 
-        <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          {!mockupUrl ? (
-            <Button
-              onClick={handleCreateProduct}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Preview...
-                </>
-              ) : (
-                'Generate Preview'
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleProceedToCheckout}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Proceed to Checkout
-                </>
-              )}
-            </Button>
-          )}
-        </div>
+        <ActionButtons
+          onBack={() => navigate(-1)}
+          onAction={mockupUrl ? handleProceedToCheckout : handleCreateProduct}
+          isLoading={isLoading}
+          mockupUrl={mockupUrl}
+        />
       </div>
     </div>
   );
