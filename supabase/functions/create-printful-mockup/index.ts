@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     if (!PRINTFUL_API_KEY) {
+      console.error('Printful API key not configured')
       throw new Error('Printful API key not configured')
     }
 
@@ -44,9 +45,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         variant_ids: [variantId],
+        format: 'jpg',
         files: photos.map(photo => ({
-          type: "default",
-          url: photo.url
+          placement: 'default',
+          image_url: photo.url
         })),
       }),
     })
@@ -60,16 +62,49 @@ serve(async (req) => {
       throw new Error(errorMessage)
     }
 
-    return new Response(
-      JSON.stringify({
-        mockupUrl: mockupData.result?.mockups?.[0]?.mockup_url,
-        result: mockupData.result,
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+    // Wait for the mockup to be generated
+    const taskKey = mockupData.result?.task_key
+    if (!taskKey) {
+      throw new Error('No task key received from Printful')
+    }
+
+    // Poll for the result
+    let attempts = 0
+    const maxAttempts = 10
+    while (attempts < maxAttempts) {
+      const resultResponse = await fetch(`https://api.printful.com/mockup-generator/task?task_key=${taskKey}`, {
+        headers: {
+          "Authorization": `Basic ${encodedKey}`,
+        },
+      })
+      
+      const resultData = await resultResponse.json()
+      console.log('Task status check response:', resultData)
+      
+      if (resultData.result?.status === 'completed') {
+        return new Response(
+          JSON.stringify({
+            mockupUrl: resultData.result?.mockups[0]?.mockup_url,
+            result: resultData.result,
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          },
+        )
+      }
+      
+      if (resultData.result?.status === 'failed') {
+        throw new Error('Mockup generation failed: ' + (resultData.result?.error || 'Unknown error'))
+      }
+      
+      // Wait 2 seconds before next attempt
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      attempts++
+    }
+
+    throw new Error('Timeout waiting for mockup generation')
+
   } catch (error) {
     console.error('Error in create-printful-mockup:', error)
     return new Response(
