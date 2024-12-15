@@ -17,10 +17,10 @@ const AuthCallback = () => {
         const type = searchParams.get('type');
         
         if (type === 'email_confirmation' && token_hash) {
-          // Verify the email with Supabase
+          // Verify the email with Supabase using the correct type
           const { error } = await supabase.auth.verifyOtp({
             token_hash,
-            type: 'email_confirmation',
+            type: "email",
           });
 
           if (error) throw error;
