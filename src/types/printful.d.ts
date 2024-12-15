@@ -16,10 +16,17 @@ interface PrintfulEDMImage {
   name?: string;
 }
 
+interface PrintfulEDMDesign {
+  id: string;
+  preview_url: string;
+  files: PrintfulEDMImage[];
+}
+
 interface PrintfulEDM {
   new (options: PrintfulEDMOptions): PrintfulEDM;
-  on(event: string, callback: (data?: any) => void): void;
+  on(event: 'editor.loaded' | 'editor.error' | 'design.save', callback: (data?: any) => void): void;
   addImage(image: PrintfulEDMImage): void;
+  getDesign(): Promise<PrintfulEDMDesign>;
 }
 
 interface Window {
