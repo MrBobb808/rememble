@@ -5,6 +5,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import CommentsList from "./comments/CommentsList";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "./ui/badge";
+import { Users } from "lucide-react";
 
 interface ImageDialogProps {
   open: boolean;
@@ -20,11 +24,37 @@ interface ImageDialogProps {
 }
 
 const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
+  const [activeViewers, setActiveViewers] = useState<number>(0);
+
+  useEffect(() => {
+    if (!image?.id || !open) return;
+
+    // Subscribe to presence updates for this image
+    const channel = supabase.channel(`image_${image.id}`)
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const viewerCount = Object.keys(state).length;
+        setActiveViewers(viewerCount);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user: 'anonymous',
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [image?.id, open]);
+
   if (!image) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1000px] max-h-[90vh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[1200px] max-h-[90vh] p-0 gap-0 overflow-hidden">
         <div className="flex flex-col md:grid md:grid-cols-2">
           {/* Image Section */}
           <div className="relative w-full bg-black flex items-center">
@@ -39,8 +69,12 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
           <div className="flex flex-col h-[50vh] md:h-[90vh] overflow-hidden">
             {/* Memory Details */}
             <div className="p-4 space-y-3 bg-white border-b">
-              <DialogHeader>
+              <DialogHeader className="flex flex-row items-center justify-between">
                 <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {activeViewers} viewing
+                </Badge>
               </DialogHeader>
 
               <p className="text-base text-gray-600">{image.caption}</p>
