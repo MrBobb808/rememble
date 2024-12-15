@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Book, Shirt, ShoppingCart } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { Card } from "@/components/ui/card";
 
 export const PrintfulProduct = () => {
   const [searchParams] = useSearchParams();
@@ -29,7 +30,7 @@ export const PrintfulProduct = () => {
       
       if (error) throw error;
       return data.map(photo => ({
-        url: photo.image_url,
+        url: photo.url,
         caption: photo.caption
       }));
     },
@@ -47,9 +48,11 @@ export const PrintfulProduct = () => {
     }
 
     setIsLoading(true);
+    setMockupUrl(null);
+
     try {
       // First generate a mockup
-      const { data: mockupData, error: mockupError } = await supabase.functions.invoke('create-printful-mockup', {
+      const { data, error } = await supabase.functions.invoke('create-printful-mockup', {
         body: {
           type: productType,
           photos: photos.map(photo => ({
@@ -59,19 +62,24 @@ export const PrintfulProduct = () => {
         },
       });
 
-      if (mockupError) throw mockupError;
+      if (error) throw error;
       
-      if (!mockupData?.mockupUrl) {
+      if (!data?.mockupUrl) {
         throw new Error('No mockup URL received from Printful');
       }
 
-      setMockupUrl(mockupData.mockupUrl);
+      setMockupUrl(data.mockupUrl);
+      
+      toast({
+        title: "Preview generated",
+        description: "Your product preview has been generated successfully.",
+      });
       
     } catch (error: any) {
       console.error('Error creating mockup:', error);
       toast({
-        title: "Error creating mockup",
-        description: error.message || "There was a problem creating your mockup. Please try again.",
+        title: "Error creating preview",
+        description: error.message || "There was a problem creating your preview. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -125,31 +133,46 @@ export const PrintfulProduct = () => {
     <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
       <Navigation />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-playfair mb-8">
-          {productType === 'photo-book' ? 'Create Photo Book' : 'Create Memory Quilt'}
-        </h1>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
-          {photos.map((photo, index) => (
-            <div key={index} className="aspect-square rounded-lg overflow-hidden">
-              <img 
-                src={photo.url} 
-                alt={photo.caption} 
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
+        <div className="flex items-center gap-4 mb-8">
+          {productType === 'photo-book' ? (
+            <Book className="w-8 h-8 text-memorial-blue" />
+          ) : (
+            <Shirt className="w-8 h-8 text-memorial-blue" />
+          )}
+          <h1 className="text-3xl font-playfair">
+            {productType === 'photo-book' ? 'Create Memorial Photo Book' : 'Create Memory Quilt'}
+          </h1>
         </div>
 
+        <Card className="p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Selected Photos</h2>
+          <p className="text-gray-600 mb-4">
+            {productType === 'photo-book' 
+              ? 'These photos will be beautifully arranged in your memorial photo book.'
+              : 'These photos will be carefully arranged on your memory quilt.'}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {photos.map((photo, index) => (
+              <div key={index} className="aspect-square rounded-lg overflow-hidden shadow-md">
+                <img 
+                  src={photo.url} 
+                  alt={photo.caption} 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+
         {mockupUrl && (
-          <div className="mb-8">
+          <Card className="p-6 mb-8">
             <h2 className="text-xl font-semibold mb-4">Preview</h2>
             <img 
               src={mockupUrl} 
-              alt="Product Mockup" 
+              alt="Product Preview" 
               className="max-w-full rounded-lg shadow-lg"
             />
-          </div>
+          </Card>
         )}
 
         <div className="flex gap-4">
@@ -185,7 +208,10 @@ export const PrintfulProduct = () => {
                   Processing...
                 </>
               ) : (
-                'Proceed to Checkout'
+                <>
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Proceed to Checkout
+                </>
               )}
             </Button>
           )}
