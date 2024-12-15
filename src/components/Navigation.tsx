@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HelpCircle, Home, Printer, Download, Share2, LayoutDashboard } from "lucide-react";
+import { HelpCircle, Printer, Download, Share2, LayoutDashboard } from "lucide-react";
 import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
@@ -84,6 +84,8 @@ const Navigation = () => {
     // TODO: Implement PDF generation
   };
 
+  const isDirector = profile?.relationship === 'director';
+
   return (
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b">
       <div className="container mx-auto py-4 px-4 flex justify-between items-center">
@@ -92,17 +94,20 @@ const Navigation = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleHomeClick}
-          >
-            <Home className="w-4 h-4 mr-2" />
-            Home
-          </Button>
+          {/* Show Home button only for non-director accounts */}
+          {!isDirector && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleHomeClick}
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Button>
+          )}
 
-          {/* Show Dashboard button only for director accounts */}
-          {profile?.relationship === 'director' && (
+          {/* Show Dashboard button for director accounts */}
+          {isDirector && (
             <Button
               variant="ghost"
               size="sm"
@@ -112,6 +117,7 @@ const Navigation = () => {
               Dashboard
             </Button>
           )}
+
           <Button
             variant="ghost"
             size="sm"
@@ -120,6 +126,7 @@ const Navigation = () => {
             <Printer className="w-4 h-4 mr-2" />
             Print Memorial
           </Button>
+
           <Button
             variant="ghost"
             size="sm"
