@@ -1,6 +1,5 @@
 import PhotoGrid from "@/components/PhotoGrid";
 import MemorialSummary from "@/components/MemorialSummary";
-import UnifiedSidebar from "./UnifiedSidebar";
 import MemorialBanner from "./MemorialBanner";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
@@ -42,7 +41,6 @@ export const MemorialContent = ({
 
       <div className={cn(
         "max-w-[1400px] mx-auto",
-        "grid lg:grid-cols-[1fr,300px] gap-6",
         "bg-gradient-to-b from-memorial-beige-light to-white/50",
         "rounded-lg shadow-sm p-4 mx-auto my-6"
       )}>
@@ -57,9 +55,6 @@ export const MemorialContent = ({
             />
           )}
         </div>
-        <aside className="hidden lg:block">
-          <UnifiedSidebar photos={photos} />
-        </aside>
       </div>
     </div>
   );
