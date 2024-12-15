@@ -6,8 +6,10 @@ import BrandingSettings from "./tabs/BrandingSettings";
 import NotificationSettings from "./tabs/NotificationSettings";
 import MemorialSettings from "./tabs/MemorialSettings";
 import SecuritySettings from "./tabs/SecuritySettings";
-import BillingSettings from "./tabs/BillingSettings";
-import SupportHelp from "./tabs/SupportHelp";
+import CollaborationSettings from "./tabs/CollaborationSettings";
+import AppearanceSettings from "./tabs/AppearanceSettings";
+import DataSettings from "./tabs/DataSettings";
+import IntegrationSettings from "./tabs/IntegrationSettings";
 
 const DirectorSettings = () => {
   return (
@@ -15,15 +17,17 @@ const DirectorSettings = () => {
       <h1 className="text-3xl font-playfair text-gray-800 mb-6">Director Settings</h1>
       
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 w-full">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="collaboration">Collaboration</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="memorials">Memorials</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-          <TabsTrigger value="support">Support</TabsTrigger>
+          <TabsTrigger value="memorials">Memorials</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="data">Data</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
 
         <Card className="mt-6 p-6">
@@ -31,32 +35,40 @@ const DirectorSettings = () => {
             <GeneralSettings />
           </TabsContent>
           
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
-          
           <TabsContent value="branding">
             <BrandingSettings />
+          </TabsContent>
+          
+          <TabsContent value="collaboration">
+            <CollaborationSettings />
           </TabsContent>
           
           <TabsContent value="notifications">
             <NotificationSettings />
           </TabsContent>
           
-          <TabsContent value="memorials">
-            <MemorialSettings />
-          </TabsContent>
-          
           <TabsContent value="security">
             <SecuritySettings />
           </TabsContent>
           
-          <TabsContent value="billing">
-            <BillingSettings />
+          <TabsContent value="memorials">
+            <MemorialSettings />
           </TabsContent>
           
-          <TabsContent value="support">
-            <SupportHelp />
+          <TabsContent value="appearance">
+            <AppearanceSettings />
+          </TabsContent>
+          
+          <TabsContent value="data">
+            <DataSettings />
+          </TabsContent>
+          
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+          
+          <TabsContent value="integrations">
+            <IntegrationSettings />
           </TabsContent>
         </Card>
       </Tabs>
