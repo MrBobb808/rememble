@@ -16,7 +16,16 @@ const CommentForm = ({ photoId }: CommentFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    
+    // Basic validation for empty comments
+    if (!newComment.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a comment before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!validateUUID(photoId)) {
       console.error('Invalid photo ID format:', photoId);
@@ -53,18 +62,17 @@ const CommentForm = ({ photoId }: CommentFormProps) => {
         throw new Error('Photo not found. It may have been deleted.');
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('memorial_image_comments')
         .insert({
           photo_id: photoId,
           content: newComment.trim(),
           user_id: userData.user.id
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
+      // Clear the input and show success message
       setNewComment("");
       toast({
         title: "Success",
@@ -88,9 +96,14 @@ const CommentForm = ({ photoId }: CommentFormProps) => {
         placeholder="Add a comment..."
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        className="min-h-[80px]"
+        className="min-h-[80px] resize-none"
+        disabled={isLoading}
       />
-      <Button type="submit" disabled={isLoading}>
+      <Button 
+        type="submit" 
+        disabled={isLoading || !newComment.trim()}
+        className="w-full sm:w-auto"
+      >
         {isLoading ? "Posting..." : "Post Comment"}
       </Button>
     </form>
