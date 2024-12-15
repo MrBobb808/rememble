@@ -15,6 +15,7 @@ const Memorial = lazy(() => import("./pages/Memorial"))
 const Auth = lazy(() => import("./pages/Auth"))
 const AuthCallback = lazy(() => import("./pages/AuthCallback"))
 const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard"))
+const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +74,7 @@ const App = () => (
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/memorial" element={<Memorial />} />
                 <Route path="/director" element={<DirectorDashboard />} />
+                <Route path="/print/:productType" element={<PrintfulProduct />} />
               </Routes>
             </Suspense>
           </BrowserRouter>

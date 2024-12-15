@@ -23,7 +23,7 @@ serve(async (req) => {
 
     // Validate input
     if (!photos || !Array.isArray(photos) || photos.length === 0) {
-      throw new Error('No photos provided for creating the product')
+      throw new Error('No photos provided for creating the mockup')
     }
 
     if (!type || !['photo-book', 'quilt'].includes(type)) {
@@ -32,46 +32,37 @@ serve(async (req) => {
 
     const encodedKey = btoa(PRINTFUL_API_KEY)
     
-    // Create sync product based on product type
+    // Create mockup task based on product type
     const variantId = type === 'photo-book' ? 438 : 439 // Example variant IDs
-    console.log('Creating product with variant ID:', variantId)
+    console.log('Creating mockup with variant ID:', variantId)
     
-    // Create sync product
-    const productResponse = await fetch("https://api.printful.com/store/products", {
+    const mockupResponse = await fetch("https://api.printful.com/mockup-generator/create-task", {
       method: "POST",
       headers: {
         "Authorization": `Basic ${encodedKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        sync_product: {
-          name: type === 'photo-book' ? "Memorial Photo Book" : "Memorial Quilt",
-          thumbnail: photos[0].url,
-        },
-        sync_variants: [
-          {
-            variant_id: variantId,
-            files: photos.map(photo => ({
-              type: "default",
-              url: photo.url
-            })),
-          },
-        ],
+        variant_ids: [variantId],
+        files: photos.map(photo => ({
+          type: "default",
+          url: photo.url
+        })),
       }),
     })
 
-    if (!productResponse.ok) {
-      const errorData = await productResponse.json()
-      console.error('Product creation failed:', errorData)
-      throw new Error(`Failed to create product: ${errorData.message || 'Unknown error'}`)
+    if (!mockupResponse.ok) {
+      const errorData = await mockupResponse.json()
+      console.error('Mockup creation failed:', errorData)
+      throw new Error(`Failed to create mockup: ${errorData.message || 'Unknown error'}`)
     }
 
-    const productData = await productResponse.json()
-    console.log('Product created successfully:', productData)
+    const mockupData = await mockupResponse.json()
+    console.log('Mockup created successfully:', mockupData)
 
     return new Response(
       JSON.stringify({
-        checkoutUrl: `https://www.printful.com/dashboard/sync-products/${productData.result.id}`,
+        mockupUrl: mockupData.result.mockups[0].mockup_url,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -79,7 +70,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error in create-printful-product:', error)
+    console.error('Error in create-printful-mockup:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred',
