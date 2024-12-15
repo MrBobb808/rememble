@@ -7,17 +7,35 @@ import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
 import { useFuneralHomeSettings } from "@/hooks/useFuneralHomeSettings";
 import { Photo } from "@/types/photo";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const MemorialContainer = () => {
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
   const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   const [isLoading, setIsLoading] = useState(true);
-  const { settings } = useFuneralHomeSettings();
+
+  // Fetch memorial details
+  const { data: memorial } = useQuery({
+    queryKey: ['memorial', memorialId],
+    queryFn: async () => {
+      if (!memorialId) return null;
+      const { data, error } = await supabase
+        .from('memorials')
+        .select('*')
+        .eq('id', memorialId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!memorialId
+  });
 
   console.log("MemorialContainer - memorialId:", memorialId);
   console.log("MemorialContainer - photos:", photos);
-  console.log("MemorialContainer - settings:", settings);
+  console.log("MemorialContainer - memorial:", memorial);
 
   useEffect(() => {
     if (photos.length >= 0) {  // Changed from > 0 to >= 0 to handle empty memorials
@@ -39,8 +57,7 @@ const MemorialContainer = () => {
             photos={photos}
             handlePhotoAdd={handlePhotoAdd}
             isLoading={isLoading}
-            funeralHomeName={settings?.name}
-            funeralHomeLogo={settings?.logo_url}
+            memorial={memorial}
           />
           <UnifiedSidebar photos={photos} />
         </div>
