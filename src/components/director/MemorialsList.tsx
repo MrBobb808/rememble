@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { MemorialItem } from "./memorials/MemorialItem";
 import { EditMemorialDialog } from "./memorials/EditMemorialDialog";
 import { PreviewMemorialDialog } from "./memorials/PreviewMemorialDialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { createNewMemorial } from "@/services/memorialService";
 
 interface Memorial {
   id: string;
@@ -27,6 +30,28 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
   const [editingMemorial, setEditingMemorial] = useState<Memorial | null>(null);
   const [newName, setNewName] = useState("");
   const [previewMemorial, setPreviewMemorial] = useState<Memorial | null>(null);
+
+  const handleCreateMemorial = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+      
+      await createNewMemorial(user.id);
+      
+      toast({
+        title: "Memorial created",
+        description: "New memorial has been created successfully.",
+      });
+      
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Error creating memorial",
+        description: error.message || "There was a problem creating the memorial.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleUpdateName = async () => {
     if (!editingMemorial) return;
@@ -131,8 +156,12 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Recent Memorials</CardTitle>
+        <Button onClick={handleCreateMemorial} size="sm">
+          <Plus className="mr-2 h-4 w-4" />
+          Create Memorial
+        </Button>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] w-full rounded-md border">
