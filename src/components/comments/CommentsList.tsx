@@ -1,6 +1,7 @@
 import { useComments } from "@/hooks/useComments";
 import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
+import { validateUUID } from "@/utils/validation";
 
 interface CommentsListProps {
   photoId: string;
@@ -9,7 +10,10 @@ interface CommentsListProps {
 const CommentsList = ({ photoId }: CommentsListProps) => {
   const { comments } = useComments(photoId);
 
-  console.log("CommentsList - Received photoId:", photoId);
+  if (!validateUUID(photoId)) {
+    console.error('Invalid photo ID format:', photoId);
+    return null;
+  }
 
   return (
     <div className="space-y-4">

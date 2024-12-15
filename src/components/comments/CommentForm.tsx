@@ -18,6 +18,16 @@ const CommentForm = ({ photoId }: CommentFormProps) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
+    if (!validateUUID(photoId)) {
+      console.error('Invalid photo ID format:', photoId);
+      toast({
+        title: "Error",
+        description: "Invalid photo reference. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     const { data: userData } = await supabase.auth.getUser();
     
@@ -31,24 +41,7 @@ const CommentForm = ({ photoId }: CommentFormProps) => {
       return;
     }
 
-    if (!validateUUID(photoId)) {
-      console.error('Invalid photo ID:', photoId);
-      toast({
-        title: "Error",
-        description: "Invalid photo reference. Please try again.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log('Attempting to insert comment with:', {
-        photo_id: photoId,
-        content: newComment.trim(),
-        user_id: userData.user.id
-      });
-
       // First, verify the photo exists
       const { data: photoExists, error: photoError } = await supabase
         .from('memorial_photos')
@@ -70,15 +63,7 @@ const CommentForm = ({ photoId }: CommentFormProps) => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        throw error;
-      }
+      if (error) throw error;
 
       setNewComment("");
       toast({
