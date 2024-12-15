@@ -85,13 +85,9 @@ export const MemorialItem = ({
           variant="outline"
           className="w-full justify-start"
           onClick={() => onGenerateLink(memorial.id, 'viewer')}
-          disabled={!memorial.is_complete}
         >
           <Link className="mr-2 h-4 w-4" />
           Generate Viewer Link
-          {!memorial.is_complete && (
-            <span className="ml-2 text-xs text-gray-500">(Fill all tiles first)</span>
-          )}
         </Button>
       </div>
     </div>

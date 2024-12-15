@@ -6,25 +6,14 @@ import { Link, Shield, Eye } from "lucide-react";
 
 interface LinkGeneratorProps {
   memorialId: string;
-  isComplete?: boolean;
 }
 
-export const LinkGenerator = ({ memorialId, isComplete = false }: LinkGeneratorProps) => {
+export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
 
   const generateLink = async (type: 'collaborator' | 'viewer') => {
     try {
-      // Check if memorial is complete for viewer links
-      if (type === 'viewer' && !isComplete) {
-        toast({
-          title: "Cannot generate viewer link",
-          description: "All photo tiles must be filled before generating a viewer link.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
@@ -59,9 +48,7 @@ export const LinkGenerator = ({ memorialId, isComplete = false }: LinkGeneratorP
 
       // Generate the correct link based on the type
       const baseUrl = window.location.origin;
-      const fullLink = type === 'collaborator' 
-        ? `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`
-        : `${baseUrl}/memorial/${type}?token=${link.token}`;
+      const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
 
       await navigator.clipboard.writeText(fullLink);
       setIsCopied(true);
@@ -95,11 +82,9 @@ export const LinkGenerator = ({ memorialId, isComplete = false }: LinkGeneratorP
         variant="outline"
         className="w-full justify-start"
         onClick={() => generateLink('viewer')}
-        disabled={!isComplete}
       >
         <Eye className="mr-2 h-4 w-4" />
         Generate Viewer Link
-        {!isComplete && <span className="ml-2 text-xs text-gray-500">(Fill all tiles first)</span>}
       </Button>
     </div>
   );
