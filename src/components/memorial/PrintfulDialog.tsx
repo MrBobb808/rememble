@@ -17,6 +17,15 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreateProduct = async (type: 'photo-book' | 'quilt') => {
+    if (photos.length === 0) {
+      toast({
+        title: "No photos available",
+        description: "Please add some photos to the memorial before creating a print product.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-printful-product', {
@@ -32,6 +41,10 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
 
       if (error) throw error;
       
+      if (!data?.checkoutUrl) {
+        throw new Error('No checkout URL received from Printful');
+      }
+
       // Redirect to Printful checkout
       window.location.href = data.checkoutUrl;
       

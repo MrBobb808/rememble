@@ -19,12 +19,22 @@ serve(async (req) => {
     }
 
     const { type, memorialId, photos } = await req.json()
-    console.log('Creating Printful product:', { type, memorialId, photoCount: photos.length })
+    console.log('Received request:', { type, memorialId, photoCount: photos?.length })
+
+    // Validate input
+    if (!photos || !Array.isArray(photos) || photos.length === 0) {
+      throw new Error('No photos provided for creating the product')
+    }
+
+    if (!type || !['photo-book', 'quilt'].includes(type)) {
+      throw new Error('Invalid product type specified')
+    }
 
     const encodedKey = btoa(PRINTFUL_API_KEY)
     
     // Create mockup task based on product type
-    const variantId = type === 'photo-book' ? 1234 : 5678 // Replace with actual Printful variant IDs
+    const variantId = type === 'photo-book' ? 438 : 439 // Example variant IDs for photo book and quilt
+    console.log('Creating mockup with variant ID:', variantId)
     
     const mockupResponse = await fetch("https://api.printful.com/mockup-generator/create-task", {
       method: "POST",
@@ -34,15 +44,21 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         variant_ids: [variantId],
-        files: photos.map((photo: any) => ({
+        files: photos.map(photo => ({
           type: "default",
           url: photo.url
         })),
       }),
     })
 
+    if (!mockupResponse.ok) {
+      const errorData = await mockupResponse.json()
+      console.error('Mockup creation failed:', errorData)
+      throw new Error(`Failed to create mockup: ${errorData.message || 'Unknown error'}`)
+    }
+
     const mockupData = await mockupResponse.json()
-    console.log('Mockup created:', mockupData)
+    console.log('Mockup created successfully:', mockupData)
 
     // Create sync product
     const productResponse = await fetch("https://api.printful.com/store/products", {
@@ -54,12 +70,12 @@ serve(async (req) => {
       body: JSON.stringify({
         sync_product: {
           name: type === 'photo-book' ? "Memorial Photo Book" : "Memorial Quilt",
-          thumbnail: mockupData.mockups[0].mockup_url,
+          thumbnail: mockupData.result.mockups[0].mockup_url,
         },
         sync_variants: [
           {
             variant_id: variantId,
-            files: photos.map((photo: any) => ({
+            files: photos.map(photo => ({
               type: "default",
               url: photo.url
             })),
@@ -68,8 +84,14 @@ serve(async (req) => {
       }),
     })
 
+    if (!productResponse.ok) {
+      const errorData = await productResponse.json()
+      console.error('Product creation failed:', errorData)
+      throw new Error(`Failed to create product: ${errorData.message || 'Unknown error'}`)
+    }
+
     const productData = await productResponse.json()
-    console.log('Product created:', productData)
+    console.log('Product created successfully:', productData)
 
     return new Response(
       JSON.stringify({
@@ -81,9 +103,12 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in create-printful-product:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
