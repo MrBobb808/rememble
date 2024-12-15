@@ -12,6 +12,9 @@ interface Memorial {
   name: string;
   created_at: string;
   is_complete: boolean;
+  banner_image_url?: string;
+  birth_year?: string;
+  death_year?: string;
 }
 
 interface MemorialsListProps {
@@ -26,19 +29,24 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
   const [previewMemorial, setPreviewMemorial] = useState<Memorial | null>(null);
 
   const handleUpdateName = async () => {
-    if (!editingMemorial || !newName.trim()) return;
+    if (!editingMemorial) return;
 
     try {
       const { error } = await supabase
         .from('memorials')
-        .update({ name: newName.trim() })
+        .update({ 
+          name: newName.trim(),
+          banner_image_url: editingMemorial.banner_image_url,
+          birth_year: editingMemorial.birth_year,
+          death_year: editingMemorial.death_year
+        })
         .eq('id', editingMemorial.id);
 
       if (error) throw error;
 
       toast({
         title: "Memorial updated",
-        description: "The memorial name has been updated successfully.",
+        description: "The memorial has been updated successfully.",
       });
 
       setEditingMemorial(null);
@@ -46,10 +54,25 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
     } catch (error: any) {
       toast({
         title: "Error updating memorial",
-        description: error.message || "There was a problem updating the memorial name.",
+        description: error.message || "There was a problem updating the memorial.",
         variant: "destructive",
       });
     }
+  };
+
+  const handleBannerChange = async (url: string) => {
+    if (!editingMemorial) return;
+    setEditingMemorial({ ...editingMemorial, banner_image_url: url });
+  };
+
+  const handleBirthYearChange = (value: string) => {
+    if (!editingMemorial) return;
+    setEditingMemorial({ ...editingMemorial, birth_year: value });
+  };
+
+  const handleDeathYearChange = (value: string) => {
+    if (!editingMemorial) return;
+    setEditingMemorial({ ...editingMemorial, death_year: value });
   };
 
   const generateLink = async (memorialId: string, type: 'collaborator' | 'viewer') => {
@@ -137,6 +160,9 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
         onNameChange={setNewName}
         onUpdate={handleUpdateName}
         onOpenChange={() => setEditingMemorial(null)}
+        onBannerChange={handleBannerChange}
+        onBirthYearChange={handleBirthYearChange}
+        onDeathYearChange={handleDeathYearChange}
       />
 
       <PreviewMemorialDialog

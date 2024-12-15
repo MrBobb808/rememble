@@ -6,14 +6,14 @@ interface MemorialBannerProps {
   photoUrl?: string;
 }
 
-const MemorialBanner = ({ name, dates, photoUrl = "/placeholder.svg" }: MemorialBannerProps) => {
+const MemorialBanner = ({ name, dates, photoUrl }: MemorialBannerProps) => {
   return (
     <div className="relative w-full h-[50vh] min-h-[400px] mb-8">
       <div className="absolute inset-0 bg-black/20" />
       <div 
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
         style={{ 
-          backgroundImage: `url(${photoUrl}?quality=80&width=1920)`,
+          backgroundImage: `url(${photoUrl || "/placeholder.svg"}?quality=80&width=1920)`,
           backgroundPosition: 'center 30%'
         }}
       />
