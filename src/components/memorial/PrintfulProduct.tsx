@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 
 export const PrintfulProduct = () => {
   const [searchParams] = useSearchParams();
@@ -35,6 +35,15 @@ export const PrintfulProduct = () => {
   });
 
   const handleCreateProduct = async () => {
+    if (photos.length === 0) {
+      toast({
+        title: "No photos available",
+        description: "Please add some photos to create a product.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-printful-product', {
@@ -100,6 +109,7 @@ export const PrintfulProduct = () => {
           variant="outline"
           onClick={() => navigate(-1)}
         >
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
         <Button

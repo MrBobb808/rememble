@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Book, Shirt } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PrintfulDialogProps {
   open: boolean;
@@ -15,7 +14,6 @@ interface PrintfulDialogProps {
 export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: PrintfulDialogProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleProductSelection = (type: 'photo-book' | 'quilt') => {
     if (!photos || photos.length === 0) {
@@ -47,7 +45,6 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
             variant="outline"
             className="h-32 flex flex-col items-center justify-center gap-2"
             onClick={() => handleProductSelection('photo-book')}
-            disabled={isLoading}
           >
             <Book className="h-8 w-8" />
             <span>Photo Book</span>
@@ -56,7 +53,6 @@ export const PrintfulDialog = ({ open, onOpenChange, memorialId, photos }: Print
             variant="outline"
             className="h-32 flex flex-col items-center justify-center gap-2"
             onClick={() => handleProductSelection('quilt')}
-            disabled={isLoading}
           >
             <Shirt className="h-8 w-8" />
             <span>Memory Quilt</span>
