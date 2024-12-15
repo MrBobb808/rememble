@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HelpCircle, Printer, Download, Share2, LayoutDashboard } from "lucide-react";
+import { HelpCircle, Home, Printer, Download, Share2, LayoutDashboard } from "lucide-react";
 import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
