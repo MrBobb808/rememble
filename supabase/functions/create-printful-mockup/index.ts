@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -18,10 +17,9 @@ serve(async (req) => {
       throw new Error('Printful API key not configured')
     }
 
-    const { type, photos } = await req.json()
-    console.log('Received request:', { type, photoCount: photos?.length })
+    const { type, photos, variantId } = await req.json()
+    console.log('Received request:', { type, photoCount: photos?.length, variantId })
 
-    // Validate input
     if (!photos || !Array.isArray(photos) || photos.length === 0) {
       throw new Error('No photos provided for creating the mockup')
     }
@@ -30,10 +28,12 @@ serve(async (req) => {
       throw new Error('Invalid product type specified')
     }
 
+    if (!variantId) {
+      throw new Error('No variant ID specified')
+    }
+
     const encodedKey = btoa(PRINTFUL_API_KEY)
     
-    // Create mockup task based on product type
-    const variantId = type === 'photo-book' ? 438 : 439 // Example variant IDs
     console.log('Creating mockup with variant ID:', variantId)
     
     const mockupResponse = await fetch("https://api.printful.com/mockup-generator/create-task", {
@@ -54,7 +54,6 @@ serve(async (req) => {
     const mockupData = await mockupResponse.json()
     console.log('Printful API response:', mockupData)
 
-    // Check if the response indicates an error
     if (!mockupResponse.ok) {
       const errorMessage = mockupData.error?.message || mockupData.error || 'Unknown error from Printful API'
       console.error('Printful API error:', errorMessage)

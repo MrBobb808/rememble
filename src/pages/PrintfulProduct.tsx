@@ -8,28 +8,8 @@ import { ProductHeader } from "@/components/printful/ProductHeader";
 import { ProductVariants } from "@/components/printful/ProductVariants";
 import { PhotoGrid } from "@/components/printful/PhotoGrid";
 import { ActionButtons } from "@/components/printful/ActionButtons";
-import { Card } from "@/components/ui/card";
-
-const PHOTO_BOOK_VARIANTS = [
-  {
-    id: 438,
-    name: "Standard Photo Book",
-    price: "$29.99",
-    description: "8.5\" x 8.5\", 20 pages"
-  },
-  {
-    id: 439,
-    name: "Premium Photo Book",
-    price: "$39.99",
-    description: "10\" x 10\", 30 pages"
-  },
-  {
-    id: 440,
-    name: "Deluxe Photo Book",
-    price: "$49.99",
-    description: "12\" x 12\", 40 pages"
-  }
-];
+import { InteractivePreview } from "@/components/printful/InteractivePreview";
+import { PHOTO_BOOK_VARIANTS, QUILT_VARIANTS } from "@/components/printful/variants";
 
 export const PrintfulProduct = () => {
   const [searchParams] = useSearchParams();
@@ -60,6 +40,8 @@ export const PrintfulProduct = () => {
     },
     enabled: !!memorialId
   });
+
+  const variants = productType === 'photo-book' ? PHOTO_BOOK_VARIANTS : QUILT_VARIANTS;
 
   const handleCreateProduct = async () => {
     if (!selectedVariant) {
@@ -120,42 +102,6 @@ export const PrintfulProduct = () => {
     }
   };
 
-  const handleProceedToCheckout = async () => {
-    if (!selectedVariant) return;
-    
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-printful-product', {
-        body: {
-          type: productType,
-          variantId: selectedVariant,
-          photos: photos.map(photo => ({
-            url: photo.url,
-            caption: photo.caption
-          }))
-        },
-      });
-
-      if (error) throw error;
-      
-      if (!data?.checkoutUrl) {
-        throw new Error('No checkout URL received from Printful');
-      }
-
-      window.location.href = data.checkoutUrl;
-      
-    } catch (error: any) {
-      console.error('Error creating product:', error);
-      toast({
-        title: "Error creating product",
-        description: error.message || "There was a problem creating your product. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (isLoadingPhotos) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -170,27 +116,21 @@ export const PrintfulProduct = () => {
         <ProductHeader productType={productType || ''} />
         
         <ProductVariants
-          variants={PHOTO_BOOK_VARIANTS}
+          variants={variants}
           selectedVariant={selectedVariant}
           onVariantSelect={setSelectedVariant}
         />
 
         <PhotoGrid photos={photos} />
 
-        {mockupUrl && (
-          <Card className="p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Preview</h2>
-            <img 
-              src={mockupUrl} 
-              alt="Product Preview" 
-              className="max-w-full rounded-lg shadow-lg"
-            />
-          </Card>
-        )}
+        <InteractivePreview 
+          mockupUrl={mockupUrl}
+          isLoading={isLoading}
+        />
 
         <ActionButtons
           onBack={() => navigate(-1)}
-          onAction={mockupUrl ? handleProceedToCheckout : handleCreateProduct}
+          onAction={handleCreateProduct}
           isLoading={isLoading}
           mockupUrl={mockupUrl}
         />
