@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoGrid from "@/components/PhotoGrid";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Photo } from "@/types/photo";
 
 interface Memorial {
   id: string;
@@ -32,9 +33,9 @@ export const PreviewMemorialDialog = ({
       
       if (error) throw error;
 
-      // Transform the data to match the Photo interface expected by PhotoGrid
+      // Transform the data to match the Photo interface
       return (data || []).map(photo => ({
-        id: photo.position,
+        id: String(photo.position), // Convert to string to match Photo interface
         url: photo.image_url,
         caption: photo.caption,
         aiReflection: photo.ai_reflection,

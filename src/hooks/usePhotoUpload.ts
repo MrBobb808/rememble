@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const usePhotoUpload = (
   onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => void,
-  toast: Toast
 ) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);

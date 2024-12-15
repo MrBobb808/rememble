@@ -3,15 +3,7 @@ import MemorialSummary from "@/components/MemorialSummary";
 import MemorialBanner from "./MemorialBanner";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
-
-interface Photo {
-  id: number;
-  url: string;
-  caption: string;
-  aiReflection?: string;
-  contributorName?: string;
-  relationship?: string;
-}
+import { Photo } from "@/types/photo";
 
 interface MemorialContentProps {
   photos: Photo[];
