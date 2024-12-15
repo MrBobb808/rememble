@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { ToastAction } from "@/components/ui/toast";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 export const usePhotoUpload = (
   onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => void,
@@ -22,29 +20,6 @@ export const usePhotoUpload = (
           variant: "destructive",
         });
       }
-    }
-  };
-
-  const generateAIReflection = async (imageUrl: string, caption: string) => {
-    try {
-      console.log("Generating AI reflection for image:", imageUrl);
-      const { data, error } = await supabase.functions.invoke("generate-reflection", {
-        body: {
-          imageUrl,
-          caption,
-        },
-      });
-
-      if (error) {
-        console.error("Error generating reflection:", error);
-        throw error;
-      }
-
-      console.log("Generated reflection:", data.reflection);
-      return data.reflection;
-    } catch (error) {
-      console.error("Error generating reflection:", error);
-      throw error;
     }
   };
 

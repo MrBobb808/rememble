@@ -25,7 +25,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
     handleFileChange,
     handleSubmit,
     setIsUploadDialogOpen
-  } = usePhotoUpload(onPhotoAdd, toast);
+  } = usePhotoUpload(onPhotoAdd);
 
   // Create array of 25 cells (5x5 grid)
   const gridCells = Array(25)

@@ -6,6 +6,7 @@ import UnifiedSidebar from "./UnifiedSidebar";
 import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
 import { useFuneralHomeSettings } from "@/hooks/useFuneralHomeSettings";
+import { Photo } from "@/types/photo";
 
 const MemorialContainer = () => {
   const [searchParams] = useSearchParams();
