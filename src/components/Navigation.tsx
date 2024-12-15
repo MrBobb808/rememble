@@ -3,12 +3,14 @@ import { HelpCircle, Home, Printer, Download, Share2, LayoutDashboard } from "lu
 import { Button } from "./ui/button";
 import { UserMenu } from "./navigation/UserMenu";
 import { HelpDialog } from "./navigation/HelpDialog";
+import { PrintfulDialog } from "./memorial/PrintfulDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 
 const Navigation = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,11 +52,7 @@ const Navigation = () => {
   };
 
   const handlePrint = () => {
-    toast({
-      title: "Preparing memorial for print...",
-      description: "The print dialog will open shortly.",
-    });
-    window.print();
+    setIsPrintDialogOpen(true);
   };
 
   const handleDownload = () => {
@@ -135,6 +133,12 @@ const Navigation = () => {
       </div>
 
       <HelpDialog isOpen={isHelpOpen} onOpenChange={setIsHelpOpen} />
+      <PrintfulDialog 
+        open={isPrintDialogOpen} 
+        onOpenChange={setIsPrintDialogOpen}
+        memorialId={currentMemorialId || ''}
+        photos={[]} // TODO: Pass actual photos from memorial context
+      />
     </div>
   );
 };
