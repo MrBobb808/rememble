@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMemorialData } from "@/hooks/useMemorialData";
-import MemorialContent from "./MemorialContent";
+import { MemorialContent } from "./MemorialContent";
 import UnifiedSidebar from "./UnifiedSidebar";
-import LoadingState from "./LoadingState";
+import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
 
 const MemorialContainer = () => {

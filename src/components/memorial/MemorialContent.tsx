@@ -16,20 +16,20 @@ interface Photo {
 
 interface MemorialContentProps {
   photos: Photo[];
-  summary: string | null;
-  onPhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => Promise<void>;
+  handlePhotoAdd: (file: File, caption: string, contributorName: string, relationship: string) => Promise<void>;
+  isLoading: boolean;
 }
 
 export const MemorialContent = ({
   photos,
-  summary,
-  onPhotoAdd,
+  handlePhotoAdd,
+  isLoading,
 }: MemorialContentProps) => {
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
 
   return (
-    <div className="pt-14"> {/* Add padding-top to account for fixed navbar */}
+    <div className="pt-14">
       <MemorialBanner 
         name="John Doe"
         dates="1945 - 2024"
@@ -37,16 +37,16 @@ export const MemorialContent = ({
       />
 
       <div className={cn(
-        "max-w-7xl mx-auto", // Center the grid
+        "max-w-7xl mx-auto",
         "grid lg:grid-cols-[1fr,300px] gap-8 mt-8",
-        "bg-gradient-to-b from-memorial-beige-light/50 to-white/50",
+        "bg-gradient-to-b from-memorial-beige-light to-white/50",
         "rounded-lg shadow-sm p-6 mx-4"
       )}>
         <div className="space-y-8">
-          <PhotoGrid photos={photos} onPhotoAdd={onPhotoAdd} />
+          <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} />
           {photos.length === 25 && (
             <MemorialSummary 
-              summary={summary}
+              summary={null}
               onDownload={() => {
                 console.log("Download memorial");
               }}
