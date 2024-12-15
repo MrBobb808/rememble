@@ -9,7 +9,6 @@ import { Loader2 } from "lucide-react"
 import * as Sentry from "@sentry/react"
 
 // Lazy load route components
-const Index = lazy(() => import("./pages/Index"))
 const Landing = lazy(() => import("./pages/Landing"))
 const Memorial = lazy(() => import("./pages/Memorial"))
 const Auth = lazy(() => import("./pages/Auth"))
