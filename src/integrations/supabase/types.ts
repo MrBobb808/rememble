@@ -124,6 +124,35 @@ export type Database = {
           },
         ]
       }
+      memorial_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "memorial_image_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorial_comments: {
         Row: {
           content: string
@@ -149,6 +178,48 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "memorial_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "memorial_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memorial_image_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parent_comment_id: string | null
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_image_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "memorial_image_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memorial_image_comments_photo_id_fkey"
             columns: ["photo_id"]
             isOneToOne: false
             referencedRelation: "memorial_photos"
@@ -231,6 +302,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "memorial_photos_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memorial_presence: {
+        Row: {
+          id: string
+          last_seen_at: string
+          memorial_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string
+          memorial_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string
+          memorial_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memorial_presence_memorial_id_fkey"
             columns: ["memorial_id"]
             isOneToOne: false
             referencedRelation: "memorials"

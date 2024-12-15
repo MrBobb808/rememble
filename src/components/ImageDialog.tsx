@@ -5,11 +5,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import CommentsList from "./comments/CommentsList";
 
 interface ImageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   image: {
+    id: string;
     url: string;
     caption: string;
     aiReflection?: string;
@@ -23,12 +25,12 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[400px]">
+      <DialogContent className="max-w-[800px]">
         <DialogHeader>
           <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
           <DialogDescription className="text-base">{image.caption}</DialogDescription>
         </DialogHeader>
-        <div className="mt-2 space-y-3">
+        <div className="mt-2 space-y-6">
           <div className="relative w-full overflow-hidden rounded-lg">
             <img
               src={image.url}
@@ -48,6 +50,10 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
               <p className="text-sm text-gray-700 italic leading-relaxed">{image.aiReflection}</p>
             </div>
           )}
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-semibold mb-3 text-memorial-gray-dark">Comments</h3>
+            <CommentsList photoId={image.id} />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
