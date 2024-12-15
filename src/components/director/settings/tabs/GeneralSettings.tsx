@@ -3,12 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Globe, Mail, Phone, Upload } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const GeneralSettings = () => {
   const { toast } = useToast();
+  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [funeralHome, setFuneralHome] = useState({
     name: "",
     phone: "",
@@ -18,9 +19,37 @@ const GeneralSettings = () => {
     timezone: "UTC",
   });
 
+  // Fetch existing settings on component mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data, error } = await supabase
+        .from('funeral_home_settings')
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error fetching settings:', error);
+        return;
+      }
+
+      if (data) {
+        setSettingsId(data.id);
+        setFuneralHome({
+          ...funeralHome,
+          name: data.name || "",
+          phone: data.phone_number || "",
+          email: data.email_address || "",
+          website: data.website || "",
+        });
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !settingsId) return;
 
     try {
       // Upload to Supabase Storage
@@ -42,7 +71,7 @@ const GeneralSettings = () => {
       const { error: updateError } = await supabase
         .from('funeral_home_settings')
         .update({ logo_url: publicUrl })
-        .eq('id', 1);
+        .eq('id', settingsId);
 
       if (updateError) throw updateError;
 
@@ -62,6 +91,8 @@ const GeneralSettings = () => {
   };
 
   const handleSave = async () => {
+    if (!settingsId) return;
+
     try {
       const { error } = await supabase
         .from('funeral_home_settings')
@@ -71,7 +102,7 @@ const GeneralSettings = () => {
           email_address: funeralHome.email,
           website: funeralHome.website,
         })
-        .eq('id', 1);
+        .eq('id', settingsId);
 
       if (error) throw error;
 
@@ -80,7 +111,6 @@ const GeneralSettings = () => {
         description: "Your funeral home settings have been updated.",
       });
 
-      console.log("Saving general settings:", funeralHome);
     } catch (error: any) {
       toast({
         title: "Error saving settings",
