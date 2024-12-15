@@ -15,6 +15,7 @@ serve(async (req) => {
   try {
     const { imageUrl, caption } = await req.json()
     console.log("Received request with caption:", caption)
+    console.log("Image URL:", imageUrl)
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openAIApiKey) {

@@ -60,6 +60,7 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
 
   const generateAIReflection = async (imageUrl: string, caption: string) => {
     try {
+      console.log("Generating AI reflection for image:", imageUrl);
       const { data, error } = await supabase.functions.invoke("generate-reflection", {
         body: {
           imageUrl,
@@ -67,7 +68,12 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error generating reflection:", error);
+        throw error;
+      }
+
+      console.log("Generated reflection:", data.reflection);
       return data.reflection;
     } catch (error) {
       console.error("Error generating reflection:", error);
@@ -79,6 +85,8 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
     if (!selectedFile) return;
 
     try {
+      console.log("Starting file upload process...");
+      
       // First, upload the file to Supabase Storage
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -87,7 +95,12 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
         .from('memorial-photos')
         .upload(fileName, selectedFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
+
+      console.log("File uploaded successfully:", uploadData);
 
       // Get the public URL of the uploaded image
       const { data: { publicUrl } } = supabase.storage
@@ -103,7 +116,12 @@ const PhotoGrid = ({ photos, onPhotoAdd, isLoading = false, isPreview = false }:
         throw new Error("No AI reflection generated");
       }
 
-      onPhotoAdd(selectedFile, caption, contributorName, relationship);
+      // Call the parent component's onPhotoAdd with all necessary data
+      await onPhotoAdd(selectedFile, caption, contributorName, relationship);
+      
+      // Reset state and show success message
+      setSelectedFile(null);
+      setIsUploadDialogOpen(false);
       
       toast({
         title: "Memory added",
