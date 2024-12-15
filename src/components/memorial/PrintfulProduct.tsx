@@ -12,6 +12,7 @@ export const PrintfulProduct = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [mockupUrl, setMockupUrl] = useState<string | null>(null);
   
   const memorialId = searchParams.get("memorial");
 
@@ -45,11 +46,12 @@ export const PrintfulProduct = () => {
     }
 
     setIsLoading(true);
+    setMockupUrl(null); // Reset any previous mockup
+
     try {
-      const { data, error } = await supabase.functions.invoke('create-printful-product', {
+      const { data, error } = await supabase.functions.invoke('create-printful-mockup', {
         body: {
           type: productType,
-          memorialId,
           photos: photos.map(photo => ({
             url: photo.url,
             caption: photo.caption
@@ -59,18 +61,22 @@ export const PrintfulProduct = () => {
 
       if (error) throw error;
       
-      if (!data?.checkoutUrl) {
-        throw new Error('No checkout URL received from Printful');
+      if (!data?.mockupUrl) {
+        throw new Error('No mockup URL received from Printful');
       }
 
-      // Redirect to Printful checkout
-      window.location.href = data.checkoutUrl;
+      setMockupUrl(data.mockupUrl);
+      
+      toast({
+        title: "Preview generated",
+        description: "Your product preview has been generated successfully.",
+      });
       
     } catch (error: any) {
       console.error('Error creating product:', error);
       toast({
-        title: "Error creating product",
-        description: error.message || "There was a problem creating your product. Please try again.",
+        title: "Error creating preview",
+        description: error.message || "There was a problem creating your preview. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -104,6 +110,17 @@ export const PrintfulProduct = () => {
         ))}
       </div>
 
+      {mockupUrl && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Preview</h2>
+          <img 
+            src={mockupUrl} 
+            alt="Product Preview" 
+            className="max-w-full rounded-lg shadow-lg"
+          />
+        </div>
+      )}
+
       <div className="flex gap-4">
         <Button
           variant="outline"
@@ -119,10 +136,10 @@ export const PrintfulProduct = () => {
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating...
+              Generating Preview...
             </>
           ) : (
-            'Continue to Checkout'
+            'Generate Preview'
           )}
         </Button>
       </div>

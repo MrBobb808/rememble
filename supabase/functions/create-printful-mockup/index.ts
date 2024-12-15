@@ -51,18 +51,20 @@ serve(async (req) => {
       }),
     })
 
-    if (!mockupResponse.ok) {
-      const errorData = await mockupResponse.json()
-      console.error('Mockup creation failed:', errorData)
-      throw new Error(`Failed to create mockup: ${errorData.message || 'Unknown error'}`)
-    }
-
     const mockupData = await mockupResponse.json()
-    console.log('Mockup created successfully:', mockupData)
+    console.log('Printful API response:', mockupData)
+
+    // Check if the response indicates an error
+    if (!mockupResponse.ok) {
+      const errorMessage = mockupData.error?.message || mockupData.error || 'Unknown error from Printful API'
+      console.error('Printful API error:', errorMessage)
+      throw new Error(errorMessage)
+    }
 
     return new Response(
       JSON.stringify({
-        mockupUrl: mockupData.result.mockups[0].mockup_url,
+        mockupUrl: mockupData.result?.mockups?.[0]?.mockup_url,
+        result: mockupData.result,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -78,7 +80,7 @@ serve(async (req) => {
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 400,
       },
     )
   }
