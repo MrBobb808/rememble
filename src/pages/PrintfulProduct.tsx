@@ -30,7 +30,7 @@ export const PrintfulProduct = () => {
       
       if (error) throw error;
       return data.map(photo => ({
-        url: photo.url,
+        url: photo.image_url, // Map image_url to url for consistency
         caption: photo.caption
       }));
     },
@@ -51,7 +51,6 @@ export const PrintfulProduct = () => {
     setMockupUrl(null);
 
     try {
-      // First generate a mockup
       const { data, error } = await supabase.functions.invoke('create-printful-mockup', {
         body: {
           type: productType,
@@ -76,7 +75,7 @@ export const PrintfulProduct = () => {
       });
       
     } catch (error: any) {
-      console.error('Error creating mockup:', error);
+      console.error('Error creating product:', error);
       toast({
         title: "Error creating preview",
         description: error.message || "There was a problem creating your preview. Please try again.",
@@ -106,7 +105,6 @@ export const PrintfulProduct = () => {
         throw new Error('No checkout URL received from Printful');
       }
 
-      // Redirect to Printful checkout
       window.location.href = data.checkoutUrl;
       
     } catch (error: any) {
