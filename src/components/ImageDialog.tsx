@@ -37,7 +37,8 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
 
           {/* Details and Comments Section */}
           <div className="flex flex-col h-[50vh] md:h-[90vh] overflow-hidden">
-            <div className="p-6 space-y-4">
+            {/* Memory Details */}
+            <div className="p-4 space-y-3 bg-white border-b">
               <DialogHeader>
                 <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
               </DialogHeader>
@@ -60,9 +61,12 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
             </div>
 
             {/* Comments Section */}
-            <div className="flex-1 border-t overflow-hidden bg-gray-50">
-              <div className="p-6 h-full overflow-y-auto">
-                <CommentsList photoId={image.id} />
+            <div className="flex-1 overflow-hidden bg-gray-50">
+              <div className="h-full overflow-y-auto">
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Comments</h3>
+                  <CommentsList photoId={image.id} />
+                </div>
               </div>
             </div>
           </div>
