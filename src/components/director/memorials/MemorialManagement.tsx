@@ -29,8 +29,11 @@ export const MemorialManagement = ({
 }: MemorialManagementProps) => {
   const { toast } = useToast();
   const [newName, setNewName] = useState(memorial?.name || "");
+  const [birthYear, setBirthYear] = useState(memorial?.birth_year || "");
+  const [deathYear, setDeathYear] = useState(memorial?.death_year || "");
+  const [bannerUrl, setBannerUrl] = useState(memorial?.banner_image_url || "");
 
-  const handleUpdateName = async () => {
+  const handleUpdateMemorial = async () => {
     if (!memorial) return;
 
     try {
@@ -39,14 +42,19 @@ export const MemorialManagement = ({
 
       const { error } = await supabase
         .from('memorials')
-        .update({ name: newName })
+        .update({ 
+          name: newName,
+          birth_year: birthYear,
+          death_year: deathYear,
+          banner_image_url: bannerUrl
+        })
         .eq('id', memorial.id);
 
       if (error) throw error;
 
       toast({
         title: "Memorial updated",
-        description: "The memorial name has been updated successfully.",
+        description: "The memorial details have been updated successfully.",
       });
 
       window.location.reload();
@@ -66,8 +74,11 @@ export const MemorialManagement = ({
           memorial={memorial}
           newName={newName}
           onNameChange={setNewName}
-          onUpdate={handleUpdateName}
+          onUpdate={handleUpdateMemorial}
           onOpenChange={() => onClose()}
+          onBannerChange={setBannerUrl}
+          onBirthYearChange={setBirthYear}
+          onDeathYearChange={setDeathYear}
         />
       )}
       
