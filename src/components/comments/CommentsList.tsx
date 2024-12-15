@@ -25,7 +25,7 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log("CommentsList - Received photoId:", photoId); // Add logging
+  console.log("CommentsList - Received photoId:", photoId);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -65,7 +65,11 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
       setComments(formattedComments);
     };
 
-    fetchComments();
+    if (validateUUID(photoId)) {
+      fetchComments();
+    } else {
+      console.error('Invalid photo ID format:', photoId);
+    }
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -119,13 +123,22 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
     }
 
     try {
-      console.log('Current user:', userData.user);
-      console.log('Photo ID:', photoId);
       console.log('Attempting to insert comment with:', {
         photo_id: photoId,
         content: newComment.trim(),
         user_id: userData.user.id
       });
+
+      // First, verify the photo exists
+      const { data: photoExists, error: photoError } = await supabase
+        .from('memorial_photos')
+        .select('id')
+        .eq('id', photoId)
+        .single();
+
+      if (photoError || !photoExists) {
+        throw new Error('Photo not found. It may have been deleted.');
+      }
 
       const { data, error } = await supabase
         .from('memorial_image_comments')

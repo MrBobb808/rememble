@@ -23,7 +23,11 @@ interface ImageDialogProps {
 const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
   if (!image) return null;
 
-  console.log("ImageDialog - image.id:", image.id); // Add logging
+  console.log("ImageDialog - image:", {
+    id: image.id,
+    url: image.url,
+    caption: image.caption
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
