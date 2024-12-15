@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      funeral_home_settings: {
+        Row: {
+          created_at: string | null
+          email_address: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone_number: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_address?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone_number?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_address?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone_number?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       memorial_activity_log: {
         Row: {
           action_type: string

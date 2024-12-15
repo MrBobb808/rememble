@@ -4,8 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Globe, Mail, Phone, Upload } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const GeneralSettings = () => {
+  const { toast } = useToast();
   const [funeralHome, setFuneralHome] = useState({
     name: "",
     phone: "",
@@ -15,14 +18,76 @@ const GeneralSettings = () => {
     timezone: "UTC",
   });
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Handle logo upload logic
-    console.log("Logo upload:", e.target.files?.[0]);
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('memorial-photos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('memorial-photos')
+        .getPublicUrl(fileName);
+
+      // Update funeral home settings with new logo URL
+      const { error: updateError } = await supabase
+        .from('funeral_home_settings')
+        .update({ logo_url: publicUrl })
+        .eq('id', 1);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Logo uploaded successfully",
+        description: "Your new logo has been saved.",
+      });
+
+    } catch (error: any) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error uploading logo",
+        description: error.message || "There was a problem uploading your logo.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSave = () => {
-    // Handle save logic
-    console.log("Saving general settings:", funeralHome);
+  const handleSave = async () => {
+    try {
+      const { error } = await supabase
+        .from('funeral_home_settings')
+        .update({
+          name: funeralHome.name,
+          phone_number: funeralHome.phone,
+          email_address: funeralHome.email,
+          website: funeralHome.website,
+        })
+        .eq('id', 1);
+
+      if (error) throw error;
+
+      toast({
+        title: "Settings saved",
+        description: "Your funeral home settings have been updated.",
+      });
+
+      console.log("Saving general settings:", funeralHome);
+    } catch (error: any) {
+      toast({
+        title: "Error saving settings",
+        description: error.message || "There was a problem saving your settings.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
