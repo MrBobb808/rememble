@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -7,10 +7,25 @@ import { useToast } from "@/components/ui/use-toast";
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
+        // Get the email confirmation token from URL
+        const token_hash = searchParams.get('token_hash');
+        const type = searchParams.get('type');
+        
+        if (type === 'email_confirmation' && token_hash) {
+          // Verify the email with Supabase
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash,
+            type: 'email_confirmation',
+          });
+
+          if (error) throw error;
+        }
+
         // Get the session to check if the user is authenticated
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
@@ -55,11 +70,11 @@ const AuthCallback = () => {
           variant: "destructive",
         });
         navigate("/auth");
-      } catch (error) {
+      } catch (error: any) {
         console.error("Auth callback error:", error);
         toast({
           title: "Error",
-          description: "An error occurred during verification. Please try again.",
+          description: error.message || "An error occurred during verification. Please try again.",
           variant: "destructive",
         });
         navigate("/auth");
@@ -67,7 +82,7 @@ const AuthCallback = () => {
     };
 
     handleEmailConfirmation();
-  }, [navigate, toast]);
+  }, [navigate, toast, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
