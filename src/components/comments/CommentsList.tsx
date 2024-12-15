@@ -98,6 +98,7 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
         description: "You must be logged in to comment",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
 
@@ -121,7 +122,7 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
       console.error('Error adding comment:', error);
       toast({
         title: "Error",
-        description: "Failed to add comment",
+        description: "Failed to add comment. Please try again.",
         variant: "destructive",
       });
     } finally {
