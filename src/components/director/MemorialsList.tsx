@@ -6,6 +6,9 @@ import { MemorialItem } from "./memorials/MemorialItem";
 import { EditMemorialDialog } from "./memorials/EditMemorialDialog";
 import { PreviewMemorialDialog } from "./memorials/PreviewMemorialDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { createNewMemorial } from "@/services/memorialService";
 
 interface Memorial {
   id: string;
@@ -124,10 +127,30 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
     }
   };
 
+  const handleCreateMemorial = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      await createNewMemorial(user.id);
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Error creating memorial",
+        description: error.message || "There was a problem creating the memorial.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Recent Memorials</CardTitle>
+        <Button onClick={handleCreateMemorial} size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Create Memorial
+        </Button>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] w-full rounded-md border">
