@@ -1,7 +1,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -25,34 +24,44 @@ const ImageDialog = ({ open, onOpenChange, image }: ImageDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
-          <DialogDescription className="text-base">{image.caption}</DialogDescription>
-        </DialogHeader>
-        <div className="mt-2 space-y-4">
-          <div className="relative w-full overflow-hidden rounded-lg">
+      <DialogContent className="max-w-[1000px] max-h-[90vh] p-0 gap-0 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Image Section */}
+          <div className="relative w-full bg-black flex items-center">
             <img
               src={image.url}
               alt={image.caption}
-              className="w-full h-auto object-cover"
+              className="w-full h-auto object-contain max-h-[90vh] md:max-h-[600px]"
             />
           </div>
-          {image.contributorName && image.relationship && (
-            <div className="mt-2 text-sm text-memorial-gray-dark">
-              <p>Shared by {image.contributorName}</p>
-              <p className="italic">Relationship: {image.relationship}</p>
+
+          {/* Details and Comments Section */}
+          <div className="p-6 flex flex-col h-full max-h-[90vh] md:max-h-[600px]">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-playfair">Memory Details</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 flex-1 overflow-y-auto">
+              <p className="text-base text-gray-600">{image.caption}</p>
+              
+              {image.contributorName && image.relationship && (
+                <div className="text-sm text-memorial-gray-dark">
+                  <p>Shared by {image.contributorName}</p>
+                  <p className="italic">Relationship: {image.relationship}</p>
+                </div>
+              )}
+
+              {image.aiReflection && (
+                <div className="p-3 bg-memorial-beige-light rounded-lg border border-memorial-beige-dark/20">
+                  <h3 className="text-sm font-semibold mb-1 text-memorial-gray-dark">AI Reflection</h3>
+                  <p className="text-sm text-gray-700 italic leading-relaxed">{image.aiReflection}</p>
+                </div>
+              )}
+
+              <div className="pt-4">
+                <CommentsList photoId={image.id} />
+              </div>
             </div>
-          )}
-          {image.aiReflection && (
-            <div className="mt-2 p-3 bg-memorial-beige-light rounded-lg border border-memorial-beige-dark/20">
-              <h3 className="text-sm font-semibold mb-1 text-memorial-gray-dark">AI Reflection</h3>
-              <p className="text-sm text-gray-700 italic leading-relaxed">{image.aiReflection}</p>
-            </div>
-          )}
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-semibold mb-3 text-memorial-gray-dark">Comments</h3>
-            <CommentsList photoId={image.id} />
           </div>
         </div>
       </DialogContent>
