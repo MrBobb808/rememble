@@ -72,7 +72,7 @@ export const DashboardMetrics = ({
         
         <Card className="bg-white/80 backdrop-blur-sm hover:bg-white transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Settings</CardTitle>
+            <CardTitle className="text-sm font-medium">Branding</CardTitle>
             <Settings className="h-4 w-4 text-memorial-blue" />
           </CardHeader>
           <CardContent>
@@ -90,7 +90,7 @@ export const DashboardMetrics = ({
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Director Settings</DialogTitle>
+            <DialogTitle>Director Branding</DialogTitle>
           </DialogHeader>
           <DirectorSettings />
         </DialogContent>
