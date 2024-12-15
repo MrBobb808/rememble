@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     if (!PRINTFUL_API_KEY) {
       console.error('Printful API key not configured')
-      throw new Error('Printful API key not configured')
+      throw new Error('Printful API key not configured in Supabase secrets. Please add PRINTFUL_API_KEY to your Edge Function secrets.')
     }
 
     const { type, photos, variantId } = await req.json()
