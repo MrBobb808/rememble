@@ -104,35 +104,46 @@ const CommentsList = ({ photoId }: CommentsListProps) => {
     }
 
     try {
+      console.log('Current user:', userData.user);
+      console.log('Photo ID:', photoId);
       console.log('Attempting to insert comment with:', {
         photo_id: photoId,
         content: newComment.trim(),
         user_id: userData.user.id
       });
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('memorial_image_comments')
         .insert({
           photo_id: photoId,
           content: newComment.trim(),
           user_id: userData.user.id
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
+
+      console.log('Successfully added comment:', data);
 
       setNewComment("");
       toast({
         title: "Success",
         description: "Your comment has been added",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding comment:', error);
       toast({
         title: "Error",
-        description: "Failed to add comment. Please try again.",
+        description: error.message || "Failed to add comment. Please try again.",
         variant: "destructive",
       });
     } finally {
