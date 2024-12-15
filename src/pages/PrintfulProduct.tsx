@@ -3,13 +3,12 @@ import { useSearchParams, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
 import { ProductHeader } from "@/components/printful/ProductHeader";
 import { ProductVariants } from "@/components/printful/ProductVariants";
 import { PhotoGrid } from "@/components/printful/PhotoGrid";
 import { ActionButtons } from "@/components/printful/ActionButtons";
 import { InteractivePreview } from "@/components/printful/InteractivePreview";
-import { PHOTO_BOOK_VARIANTS, QUILT_VARIANTS } from "@/components/printful/variants";
+import { PHOTO_BOOK_VARIANTS, QUILT_VARIANTS, PrintfulVariant } from "@/components/printful/variants";
 
 export const PrintfulProduct = () => {
   const [searchParams] = useSearchParams();
@@ -41,7 +40,7 @@ export const PrintfulProduct = () => {
     enabled: !!memorialId
   });
 
-  const variants = productType === 'photo-book' ? PHOTO_BOOK_VARIANTS : QUILT_VARIANTS;
+  const variants: PrintfulVariant[] = productType === 'photo-book' ? PHOTO_BOOK_VARIANTS : QUILT_VARIANTS;
 
   const handleCreateProduct = async () => {
     if (!selectedVariant) {
