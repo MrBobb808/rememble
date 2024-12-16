@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useMemorialData } from "@/hooks/useMemorialData";
 import { MemorialContent } from "./MemorialContent";
 import UnifiedSidebar from "./UnifiedSidebar";
@@ -11,10 +11,47 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const MemorialContainer = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
+  const token = searchParams.get("token");
   const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check for valid access
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        // If there's a token, we don't need to check authentication
+        if (token) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Otherwise, verify authentication
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          navigate("/auth");
+          return;
+        }
+
+        if (!session) {
+          console.log("No active session, redirecting to auth");
+          navigate("/auth");
+          return;
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error checking access:", error);
+        navigate("/auth");
+      }
+    };
+
+    checkAccess();
+  }, [navigate, token]);
 
   // Fetch memorial details
   const { data: memorial } = useQuery({
@@ -38,7 +75,7 @@ const MemorialContainer = () => {
   console.log("MemorialContainer - memorial:", memorial);
 
   useEffect(() => {
-    if (photos.length >= 0) {  // Changed from > 0 to >= 0 to handle empty memorials
+    if (photos.length >= 0) {
       console.log("Setting isLoading to false");
       setIsLoading(false);
     }
