@@ -8,17 +8,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: localStorage // Explicitly set storage to ensure session persistence
   }
 });
 
-// Set up auth state change listener
+// Set up auth state change listener with debug logging
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Auth state changed:', event, session);
-  
-  if (event === 'TOKEN_REFRESHED') {
-    console.log('Token refreshed successfully');
-  } else if (event === 'SIGNED_OUT') {
-    console.log('User signed out');
-  }
 });

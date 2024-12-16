@@ -5,7 +5,6 @@ import { MemorialContent } from "./MemorialContent";
 import UnifiedSidebar from "./UnifiedSidebar";
 import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
-import { useFuneralHomeSettings } from "@/hooks/useFuneralHomeSettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,11 +20,13 @@ const MemorialContainer = () => {
 
   // Check for valid access and handle session
   useEffect(() => {
+    let mounted = true;
+
     const checkAccess = async () => {
       try {
         // If there's a token, we don't need to check authentication
         if (token) {
-          setIsLoading(false);
+          if (mounted) setIsLoading(false);
           return;
         }
 
@@ -45,10 +46,11 @@ const MemorialContainer = () => {
 
         // If no session, try to refresh
         if (!session) {
+          console.log("No active session, attempting refresh...");
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError || !refreshData.session) {
-            console.log("No active session and refresh failed, redirecting to auth");
+            console.log("Session refresh failed:", refreshError);
             toast({
               title: "Session Expired",
               description: "Please sign in again",
@@ -57,9 +59,11 @@ const MemorialContainer = () => {
             navigate("/auth");
             return;
           }
+          
+          console.log("Session refreshed successfully:", refreshData.session);
         }
 
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       } catch (error) {
         console.error("Error checking access:", error);
         toast({
@@ -75,12 +79,15 @@ const MemorialContainer = () => {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
+      console.log("Auth state change in MemorialContainer:", event, session);
+      
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         navigate("/auth");
       }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, token, toast]);
@@ -90,14 +97,20 @@ const MemorialContainer = () => {
     queryKey: ['memorial', memorialId],
     queryFn: async () => {
       if (!memorialId) return null;
-      const { data, error } = await supabase
-        .from('memorials')
-        .select('*')
-        .eq('id', memorialId)
-        .single();
       
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('memorials')
+          .select('*')
+          .eq('id', memorialId)
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error("Error fetching memorial:", error);
+        return null;
+      }
     },
     enabled: !!memorialId
   });
