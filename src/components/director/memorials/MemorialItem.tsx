@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2, Link, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Memorial {
   id: string;
@@ -29,6 +31,42 @@ export const MemorialItem = ({
   onGenerateLink,
 }: MemorialItemProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleGenerateCollaboratorLink = async () => {
+    try {
+      // Create a new memorial link record
+      const { data: link, error } = await supabase
+        .from('memorial_links')
+        .insert({
+          memorial_id: memorial.id,
+          type: 'collaborator',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Generate the full URL for the memorial with the token
+      const baseUrl = window.location.origin;
+      const memorialUrl = `${baseUrl}/memorial?id=${memorial.id}&token=${link.token}`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(memorialUrl);
+
+      toast({
+        title: "Link generated successfully",
+        description: "The collaborator link has been copied to your clipboard.",
+      });
+    } catch (error: any) {
+      console.error('Error generating link:', error);
+      toast({
+        title: "Error generating link",
+        description: error.message || "There was a problem generating the link.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4 border-b last:border-0 hover:bg-gray-50">
@@ -84,7 +122,7 @@ export const MemorialItem = ({
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={() => onGenerateLink(memorial.id, 'collaborator')}
+          onClick={handleGenerateCollaboratorLink}
         >
           <Shield className="mr-2 h-4 w-4" />
           Generate Collaborator Link
