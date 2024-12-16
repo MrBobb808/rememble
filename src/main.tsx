@@ -4,9 +4,11 @@ import App from './App.tsx'
 import './index.css'
 import { initializeAnalytics, initializeSentry, reportWebVitals } from './lib/analytics'
 
-// Initialize analytics and monitoring
-initializeAnalytics();
-initializeSentry();
+// Initialize analytics and monitoring in production only
+if (process.env.NODE_ENV === 'production') {
+  initializeAnalytics();
+  initializeSentry();
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,5 +16,7 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 )
 
-// Report performance metrics
-reportWebVitals(console.log);
+// Report performance metrics in production only
+if (process.env.NODE_ENV === 'production') {
+  reportWebVitals(console.log);
+}

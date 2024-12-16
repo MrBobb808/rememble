@@ -21,6 +21,7 @@ const MemorialContainer = () => {
   // Check for valid access and handle session
   useEffect(() => {
     let mounted = true;
+    let sessionSubscription: { unsubscribe: () => void } | null = null;
 
     const checkAccess = async () => {
       try {
@@ -46,11 +47,9 @@ const MemorialContainer = () => {
 
         // If no session, try to refresh
         if (!session) {
-          console.log("No active session, attempting refresh...");
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError || !refreshData.session) {
-            console.log("Session refresh failed:", refreshError);
             toast({
               title: "Session Expired",
               description: "Please sign in again",
@@ -59,8 +58,6 @@ const MemorialContainer = () => {
             navigate("/auth");
             return;
           }
-          
-          console.log("Session refreshed successfully:", refreshData.session);
         }
 
         if (mounted) setIsLoading(false);
@@ -78,8 +75,10 @@ const MemorialContainer = () => {
     checkAccess();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change in MemorialContainer:", event, session);
+    sessionSubscription = supabase.auth.onAuthStateChange((event, session) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Auth state change in MemorialContainer:", event, session);
+      }
       
       if (event === 'SIGNED_OUT') {
         navigate("/auth");
@@ -88,47 +87,69 @@ const MemorialContainer = () => {
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (sessionSubscription) {
+        sessionSubscription.unsubscribe();
+      }
     };
   }, [navigate, token, toast]);
 
-  // Fetch memorial details
-  const { data: memorial } = useQuery({
+  // Fetch memorial details with error handling
+  const { data: memorial, error: memorialError } = useQuery({
     queryKey: ['memorial', memorialId],
     queryFn: async () => {
       if (!memorialId) return null;
       
-      try {
-        const { data, error } = await supabase
-          .from('memorials')
-          .select('*')
-          .eq('id', memorialId)
-          .single();
-        
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error("Error fetching memorial:", error);
-        return null;
-      }
+      const { data, error } = await supabase
+        .from('memorials')
+        .select('*')
+        .eq('id', memorialId)
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
-    enabled: !!memorialId
+    enabled: !!memorialId,
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error loading memorial",
+        description: "Unable to load memorial details. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
-  console.log("MemorialContainer - memorialId:", memorialId);
-  console.log("MemorialContainer - photos:", photos);
-  console.log("MemorialContainer - memorial:", memorial);
+  if (process.env.NODE_ENV === 'development') {
+    console.log("MemorialContainer - memorialId:", memorialId);
+    console.log("MemorialContainer - photos:", photos);
+    console.log("MemorialContainer - memorial:", memorial);
+  }
 
   useEffect(() => {
     if (photos.length >= 0) {
-      console.log("Setting isLoading to false");
       setIsLoading(false);
     }
   }, [photos]);
 
   if (isLoading) {
-    console.log("Rendering LoadingState");
     return <LoadingState />;
+  }
+
+  if (memorialError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Unable to Load Memorial</h2>
+          <p className="text-gray-600 mb-4">There was an error loading the memorial details.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-memorial-blue text-white rounded hover:bg-memorial-blue/90"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

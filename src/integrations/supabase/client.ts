@@ -9,11 +9,15 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storage: localStorage
+    storage: localStorage,
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development'
   }
 });
 
-// Set up auth state change listener with debug logging
+// Set up auth state change listener with environment-aware logging
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth state changed:', event, session);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Auth state changed:', event, session);
+  }
 });
