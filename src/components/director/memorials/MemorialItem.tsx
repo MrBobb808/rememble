@@ -19,6 +19,7 @@ interface MemorialItemProps {
   onEdit: (memorial: Memorial) => void;
   onPreview: (memorial: Memorial) => void;
   onDelete: (id: string) => void;
+  onGenerateLink: (memorialId: string, type: 'collaborator' | 'viewer') => Promise<void>;
 }
 
 export const MemorialItem = ({
@@ -26,6 +27,7 @@ export const MemorialItem = ({
   onEdit,
   onPreview,
   onDelete,
+  onGenerateLink,
 }: MemorialItemProps) => {
   const navigate = useNavigate();
 
