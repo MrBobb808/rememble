@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useMemorialData } from "@/hooks/useMemorialData";
+import { useMemorialSession } from "@/hooks/useMemorialSession";
+import { useMemorialDetails } from "@/hooks/useMemorialDetails";
 import { MemorialContent } from "./MemorialContent";
 import UnifiedSidebar from "./UnifiedSidebar";
 import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const MemorialContainer = () => {
@@ -19,134 +19,10 @@ const MemorialContainer = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Check for valid access and handle session
-  useEffect(() => {
-    let mounted = true;
-    let unsubscribe: (() => void) | null = null;
+  const { isLoading: isSessionLoading } = useMemorialSession(token);
 
-    const checkAccess = async () => {
-      try {
-        // If there's a token, we don't need to check authentication
-        if (token) {
-          if (mounted) setIsLoading(false);
-          return;
-        }
-
-        // Get current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          toast({
-            title: "Session Error",
-            description: "Please sign in again",
-            variant: "destructive",
-          });
-          navigate("/auth");
-          return;
-        }
-
-        // If no session, try to refresh
-        if (!session) {
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError || !refreshData.session) {
-            console.error("Session refresh error:", refreshError);
-            toast({
-              title: "Session Expired",
-              description: "Please sign in again",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return;
-          }
-
-          // Verify the refreshed session
-          const { error: verifyError } = await supabase.auth.getUser();
-          if (verifyError) {
-            console.error("Session verification error:", verifyError);
-            toast({
-              title: "Authentication Error",
-              description: "Please sign in again",
-              variant: "destructive",
-            });
-            navigate("/auth");
-            return;
-          }
-        }
-
-        if (mounted) setIsLoading(false);
-      } catch (error) {
-        console.error("Error checking access:", error);
-        toast({
-          title: "Authentication Error",
-          description: "Please try signing in again",
-          variant: "destructive",
-        });
-        navigate("/auth");
-      }
-    };
-
-    // Initial session check
-    checkAccess();
-
-    // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Auth state change in MemorialContainer:", event, session);
-      }
-      
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-        navigate("/auth");
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Verify the refreshed token
-        const { error: verifyError } = await supabase.auth.getUser();
-        if (verifyError) {
-          console.error("Token verification error:", verifyError);
-          navigate("/auth");
-        }
-      }
-    });
-
-    // Store unsubscribe function
-    unsubscribe = subscription.unsubscribe;
-
-    return () => {
-      mounted = false;
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [navigate, token, toast]);
-
-  // Fetch memorial details with error handling
-  const { data: memorial, error: memorialError } = useQuery({
-    queryKey: ['memorial', memorialId],
-    queryFn: async () => {
-      if (!memorialId) return null;
-      
-      const { data, error } = await supabase
-        .from('memorials')
-        .select('*')
-        .eq('id', memorialId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!memorialId,
-    retry: 2,
-    meta: {
-      onError: () => {
-        toast({
-          title: "Error loading memorial",
-          description: "Unable to load memorial details. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  });
+  // Fetch memorial details
+  const { data: memorial, error: memorialError } = useMemorialDetails(memorialId);
 
   if (process.env.NODE_ENV === 'development') {
     console.log("MemorialContainer - memorialId:", memorialId);
@@ -154,13 +30,14 @@ const MemorialContainer = () => {
     console.log("MemorialContainer - memorial:", memorial);
   }
 
-  useEffect(() => {
+  // Update loading state when photos are loaded
+  useState(() => {
     if (photos.length >= 0) {
       setIsLoading(false);
     }
   }, [photos]);
 
-  if (isLoading) {
+  if (isSessionLoading || isLoading) {
     return <LoadingState />;
   }
 
