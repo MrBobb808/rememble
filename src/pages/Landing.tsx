@@ -10,23 +10,23 @@ const Landing = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{ 
-          backgroundImage: `url(https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1920)`,
-          backgroundPosition: 'center 30%'
+          backgroundImage: `url(/placeholder.svg)`,
+          backgroundPosition: 'center'
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
-        <h1 className="text-7xl md:text-8xl font-playfair mb-8 animate-fade-in">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-playfair mb-8">
           In Loving Memory
         </h1>
-        <p className="text-2xl md:text-3xl font-inter mb-12 animate-fade-in opacity-90">
+        <p className="text-xl md:text-2xl lg:text-3xl font-inter mb-12 max-w-2xl">
           Create a beautiful memorial to honor your loved one
         </p>
         <Button 
           onClick={() => navigate("/memorial")}
           size="lg"
-          className="text-xl px-8 py-6 bg-white/20 hover:bg-white/30 backdrop-blur-sm animate-fade-in"
+          className="text-lg md:text-xl px-6 py-6 bg-white/20 hover:bg-white/30 backdrop-blur-sm"
         >
           Enter Memorial
         </Button>
