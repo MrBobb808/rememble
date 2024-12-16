@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -35,6 +36,8 @@ export const MemorialContent = ({
   const [showTributeModal, setShowTributeModal] = useState(false);
   const [showIncompleteAlert, setShowIncompleteAlert] = useState(false);
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
+  const [slideshowUrl, setSlideshowUrl] = useState<string | null>(null);
+  const [showSlideshowDialog, setShowSlideshowDialog] = useState(false);
   const { toast } = useToast();
 
   const handleGenerateSlideshow = async () => {
@@ -47,13 +50,16 @@ export const MemorialContent = ({
 
         if (error) throw error;
 
-        toast({
-          title: "Slideshow generated!",
-          description: "Your memorial slideshow is ready to view.",
-        });
-
-        // TODO: Handle the video URL response
-        console.log("Slideshow URL:", data.videoUrl);
+        if (data.videoUrl) {
+          setSlideshowUrl(data.videoUrl);
+          setShowSlideshowDialog(true);
+          toast({
+            title: "Slideshow generated!",
+            description: "Your memorial slideshow is ready to view.",
+          });
+        } else {
+          throw new Error("No video URL received");
+        }
       } catch (error) {
         console.error("Error generating slideshow:", error);
         toast({
@@ -102,14 +108,6 @@ export const MemorialContent = ({
       )}>
         <div className="space-y-6">
           <PhotoGrid photos={photos} onPhotoAdd={handlePhotoAdd} isLoading={isLoading} />
-          {photos.length === 25 && (
-            <MemorialSummary 
-              summary={null}
-              onDownload={() => {
-                console.log("Download memorial");
-              }}
-            />
-          )}
         </div>
       </div>
 
@@ -130,6 +128,26 @@ export const MemorialContent = ({
           </AlertDialogHeader>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showSlideshowDialog} onOpenChange={setShowSlideshowDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Memorial Slideshow</DialogTitle>
+          </DialogHeader>
+          {slideshowUrl && (
+            <div className="aspect-video w-full">
+              <video 
+                controls 
+                className="w-full h-full rounded-lg"
+                poster={photos[0]?.url}
+              >
+                <source src={slideshowUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
