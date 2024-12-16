@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import { supabase } from "@/integrations/supabase/client"
+import ReactMarkdown from 'react-markdown'
 import html2pdf from 'html2pdf.js'
 
 interface TributeModalProps {
@@ -32,8 +33,8 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
     try {
       const captions = photos.map(photo => ({
         caption: photo.caption,
-        contributor: photo.contributorName,
-        relationship: photo.relationship
+        contributor: photo.contributorName || 'Anonymous',
+        relationship: photo.relationship || 'Friend'
       }))
       
       const { data, error } = await supabase.functions.invoke('generate-tribute', {
@@ -72,20 +73,6 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
     html2pdf().set(opt).from(content).save()
   }
 
-  const formatPoem = (poem: string) => {
-    // Split into stanzas (double line breaks)
-    const stanzas = poem.split('\n\n')
-    return stanzas.map((stanza, index) => (
-      <div key={index} className="mb-8 last:mb-0">
-        {stanza.split('\n').map((line, lineIndex) => (
-          <p key={lineIndex} className="leading-relaxed italic text-center">
-            {line}
-          </p>
-        ))}
-      </div>
-    ))
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto">
@@ -116,18 +103,18 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Tribute Summary</h3>
               <div className="prose max-w-none bg-memorial-beige-light/50 p-6 rounded-lg">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                <ReactMarkdown className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {tribute.summary}
-                </p>
+                </ReactMarkdown>
               </div>
             </div>
 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Memorial Poem</h3>
               <div className="prose max-w-none bg-memorial-beige-light p-6 rounded-lg">
-                <div className="text-gray-700">
-                  {formatPoem(tribute.poem)}
-                </div>
+                <ReactMarkdown className="text-gray-700 whitespace-pre-line">
+                  {tribute.poem}
+                </ReactMarkdown>
               </div>
             </div>
 
