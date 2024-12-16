@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { DirectorGuardLoading } from "./DirectorGuardLoading";
 import { useNavigate } from "react-router-dom";
@@ -12,26 +12,36 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: profile, isLoading, error } = useProfile();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  // Handle authentication and authorization in useEffect
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Development mode: Bypassing director guard");
-      return;
-    }
+    const checkAuthorization = async () => {
+      // Development mode bypass
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Development mode: Bypassing director guard");
+        setIsAuthorized(true);
+        return;
+      }
 
-    if (error) {
-      console.error("Error fetching profile:", error);
-      toast({
-        title: "Authentication Error",
-        description: "Please sign in again to continue.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
+      // Handle authentication errors
+      if (error) {
+        console.error("Error fetching profile:", error);
+        setIsAuthorized(false);
+        toast({
+          title: "Authentication Error",
+          description: "Please sign in again to continue.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
 
-    if (!isLoading && profile) {
+      // Skip if still loading or no profile
+      if (isLoading || !profile) {
+        return;
+      }
+
+      // Check director status
       const isDirector = profile?.relationship?.toLowerCase().trim() === 'director';
       
       if (!isDirector) {
@@ -40,33 +50,35 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
           userId: profile?.id 
         });
         
+        setIsAuthorized(false);
         toast({
           title: "Access Denied",
           description: "You do not have permission to access this page.",
           variant: "destructive",
         });
-        
         navigate("/auth");
       } else {
         console.log("Director access granted", { 
           userId: profile?.id,
           relationship: profile?.relationship 
         });
+        setIsAuthorized(true);
       }
-    }
+    };
+
+    checkAuthorization();
   }, [profile, isLoading, error, navigate, toast]);
 
   if (isLoading) {
     return <DirectorGuardLoading />;
   }
 
-  // In development, or if user is a director, render children
-  if (process.env.NODE_ENV === 'development' || 
-      (profile?.relationship?.toLowerCase().trim() === 'director')) {
+  // Render children only if authorized
+  if (isAuthorized) {
     return <>{children}</>;
   }
 
-  // Return null while the redirect happens
+  // Return null while authorization is pending or failed
   return null;
 };
 
