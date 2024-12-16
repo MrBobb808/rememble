@@ -94,9 +94,6 @@ const Auth = () => {
                   brand: '#1e40af',
                   brandAccent: '#1e3a8a',
                 },
-                space: {
-                  inputText: 'mr.bobb12@yahoo.com'
-                }
               }
             },
             className: {
