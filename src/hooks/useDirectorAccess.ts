@@ -11,49 +11,18 @@ export const useDirectorAccess = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    let mounted = true;
-
     const checkAccess = async () => {
       try {
-        // First check if we have a valid session
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          throw sessionError;
-        }
-
-        if (!sessionData.session) {
-          console.log("No active session found");
-          // Clear any potentially invalid session data
-          await supabase.auth.signOut();
-          navigate("/auth");
-          return;
-        }
-
-        // Refresh session if needed
-        const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError) {
-          console.error("Session refresh error:", refreshError);
-          throw refreshError;
-        }
-
         if (!session) {
-          console.log("Session refresh failed");
-          await supabase.auth.signOut();
+          console.log("No active session found");
           navigate("/auth");
           return;
         }
 
-        // Get user details
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (userError) {
-          console.error("User error:", userError);
-          throw userError;
-        }
-
         if (!user) {
           console.log("No user found");
           navigate("/auth");
@@ -111,34 +80,25 @@ export const useDirectorAccess = () => {
           return;
         }
 
-        if (mounted) {
-          setIsAuthorized(true);
-        }
+        setIsAuthorized(true);
       } catch (error) {
         console.error("Error checking access:", error);
-        // Clear any potentially invalid session data
-        await supabase.auth.signOut();
         navigate("/auth");
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
+    // Run the check immediately when the component mounts
     checkAccess();
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === 'SIGNED_OUT') {
-        navigate("/auth");
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        checkAccess();
-      }
+    // Set up a listener for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAccess();
     });
 
+    // Cleanup subscription when component unmounts
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, searchParams, toast]);
