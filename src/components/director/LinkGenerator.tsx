@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, Shield, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 interface LinkGeneratorProps {
   memorialId: string;
@@ -11,19 +12,34 @@ interface LinkGeneratorProps {
 
 export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
 
   const generateLink = async (type: 'collaborator' | 'viewer') => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) {
+      // First check if the session is valid
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        toast({
+          title: "Session expired",
+          description: "Please sign in again to continue.",
+          variant: "destructive",
+        });
+        // Redirect to auth page
+        navigate("/auth");
+        return;
+      }
+
+      if (!session) {
         toast({
           title: "Authentication required",
           description: "Please sign in to generate links.",
           variant: "destructive",
         });
+        navigate("/auth");
         return;
       }
 
@@ -32,7 +48,7 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
         .insert({
           memorial_id: memorialId,
           type,
-          created_by: user.id,
+          created_by: session.user.id,
         })
         .select()
         .single();
@@ -60,6 +76,18 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
       }
     } catch (error: any) {
       console.error('Error generating link:', error);
+      
+      // Check if it's an authentication error
+      if (error.message?.includes('JWT expired')) {
+        toast({
+          title: "Session expired",
+          description: "Your session has expired. Please sign in again.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
       toast({
         title: "Error generating link",
         description: error.message || "There was a problem generating the link.",
