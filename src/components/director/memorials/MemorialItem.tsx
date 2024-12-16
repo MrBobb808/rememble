@@ -33,7 +33,7 @@ export const MemorialItem = ({
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleGenerateCollaboratorLink = async () => {
+  const handleGenerateLink = async (type: 'collaborator' | 'viewer') => {
     try {
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -47,35 +47,25 @@ export const MemorialItem = ({
         return;
       }
 
-      // Check if user is an admin for this memorial
-      const { data: collaborator, error: collaboratorError } = await supabase
-        .from('memorial_collaborators')
-        .select('role')
-        .eq('memorial_id', memorial.id)
-        .eq('user_id', user.id)
-        .single();
-
-      if (collaboratorError || !collaborator || collaborator.role !== 'admin') {
-        toast({
-          title: "Permission denied",
-          description: "You must be an admin of this memorial to generate links.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create a new memorial link record
+      // Create the link
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
           memorial_id: memorial.id,
-          type: 'collaborator',
+          type,
           created_by: user.id,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error generating link:', error);
+        throw error;
+      }
+
+      if (!link) {
+        throw new Error('No link was generated');
+      }
 
       // Generate the full URL for the memorial with the token
       const baseUrl = window.location.origin;
@@ -86,7 +76,7 @@ export const MemorialItem = ({
 
       toast({
         title: "Link generated successfully",
-        description: "The collaborator link has been copied to your clipboard.",
+        description: "The link has been copied to your clipboard.",
       });
     } catch (error: any) {
       console.error('Error generating link:', error);
@@ -152,7 +142,7 @@ export const MemorialItem = ({
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={handleGenerateCollaboratorLink}
+          onClick={() => handleGenerateLink('collaborator')}
         >
           <Shield className="mr-2 h-4 w-4" />
           Generate Collaborator Link
@@ -160,7 +150,7 @@ export const MemorialItem = ({
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={() => onGenerateLink(memorial.id, 'viewer')}
+          onClick={() => handleGenerateLink('viewer')}
         >
           <Link className="mr-2 h-4 w-4" />
           Generate Viewer Link
