@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import PhotoGrid from "@/components/PhotoGrid";
 import MemorialSummary from "@/components/MemorialSummary";
 import MemorialBanner from "./MemorialBanner";
@@ -5,13 +6,13 @@ import { TributeModal } from "./TributeModal";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { Photo } from "@/types/photo";
-import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import Slideshow from "./Slideshow";
 
 interface MemorialContentProps {
   photos: Photo[];
@@ -36,40 +37,12 @@ export const MemorialContent = ({
   const [showTributeModal, setShowTributeModal] = useState(false);
   const [showIncompleteAlert, setShowIncompleteAlert] = useState(false);
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
-  const [slideshowUrl, setSlideshowUrl] = useState<string | null>(null);
   const [showSlideshowDialog, setShowSlideshowDialog] = useState(false);
   const { toast } = useToast();
 
   const handleGenerateSlideshow = async () => {
     if (photos.length === 25) {
-      setIsGeneratingSlideshow(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-slideshow', {
-          body: { photos }
-        });
-
-        if (error) throw error;
-
-        if (data.videoUrl) {
-          setSlideshowUrl(data.videoUrl);
-          setShowSlideshowDialog(true);
-          toast({
-            title: "Slideshow generated!",
-            description: "Your memorial slideshow is ready to view.",
-          });
-        } else {
-          throw new Error("No video URL received");
-        }
-      } catch (error) {
-        console.error("Error generating slideshow:", error);
-        toast({
-          title: "Error generating slideshow",
-          description: "There was a problem creating your slideshow. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsGeneratingSlideshow(false);
-      }
+      setShowSlideshowDialog(true);
     } else {
       setShowIncompleteAlert(true);
     }
@@ -90,14 +63,7 @@ export const MemorialContent = ({
           className="bg-memorial-blue hover:bg-memorial-blue/90"
           disabled={isGeneratingSlideshow}
         >
-          {isGeneratingSlideshow ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating Slideshow...
-            </>
-          ) : (
-            "Generate Slideshow"
-          )}
+          View Slideshow
         </Button>
       </div>
 
@@ -122,7 +88,7 @@ export const MemorialContent = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Incomplete Memorial</AlertDialogTitle>
             <AlertDialogDescription>
-              Please complete all 25 photo tiles before generating your memorial slideshow. 
+              Please complete all 25 photo tiles before viewing the memorial slideshow. 
               You have added {photos.length} out of 25 photos.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -134,18 +100,7 @@ export const MemorialContent = ({
           <DialogHeader>
             <DialogTitle>Memorial Slideshow</DialogTitle>
           </DialogHeader>
-          {slideshowUrl && (
-            <div className="aspect-video w-full">
-              <video 
-                controls 
-                className="w-full h-full rounded-lg"
-                poster={photos[0]?.url}
-              >
-                <source src={slideshowUrl} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          )}
+          <Slideshow photos={photos} />
         </DialogContent>
       </Dialog>
     </div>
