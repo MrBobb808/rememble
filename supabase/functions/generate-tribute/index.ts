@@ -13,12 +13,44 @@ serve(async (req) => {
 
   try {
     const { captions } = await req.json()
-    console.log("Received captions for tribute generation:", captions)
+    console.log("Received data for tribute generation:", captions)
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured')
     }
+
+    // Format the input data for the prompt
+    const formattedMemories = captions.map(c => ({
+      contributor: c.contributor || 'Anonymous',
+      memory: c.caption
+    }));
+
+    // Create a structured prompt
+    const systemPrompt = `You are a compassionate AI tasked with creating a heartfelt memorial tribute. 
+    Create two sections:
+    1. A deeply personal tribute summary that references specific contributors and their shared memories
+    2. A structured memorial poem with exactly 4 stanzas of 4 lines each
+
+    The tribute summary should:
+    - Reference contributors by name
+    - Mention specific memories they shared
+    - Capture the essence of who the person was to their loved ones
+    - Be approximately 200 words
+
+    The poem should:
+    - Be structured in exactly 4 stanzas
+    - Have exactly 4 lines per stanza
+    - Use metaphor and imagery
+    - Reflect the person's impact and legacy
+    - Be emotionally resonant`;
+
+    const userPrompt = `Here are the memories shared by loved ones:
+    ${formattedMemories.map(m => `${m.contributor} shared: "${m.memory}"`).join('\n')}
+
+    Please create:
+    1. A heartfelt tribute summary referencing these specific memories and contributors
+    2. A memorial poem in 4 stanzas`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -29,14 +61,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o",
         messages: [
-          {
-            role: "system",
-            content: "You are an AI assistant tasked with creating a heartfelt tribute for a completed memorial. Generate both a personalized tribute summary and a structured poem based on the provided memories. The summary should reference specific contributors and their shared memories. The poem should be structured in clear stanzas."
-          },
-          {
-            role: "user",
-            content: `Create a heartfelt tribute and poem based on these memories:\n\n${captions.map(c => c).join('\n')}\n\nGenerate two sections:\n1. A deeply personal tribute summary that references specific contributors and their memories, highlighting the impact and legacy of the loved one.\n2. A structured poem (3-4 stanzas, 4 lines each) capturing the essence of their life and the shared memories.`
-          }
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
         ],
         temperature: 0.7,
         max_tokens: 1000,
@@ -50,7 +76,7 @@ serve(async (req) => {
       throw new Error('No tribute generated')
     }
 
-    // Parse the response to separate summary and poem
+    // Split the response into summary and poem sections
     const content = data.choices[0].message.content
     const [summary, poem] = content.split('\n\n').filter(Boolean)
 

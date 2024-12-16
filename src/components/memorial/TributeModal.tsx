@@ -15,7 +15,11 @@ import html2pdf from 'html2pdf.js'
 interface TributeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  photos: Array<{ caption: string; contributorName?: string }>
+  photos: Array<{ 
+    caption: string
+    contributorName?: string 
+    relationship?: string
+  }>
 }
 
 export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) => {
@@ -28,7 +32,8 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
     try {
       const captions = photos.map(photo => ({
         caption: photo.caption,
-        contributor: photo.contributorName
+        contributor: photo.contributorName,
+        relationship: photo.relationship
       }))
       
       const { data, error } = await supabase.functions.invoke('generate-tribute', {
@@ -72,7 +77,7 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
     return stanzas.map((stanza, index) => (
       <div key={index} className="mb-6">
         {stanza.split('\n').map((line, lineIndex) => (
-          <p key={lineIndex} className="leading-relaxed">
+          <p key={lineIndex} className="leading-relaxed italic">
             {line}
           </p>
         ))}
@@ -109,8 +114,8 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
           <div className="space-y-6" id="tribute-content">
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Tribute Summary</h3>
-              <div className="prose max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+              <div className="prose max-w-none bg-memorial-beige-light/50 p-6 rounded-lg">
+                <p className="text-gray-700 leading-relaxed">
                   {tribute.summary}
                 </p>
               </div>
@@ -119,14 +124,14 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Memorial Poem</h3>
               <div className="prose max-w-none bg-memorial-beige-light p-6 rounded-lg">
-                <div className="text-gray-700 leading-relaxed italic">
+                <div className="text-gray-700 leading-relaxed">
                   {formatPoem(tribute.poem)}
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-4 pt-4">
-              <Button variant="outline" onClick={() => generateTribute()}>
+              <Button variant="outline" onClick={generateTribute}>
                 Regenerate
               </Button>
               <Button onClick={downloadPDF}>
