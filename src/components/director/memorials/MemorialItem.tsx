@@ -35,12 +35,25 @@ export const MemorialItem = ({
 
   const handleGenerateCollaboratorLink = async () => {
     try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to generate links.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Create a new memorial link record
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
           memorial_id: memorial.id,
           type: 'collaborator',
+          created_by: user.id,
         })
         .select()
         .single();
