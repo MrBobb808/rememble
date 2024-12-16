@@ -43,7 +43,8 @@ export const MemorialContent = ({
   };
 
   return (
-    <div className="pt-8">
+    // Added mt-16 to account for the fixed header height
+    <div className="pt-8 mt-16">
       <MemorialBanner 
         name={memorial?.name || "Memorial"}
         birthYear={memorial?.birth_year}
