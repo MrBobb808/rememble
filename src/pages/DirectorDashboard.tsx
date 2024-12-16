@@ -117,7 +117,8 @@ const DirectorDashboard = () => {
     <DirectorGuard>
       <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
         <Navigation />
-        <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Added mt-16 to account for fixed header height */}
+        <main className="container mx-auto px-4 py-8 mt-16 space-y-8">
           <Tabs defaultValue="dashboard" className="space-y-6">
             <TabsList>
               <TabsTrigger value="dashboard" className="flex items-center gap-2">
