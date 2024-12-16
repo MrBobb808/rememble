@@ -13,16 +13,28 @@ export const useDirectorAccess = () => {
   useEffect(() => {
     const checkAccess = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // First check if we have a valid session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          throw sessionError;
+        }
+
         if (!session) {
           console.log("No active session found");
           navigate("/auth");
           return;
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get user details
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
+        if (userError) {
+          console.error("User error:", userError);
+          throw userError;
+        }
+
         if (!user) {
           console.log("No user found");
           navigate("/auth");
@@ -83,21 +95,25 @@ export const useDirectorAccess = () => {
         setIsAuthorized(true);
       } catch (error) {
         console.error("Error checking access:", error);
+        // Clear any potentially invalid session data
+        await supabase.auth.signOut();
         navigate("/auth");
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Run the check immediately when the component mounts
     checkAccess();
 
-    // Set up a listener for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkAccess();
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        navigate("/auth");
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        checkAccess();
+      }
     });
 
-    // Cleanup subscription when component unmounts
     return () => {
       subscription.unsubscribe();
     };
