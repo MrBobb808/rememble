@@ -18,16 +18,15 @@ const MemorialContainer = () => {
 
   // Early validation of required parameters
   useEffect(() => {
-    if (!memorialId || !token) {
+    if (!memorialId) {
       toast({
-        title: "Invalid Access",
-        description: "Missing memorial information. Please check your link.",
-        variant: "destructive",
+        title: "Welcome",
+        description: "Please use a valid memorial link to access a memorial.",
       });
       navigate("/");
       return;
     }
-  }, [memorialId, token, navigate, toast]);
+  }, [memorialId, navigate, toast]);
 
   const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   
