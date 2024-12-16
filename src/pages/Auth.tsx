@@ -104,6 +104,7 @@ const Auth = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
+          defaultEmail="mr.bobb12@yahoo.com"
         />
       </div>
     </div>
