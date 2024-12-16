@@ -6,19 +6,20 @@ import UnifiedSidebar from "./UnifiedSidebar";
 import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
 import { useFuneralHomeSettings } from "@/hooks/useFuneralHomeSettings";
-import { Photo } from "@/types/photo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const MemorialContainer = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
   const token = searchParams.get("token");
   const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for valid access
+  // Check for valid access and handle session
   useEffect(() => {
     const checkAccess = async () => {
       try {
@@ -28,30 +29,61 @@ const MemorialContainer = () => {
           return;
         }
 
-        // Otherwise, verify authentication
+        // Get current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error("Session error:", sessionError);
+          toast({
+            title: "Session Error",
+            description: "Please sign in again",
+            variant: "destructive",
+          });
           navigate("/auth");
           return;
         }
 
+        // If no session, try to refresh
         if (!session) {
-          console.log("No active session, redirecting to auth");
-          navigate("/auth");
-          return;
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshData.session) {
+            console.log("No active session and refresh failed, redirecting to auth");
+            toast({
+              title: "Session Expired",
+              description: "Please sign in again",
+              variant: "destructive",
+            });
+            navigate("/auth");
+            return;
+          }
         }
 
         setIsLoading(false);
       } catch (error) {
         console.error("Error checking access:", error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try signing in again",
+          variant: "destructive",
+        });
         navigate("/auth");
       }
     };
 
     checkAccess();
-  }, [navigate, token]);
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate("/auth");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, token, toast]);
 
   // Fetch memorial details
   const { data: memorial } = useQuery({
