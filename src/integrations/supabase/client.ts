@@ -10,9 +10,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     detectSessionInUrl: true,
     storage: localStorage,
+    storageKey: 'memorial-auth-token',
     flowType: 'pkce',
-    debug: process.env.NODE_ENV === 'development',
-    storageKey: 'memorial-auth-token'
+    debug: process.env.NODE_ENV === 'development'
   }
 });
 
