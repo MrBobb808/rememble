@@ -22,34 +22,35 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
           return;
         }
 
-        if (session.user.email !== "mr.bobb12@yahoo.com") {
+        // If it's the director account, grant immediate access
+        if (session.user.email === "mr.bobb12@yahoo.com") {
+          return; // Allow access without any further checks
+        }
+
+        // For non-director users, check for memorial access
+        const { data: collaborations, error: collaborationError } = await supabase
+          .from("memorial_collaborators")
+          .select("memorial_id")
+          .eq("email", session.user.email)
+          .limit(1);
+
+        if (collaborationError) {
+          console.error("Error fetching collaborations:", collaborationError);
+          throw collaborationError;
+        }
+
+        if (collaborations && collaborations.length > 0) {
+          navigate(`/memorial?id=${collaborations[0].memorial_id}`);
+        } else {
           toast({
             title: "Access Denied",
-            description: "You don't have permission to access this page.",
+            description: "You don't have access to any memorials. Please request an invitation.",
             variant: "destructive",
           });
           navigate("/");
-          return;
-        }
-
-        // Check subscription status
-        const { data: subscription, error: subscriptionError } = await supabase
-          .from("director_subscriptions")
-          .select("status")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (subscriptionError || !subscription || subscription.status !== "active") {
-          toast({
-            title: "Subscription Required",
-            description: "Please activate your subscription to access the dashboard.",
-            variant: "destructive",
-          });
-          navigate("/");
-          return;
         }
       } catch (error) {
-        console.error("Director access check error:", error);
+        console.error("Error checking access:", error);
         navigate("/auth");
       }
     };

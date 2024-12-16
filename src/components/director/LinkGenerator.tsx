@@ -46,10 +46,11 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
         throw new Error('No link was generated');
       }
 
-      // Generate the correct link based on the type
+      // Generate the full URL for the memorial with the token
       const baseUrl = window.location.origin;
       const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
 
+      // Copy to clipboard
       await navigator.clipboard.writeText(fullLink);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
