@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useMemorialData } from "@/hooks/useMemorialData";
 import { useMemorialSession } from "@/hooks/useMemorialSession";
@@ -15,14 +15,47 @@ const MemorialContainer = () => {
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
   const token = searchParams.get("token");
-  const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for valid access and handle session
-  const { isLoading: isSessionLoading } = useMemorialSession(token);
+  // Early validation of required parameters
+  useEffect(() => {
+    if (!memorialId || !token) {
+      toast({
+        title: "Invalid Access",
+        description: "Missing memorial information. Please check your link.",
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
+  }, [memorialId, token, navigate, toast]);
 
-  // Fetch memorial details with error handling in meta
+  const { photos, handlePhotoAdd } = useMemorialData(memorialId);
+  
+  // Check for valid access and handle session
+  const { isLoading: isSessionLoading, sessionError } = useMemorialSession(token);
+
+  // Handle session errors
+  useEffect(() => {
+    if (sessionError) {
+      toast({
+        title: "Session Error",
+        description: "Please sign in again to continue.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [sessionError, navigate, toast]);
+
+  // Fetch memorial details with error handling
   const { data: memorial, error: memorialError } = useMemorialDetails(memorialId);
+
+  // Update loading state when photos are loaded
+  useEffect(() => {
+    if (photos && photos.length >= 0) {
+      setIsLoading(false);
+    }
+  }, [photos]);
 
   if (process.env.NODE_ENV === 'development') {
     console.log("MemorialContainer - memorialId:", memorialId);
@@ -30,18 +63,15 @@ const MemorialContainer = () => {
     console.log("MemorialContainer - memorial:", memorial);
   }
 
-  // Update loading state when photos are loaded
-  useState(() => {
-    if (photos.length >= 0) {
-      setIsLoading(false);
-    }
-  }, [photos]);
-
   if (isSessionLoading || isLoading) {
     return <LoadingState />;
   }
 
   if (memorialError) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Error fetching memorial details:", memorialError);
+    }
+    
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

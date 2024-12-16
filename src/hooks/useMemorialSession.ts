@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useMemorialSession = (token?: string | null) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<Error | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -24,12 +25,7 @@ export const useMemorialSession = (token?: string | null) => {
         
         if (sessionError) {
           console.error("Session error:", sessionError);
-          toast({
-            title: "Session Error",
-            description: "Please sign in again",
-            variant: "destructive",
-          });
-          navigate("/auth");
+          setSessionError(sessionError);
           return;
         }
 
@@ -40,25 +36,22 @@ export const useMemorialSession = (token?: string | null) => {
           
           if (refreshError || !refreshedSession) {
             console.error("Session refresh error:", refreshError);
-            toast({
-              title: "Session Expired",
-              description: "Please sign in again",
-              variant: "destructive",
-            });
-            navigate("/auth");
+            setSessionError(refreshError || new Error("Failed to refresh session"));
             return;
           }
         }
 
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          setSessionError(null);
+        }
       } catch (error) {
         console.error("Error checking session:", error);
-        toast({
-          title: "Authentication Error",
-          description: "Please try signing in again",
-          variant: "destructive",
-        });
-        navigate("/auth");
+        if (error instanceof Error) {
+          setSessionError(error);
+        } else {
+          setSessionError(new Error("Unknown session error"));
+        }
       }
     };
 
@@ -73,12 +66,6 @@ export const useMemorialSession = (token?: string | null) => {
       
       if (event === 'SIGNED_OUT') {
         navigate("/auth");
-      } else if (event === 'TOKEN_REFRESHED') {
-        const { error: verifyError } = await supabase.auth.getUser();
-        if (verifyError) {
-          console.error("Token verification error:", verifyError);
-          navigate("/auth");
-        }
       }
     });
 
@@ -88,5 +75,5 @@ export const useMemorialSession = (token?: string | null) => {
     };
   }, [navigate, toast, token]);
 
-  return { isLoading };
+  return { isLoading, sessionError };
 };
