@@ -2,8 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2, Link, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface Memorial {
   id: string;
@@ -28,14 +30,14 @@ export const MemorialItem = ({
   onEdit,
   onPreview,
   onDelete,
-  onGenerateLink,
 }: MemorialItemProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
   const handleGenerateLink = async (type: 'collaborator' | 'viewer') => {
     try {
-      // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) {
@@ -80,34 +82,23 @@ export const MemorialItem = ({
         .select()
         .single();
 
-      if (error) {
-        console.error('Error generating link:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!link) {
-        throw new Error('No link was generated');
-      }
-
-      // Generate the full URL for the memorial with the token
       const baseUrl = window.location.origin;
-      const memorialUrl = `${baseUrl}/memorial?id=${memorial.id}&token=${link.token}`;
+      const fullLink = `${baseUrl}/memorial?id=${memorial.id}&token=${link.token}`;
+      
+      setGeneratedLink(fullLink);
+      setShowDialog(true);
 
       try {
-        // Try to copy to clipboard
-        await navigator.clipboard.writeText(memorialUrl);
+        await navigator.clipboard.writeText(fullLink);
         toast({
-          title: "Link generated successfully",
+          title: "Link copied!",
           description: "The link has been copied to your clipboard.",
         });
       } catch (clipboardError) {
-        // If clipboard access is denied, show the link in the toast
+        // Don't show an error toast since we're showing the manual copy dialog
         console.error('Clipboard access denied:', clipboardError);
-        toast({
-          title: "Link generated",
-          description: "Copy this link manually: " + memorialUrl,
-          duration: 10000, // Show for longer since user needs to copy manually
-        });
       }
     } catch (error: any) {
       console.error('Error generating link:', error);
@@ -187,6 +178,42 @@ export const MemorialItem = ({
           Generate Viewer Link
         </Button>
       </div>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generated Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              If the link wasn't automatically copied, you can manually copy it below:
+            </p>
+            <div className="p-2 bg-muted rounded-md">
+              <code className="text-sm break-all">{generatedLink}</code>
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => {
+                if (generatedLink) {
+                  navigator.clipboard.writeText(generatedLink)
+                    .then(() => {
+                      toast({
+                        title: "Link copied!",
+                        description: "The link has been copied to your clipboard.",
+                      });
+                    })
+                    .catch((error) => {
+                      console.error('Error copying to clipboard:', error);
+                      // Don't show error toast since the link is visible for manual copy
+                    });
+                }
+              }}
+            >
+              Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
