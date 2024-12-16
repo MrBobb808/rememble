@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { DirectorGuardLoading } from "./DirectorGuardLoading";
 import { useNavigate } from "react-router-dom";
@@ -11,55 +11,63 @@ interface DirectorGuardProps {
 const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // In development, bypass the guard
-  if (process.env.NODE_ENV === 'development') {
-    console.log("Development mode: Bypassing director guard");
-    return <>{children}</>;
-  }
-
   const { data: profile, isLoading, error } = useProfile();
+
+  // Handle authentication and authorization in useEffect
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Development mode: Bypassing director guard");
+      return;
+    }
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in again to continue.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (!isLoading && profile) {
+      const isDirector = profile?.relationship?.toLowerCase().trim() === 'director';
+      
+      if (!isDirector) {
+        console.log("Access denied: User is not a director", { 
+          relationship: profile?.relationship,
+          userId: profile?.id 
+        });
+        
+        toast({
+          title: "Access Denied",
+          description: "You do not have permission to access this page.",
+          variant: "destructive",
+        });
+        
+        navigate("/auth");
+      } else {
+        console.log("Director access granted", { 
+          userId: profile?.id,
+          relationship: profile?.relationship 
+        });
+      }
+    }
+  }, [profile, isLoading, error, navigate, toast]);
 
   if (isLoading) {
     return <DirectorGuardLoading />;
   }
 
-  if (error) {
-    console.error("Error fetching profile:", error);
-    toast({
-      title: "Authentication Error",
-      description: "Please sign in again to continue.",
-      variant: "destructive",
-    });
-    navigate("/auth");
-    return null;
+  // In development, or if user is a director, render children
+  if (process.env.NODE_ENV === 'development' || 
+      (profile?.relationship?.toLowerCase().trim() === 'director')) {
+    return <>{children}</>;
   }
 
-  // Check if user is director based on relationship
-  const isDirector = profile?.relationship?.toLowerCase().trim() === 'director';
-
-  if (!isDirector) {
-    console.log("Access denied: User is not a director", { 
-      relationship: profile?.relationship,
-      userId: profile?.id 
-    });
-    
-    toast({
-      title: "Access Denied",
-      description: "You do not have permission to access this page.",
-      variant: "destructive",
-    });
-    
-    navigate("/auth");
-    return null;
-  }
-
-  console.log("Director access granted", { 
-    userId: profile?.id,
-    relationship: profile?.relationship 
-  });
-
-  return <>{children}</>;
+  // Return null while the redirect happens
+  return null;
 };
 
 export default DirectorGuard;
