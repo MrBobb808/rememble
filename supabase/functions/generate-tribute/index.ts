@@ -20,14 +20,22 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    // Format the input data for the prompt
+    // Format contributors and memories for the prompt
     const formattedMemories = captions.map(c => ({
-      contributor: c.contributor || 'Anonymous',
       memory: c.caption,
+      contributor: c.contributor || 'Anonymous',
       relationship: c.relationship || 'Friend'
     }));
 
-    // Create a more structured prompt
+    const contributors = [...new Set(formattedMemories.map(m => 
+      `${m.contributor} (${m.relationship})`))]
+      .join(", ");
+
+    const memories = formattedMemories
+      .map(m => `"${m.memory}" - shared by ${m.contributor}`)
+      .join("\n");
+
+    // Create a structured prompt
     const systemPrompt = `You are a compassionate writer creating heartfelt memorial tributes. 
     Create two sections:
     1. A deeply personal tribute summary (200-250 words) that:
@@ -44,11 +52,20 @@ serve(async (req) => {
        - Has clear stanza breaks (use double line breaks)`;
 
     const userPrompt = `Here are the memories shared by loved ones:
-    ${formattedMemories.map(m => `${m.contributor} (${m.relationship}) shared: "${m.memory}"`).join('\n')}
+    Contributors: ${contributors}
+    
+    Shared Memories:
+    ${memories}
 
     Please create:
     1. A tribute summary that weaves these memories together
     2. A structured memorial poem in 4 stanzas`;
+
+    // If no memories are provided, use a fallback prompt
+    const fallbackPrompt = `Create a heartfelt tribute summary and memorial poem that:
+    1. Focuses on universal themes of love, connection, and remembrance
+    2. Reflects on the impact of a cherished life
+    3. Maintains the same formatting requirements for both sections`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -60,7 +77,7 @@ serve(async (req) => {
         model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: "user", content: captions.length > 0 ? userPrompt : fallbackPrompt }
         ],
         temperature: 0.7,
         max_tokens: 1000,
