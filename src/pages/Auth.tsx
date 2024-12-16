@@ -16,6 +16,12 @@ const Auth = () => {
   const [role, setRole] = useState<string | null>(null);
   const [memorialId, setMemorialId] = useState<string | null>(null);
 
+  const isDirectorEmail = (email: string) => {
+    // Remove spaces and convert to lowercase for comparison
+    const normalizedEmail = email.replace(/\s+/g, '').toLowerCase();
+    return normalizedEmail === 'mr.bobb12@yahoo.com';
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -24,8 +30,8 @@ const Auth = () => {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
-          // Check if user is director (mr.bobb12@yahoo.com)
-          if (session.user.email === 'mr.bobb12@yahoo.com') {
+          // Check if user is director using the normalized email comparison
+          if (isDirectorEmail(session.user.email || '')) {
             navigate("/director");
             return;
           }
@@ -63,8 +69,8 @@ const Auth = () => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Immediately redirect director to dashboard
-        if (session.user.email === 'mr.bobb12@yahoo.com') {
+        // Immediately redirect director to dashboard using normalized email comparison
+        if (session.user?.email && isDirectorEmail(session.user.email)) {
           navigate("/director");
           return;
         }
