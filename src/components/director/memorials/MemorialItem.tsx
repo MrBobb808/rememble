@@ -47,6 +47,23 @@ export const MemorialItem = ({
         return;
       }
 
+      // Check if user is an admin for this memorial
+      const { data: collaborator, error: collaboratorError } = await supabase
+        .from('memorial_collaborators')
+        .select('role')
+        .eq('memorial_id', memorial.id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (collaboratorError || !collaborator || collaborator.role !== 'admin') {
+        toast({
+          title: "Permission denied",
+          description: "You must be an admin of this memorial to generate links.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Create a new memorial link record
       const { data: link, error } = await supabase
         .from('memorial_links')
