@@ -95,7 +95,7 @@ export const MemorialContent = ({
       </AlertDialog>
 
       <Dialog open={showSlideshowDialog} onOpenChange={setShowSlideshowDialog}>
-        <DialogContent className="max-w-md w-[60vw]">
+        <DialogContent className="max-w-4xl w-[75vw]">
           <Slideshow 
             photos={photos} 
             memorial={memorial}
