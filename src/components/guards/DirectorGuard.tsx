@@ -18,7 +18,10 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
     return <DirectorGuardLoading />;
   }
 
-  if (profile?.relationship !== 'director') {
+  // Check if user is director (mr.bobb12@yahoo.com)
+  const isDirector = profile?.email?.toLowerCase().trim() === 'mr.bobb12@yahoo.com';
+
+  if (!isDirector) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-memorial-beige-light">
         <div className="text-center">

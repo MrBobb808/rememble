@@ -24,8 +24,12 @@ const Auth = () => {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
+          // Normalize the email addresses for comparison
+          const userEmail = session.user.email?.toLowerCase().trim();
+          const directorEmail = 'mr.bobb12@yahoo.com'.toLowerCase().trim();
+
           // Check if user is director (mr.bobb12@yahoo.com)
-          if (session.user.email === 'mr.bobb12@yahoo.com') {
+          if (userEmail === directorEmail) {
             navigate("/director");
             return;
           }
@@ -63,8 +67,12 @@ const Auth = () => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        // Normalize email addresses for comparison
+        const userEmail = session.user.email?.toLowerCase().trim();
+        const directorEmail = 'mr.bobb12@yahoo.com'.toLowerCase().trim();
+
         // Immediately redirect director to dashboard
-        if (session.user.email === 'mr.bobb12@yahoo.com') {
+        if (userEmail === directorEmail) {
           navigate("/director");
           return;
         }
