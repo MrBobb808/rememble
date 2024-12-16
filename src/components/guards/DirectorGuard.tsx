@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DirectorGuardProps {
   children: React.ReactNode;
@@ -9,6 +11,17 @@ interface DirectorGuardProps {
 const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+
+  // Check subscription status
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: async () => {
+      const { data: response, error } = await supabase.functions.invoke('check-subscription');
+      if (error) throw error;
+      return response;
+    }
+  });
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -64,10 +77,25 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
           return;
         }
       }
+
+      // If not subscribed, show subscription prompt
+      if (!subscription?.subscribed) {
+        toast({
+          title: "Subscription Required",
+          description: "Please subscribe to access the director dashboard.",
+          duration: 5000,
+        });
+        navigate("/director?tab=billing");
+      }
     };
 
     checkAccess();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, subscription]);
+
+  // If not subscribed, only show settings page
+  if (!subscription?.subscribed && window.location.pathname !== "/director") {
+    return null;
+  }
 
   return <>{children}</>;
 };
