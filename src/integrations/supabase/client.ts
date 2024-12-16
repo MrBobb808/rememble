@@ -12,7 +12,11 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     storageKey: 'memorial-auth-token',
     flowType: 'pkce',
-    debug: process.env.NODE_ENV === 'development'
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'memories-in-a-quilt'
+    }
   }
 });
 
@@ -23,14 +27,11 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 
   if (event === 'SIGNED_OUT') {
-    // Clear all auth-related data
     localStorage.removeItem('memorial-auth-token');
     localStorage.removeItem('memorial_data');
     window.location.href = '/auth';
-  } else if (event === 'TOKEN_REFRESHED') {
-    if (session) {
-      localStorage.setItem('memorial-auth-token', session.access_token);
-    }
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    localStorage.setItem('memorial-auth-token', session.access_token);
   }
 });
 
@@ -51,12 +52,11 @@ export const checkSession = async () => {
       return null;
     }
 
-    // Attempt to refresh the session if it's close to expiring
     const expiresAt = session?.expires_at ? session.expires_at * 1000 : 0;
     const timeNow = Date.now();
     const timeUntilExpiry = expiresAt - timeNow;
     
-    if (timeUntilExpiry < 60 * 1000) { // Less than 1 minute until expiry
+    if (timeUntilExpiry < 60 * 1000) {
       const { data: { session: refreshedSession }, error: refreshError } = 
         await supabase.auth.refreshSession();
       
@@ -77,15 +77,13 @@ export const checkSession = async () => {
   }
 };
 
-// Helper function to handle session errors
 const handleSessionError = async () => {
   try {
     await supabase.auth.signOut();
-    localStorage.clear(); // Clear any potentially corrupted data
-    window.location.href = '/auth'; // Redirect to auth page
+    localStorage.clear();
+    window.location.href = '/auth';
   } catch (error) {
     console.error('Error during session cleanup:', error);
-    // Force reload as last resort
     window.location.reload();
   }
 };
