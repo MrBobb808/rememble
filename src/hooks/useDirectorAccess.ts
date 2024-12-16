@@ -37,9 +37,13 @@ export const useDirectorAccess = () => {
           return;
         }
 
+        // Normalize email addresses for case-insensitive comparison
+        const userEmail = user.email?.toLowerCase().trim();
+        const directorEmail = "mr.bobb12@yahoo.com".toLowerCase().trim();
+
         // Check if user is the director
-        if (user.email !== "mr.bobb12@yahoo.com") {
-          console.log("Non-director user detected:", user.email);
+        if (userEmail !== directorEmail) {
+          console.log("Non-director user detected:", userEmail);
           
           // Check if user has any memorial invitations
           const { data: collaborations, error: collaborationError } = await supabase
