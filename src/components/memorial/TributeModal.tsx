@@ -112,7 +112,12 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Memorial Poem</h3>
               <div className="prose max-w-none bg-memorial-beige-light p-6 rounded-lg">
-                <ReactMarkdown className="text-gray-700 whitespace-pre-line">
+                <ReactMarkdown 
+                  className="text-gray-700 whitespace-pre-line text-center font-playfair italic leading-relaxed"
+                  components={{
+                    p: ({children}) => <p className="mb-6 last:mb-0">{children}</p>
+                  }}
+                >
                   {tribute.poem}
                 </ReactMarkdown>
               </div>
