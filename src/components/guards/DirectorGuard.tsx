@@ -8,7 +8,7 @@ interface DirectorGuardProps {
   children: React.ReactNode;
 }
 
-const AUTHORIZED_EMAIL = "Mr.bobb12@yahoo.com";
+const AUTHORIZED_EMAIL = "mr.bobb12@yahoo.com";
 
 const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const navigate = useNavigate();
@@ -36,7 +36,10 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
 
       // Check if user's email matches the authorized email
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || user.email !== AUTHORIZED_EMAIL) {
+      console.log("Current user email:", user?.email);
+      console.log("Authorized email:", AUTHORIZED_EMAIL);
+      
+      if (!user || user.email?.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
         toast({
           title: "Access Denied",
           description: "You are not authorized to access the director dashboard.",
