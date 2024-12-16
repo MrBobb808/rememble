@@ -68,11 +68,9 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
   }
 
   const formatPoem = (poem: string) => {
-    // Split the poem into stanzas (double newlines)
     const stanzas = poem.split('\n\n')
     return stanzas.map((stanza, index) => (
       <div key={index} className="mb-6">
-        {/* Split each stanza into lines (single newlines) */}
         {stanza.split('\n').map((line, lineIndex) => (
           <p key={lineIndex} className="leading-relaxed">
             {line}
