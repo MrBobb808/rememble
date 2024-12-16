@@ -19,4 +19,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Ensure the _redirects file is copied to the build output
+  publicDir: 'public',
 }));
