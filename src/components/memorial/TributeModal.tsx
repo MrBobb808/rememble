@@ -73,11 +73,12 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
   }
 
   const formatPoem = (poem: string) => {
+    // Split into stanzas (double line breaks)
     const stanzas = poem.split('\n\n')
     return stanzas.map((stanza, index) => (
-      <div key={index} className="mb-6">
+      <div key={index} className="mb-8 last:mb-0">
         {stanza.split('\n').map((line, lineIndex) => (
-          <p key={lineIndex} className="leading-relaxed italic">
+          <p key={lineIndex} className="leading-relaxed italic text-center">
             {line}
           </p>
         ))}
@@ -111,11 +112,11 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
         )}
 
         {tribute && (
-          <div className="space-y-6" id="tribute-content">
+          <div className="space-y-8" id="tribute-content">
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Tribute Summary</h3>
               <div className="prose max-w-none bg-memorial-beige-light/50 p-6 rounded-lg">
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                   {tribute.summary}
                 </p>
               </div>
@@ -124,7 +125,7 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Memorial Poem</h3>
               <div className="prose max-w-none bg-memorial-beige-light p-6 rounded-lg">
-                <div className="text-gray-700 leading-relaxed">
+                <div className="text-gray-700">
                   {formatPoem(tribute.poem)}
                 </div>
               </div>

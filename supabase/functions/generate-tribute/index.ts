@@ -23,34 +23,32 @@ serve(async (req) => {
     // Format the input data for the prompt
     const formattedMemories = captions.map(c => ({
       contributor: c.contributor || 'Anonymous',
-      memory: c.caption
+      memory: c.caption,
+      relationship: c.relationship || 'Friend'
     }));
 
-    // Create a structured prompt
-    const systemPrompt = `You are a compassionate AI tasked with creating a heartfelt memorial tribute. 
+    // Create a more structured prompt
+    const systemPrompt = `You are a compassionate writer creating heartfelt memorial tributes. 
     Create two sections:
-    1. A deeply personal tribute summary that references specific contributors and their shared memories
-    2. A structured memorial poem with exactly 4 stanzas of 4 lines each
+    1. A deeply personal tribute summary (200-250 words) that:
+       - References specific contributors by name and their relationship
+       - Mentions specific memories they shared
+       - Weaves together the memories into a cohesive narrative
+       - Uses warm, empathetic language
 
-    The tribute summary should:
-    - Reference contributors by name
-    - Mention specific memories they shared
-    - Capture the essence of who the person was to their loved ones
-    - Be approximately 200 words
-
-    The poem should:
-    - Be structured in exactly 4 stanzas
-    - Have exactly 4 lines per stanza
-    - Use metaphor and imagery
-    - Reflect the person's impact and legacy
-    - Be emotionally resonant`;
+    2. A memorial poem with exactly 4 stanzas that:
+       - Has exactly 4 lines per stanza
+       - Uses consistent rhythm and imagery
+       - References specific shared memories
+       - Reflects the person's impact on others
+       - Has clear stanza breaks (use double line breaks)`;
 
     const userPrompt = `Here are the memories shared by loved ones:
-    ${formattedMemories.map(m => `${m.contributor} shared: "${m.memory}"`).join('\n')}
+    ${formattedMemories.map(m => `${m.contributor} (${m.relationship}) shared: "${m.memory}"`).join('\n')}
 
     Please create:
-    1. A heartfelt tribute summary referencing these specific memories and contributors
-    2. A memorial poem in 4 stanzas`;
+    1. A tribute summary that weaves these memories together
+    2. A structured memorial poem in 4 stanzas`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
