@@ -19,6 +19,18 @@ export const UserMenu = () => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const { data: profile } = useProfile();
+  const [userEmail, setUserEmail] = useState<string>('');
+
+  // Get user email on component mount
+  useState(() => {
+    const getUserEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+    };
+    getUserEmail();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -58,9 +70,9 @@ export const UserMenu = () => {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{profile?.full_name || 'Loading...'}</p>
+          <p className="text-sm font-medium">{profile?.full_name || 'Anonymous'}</p>
           <p className="text-xs text-muted-foreground break-all">
-            {profile?.id || 'Loading...'}
+            {userEmail || 'Loading...'}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             {profile?.relationship || 'Loading...'}
