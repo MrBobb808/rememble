@@ -17,28 +17,48 @@ const Auth = () => {
   const [memorialId, setMemorialId] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkToken = async () => {
+    const checkSession = async () => {
       try {
-        if (token) {
-          // Check if token exists in signup_tokens table
-          const { data: tokenData, error: tokenError } = await supabase
-            .from("signup_tokens")
-            .select("email, role, memorial_id")
-            .eq("token", token)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (session?.user) {
+          // Check if user is director
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("relationship")
+            .eq("id", session.user.id)
             .single();
 
-          if (tokenError) throw tokenError;
-          if (tokenData) {
-            setEmail(tokenData.email);
-            setRole(tokenData.role);
-            setMemorialId(tokenData.memorial_id);
+          if (profile?.relationship === "director") {
+            navigate("/director");
+            return;
+          }
+
+          // For regular users, check memorial access
+          const { data: collaborations } = await supabase
+            .from("memorial_collaborators")
+            .select("memorial_id")
+            .eq("email", session.user.email)
+            .limit(1);
+
+          if (collaborations && collaborations.length > 0) {
+            navigate(`/memorial?id=${collaborations[0].memorial_id}`);
+          } else {
+            toast({
+              title: "No memorial access",
+              description: "You don't have access to any memorials. Please request an invitation.",
+              variant: "destructive",
+            });
+            navigate("/");
           }
         }
-      } catch (error) {
-        console.error("Error checking token:", error);
+      } catch (error: any) {
+        console.error("Session check error:", error);
         toast({
-          title: "Invalid invitation link",
-          description: "This invitation link is invalid or has expired.",
+          title: "Authentication Error",
+          description: error.message || "Please sign in again.",
           variant: "destructive",
         });
       } finally {
@@ -46,49 +66,21 @@ const Auth = () => {
       }
     };
 
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Check if user is director
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("relationship")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile?.relationship === "director") {
-          navigate("/director");
-          return;
-        }
-
-        // For regular users, check memorial access
-        const { data: collaborations } = await supabase
-          .from("memorial_collaborators")
-          .select("memorial_id")
-          .eq("email", session.user.email)
-          .limit(1);
-
-        if (collaborations && collaborations.length > 0) {
-          navigate(`/memorial?id=${collaborations[0].memorial_id}`);
-        } else {
-          toast({
-            title: "No memorial access",
-            description: "You don't have access to any memorials. Please request an invitation.",
-            variant: "destructive",
-          });
-          navigate("/");
-        }
-      } else {
-        setIsLoading(false);
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        checkSession();
       }
-    };
+    });
 
-    if (token) {
-      checkToken();
-    } else {
-      checkSession();
-    }
-  }, [token, navigate, toast]);
+    // Initial session check
+    checkSession();
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   if (isLoading) {
     return (
@@ -105,7 +97,7 @@ const Auth = () => {
           {token ? (
             email ? `Welcome to ${role === 'admin' ? 'your' : 'the'} Memorial` : "Access Memorial"
           ) : (
-            "Funeral Director Sign In"
+            "Sign In"
           )}
         </h1>
         {email && (
