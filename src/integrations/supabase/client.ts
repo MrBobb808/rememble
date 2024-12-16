@@ -28,7 +28,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     window.location.href = '/auth';
   } else if (event === 'TOKEN_REFRESHED') {
     if (session) {
-      localStorage.setItem('memorial-auth-token', JSON.stringify(session));
+      localStorage.setItem('memorial-auth-token', session.access_token);
     }
   }
 });
