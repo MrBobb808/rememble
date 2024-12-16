@@ -13,6 +13,7 @@ const Landing = lazy(() => import("./pages/Landing"))
 const Memorial = lazy(() => import("./pages/Memorial"))
 const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard"))
 const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct"))
+const Auth = lazy(() => import("./pages/Auth"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +71,7 @@ const App = () => (
                 <Route path="/memorial" element={<Memorial />} />
                 <Route path="/director" element={<DirectorDashboard />} />
                 <Route path="/print/:productType" element={<PrintfulProduct />} />
+                <Route path="/auth" element={<Auth />} />
               </Routes>
             </Suspense>
           </BrowserRouter>
