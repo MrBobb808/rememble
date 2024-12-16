@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkSession } from "@/integrations/supabase/client";
 
 export const useMemorialSession = (token?: string | null) => {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export const useMemorialSession = (token?: string | null) => {
   useEffect(() => {
     let mounted = true;
 
-    const checkSession = async () => {
+    const verifySession = async () => {
       try {
         // If there's a token, we don't need to check authentication
         if (token) {
@@ -20,25 +20,17 @@ export const useMemorialSession = (token?: string | null) => {
           return;
         }
 
-        // Get current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const session = await checkSession();
         
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          setSessionError(sessionError);
-          return;
-        }
-
-        // If no session, try to refresh
         if (!session) {
-          const { data: { session: refreshedSession }, error: refreshError } = 
-            await supabase.auth.refreshSession();
-          
-          if (refreshError || !refreshedSession) {
-            console.error("Session refresh error:", refreshError);
-            setSessionError(refreshError || new Error("Failed to refresh session"));
-            return;
-          }
+          setSessionError(new Error("No valid session found"));
+          toast({
+            title: "Session expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
         }
 
         if (mounted) {
@@ -46,7 +38,7 @@ export const useMemorialSession = (token?: string | null) => {
           setSessionError(null);
         }
       } catch (error) {
-        console.error("Error checking session:", error);
+        console.error("Error verifying session:", error);
         if (error instanceof Error) {
           setSessionError(error);
         } else {
@@ -55,8 +47,8 @@ export const useMemorialSession = (token?: string | null) => {
       }
     };
 
-    // Initial session check
-    checkSession();
+    // Initial session verification
+    verifySession();
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {

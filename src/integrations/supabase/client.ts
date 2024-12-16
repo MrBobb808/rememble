@@ -15,9 +15,52 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
-// Set up auth state change listener with environment-aware logging
+// Enhanced auth state change listener with error handling
 supabase.auth.onAuthStateChange((event, session) => {
   if (process.env.NODE_ENV === 'development') {
     console.log('Auth state changed:', event, session);
   }
+
+  if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+    // Clear any cached data or state that depends on authentication
+    localStorage.removeItem('memorial_data');
+  }
 });
+
+// Add a helper function to check and refresh session
+export const checkSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Session check failed:', error.message);
+      await handleSessionError();
+      return null;
+    }
+
+    if (!session) {
+      console.warn('No valid session found');
+      await handleSessionError();
+      return null;
+    }
+
+    return session;
+  } catch (error) {
+    console.error('Unexpected error during session check:', error);
+    await handleSessionError();
+    return null;
+  }
+};
+
+// Helper function to handle session errors
+const handleSessionError = async () => {
+  try {
+    await supabase.auth.signOut();
+    localStorage.clear(); // Clear any potentially corrupted data
+    window.location.href = '/auth'; // Redirect to auth page
+  } catch (error) {
+    console.error('Error during session cleanup:', error);
+    // Force reload as last resort
+    window.location.reload();
+  }
+};
