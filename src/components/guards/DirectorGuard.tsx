@@ -18,8 +18,8 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
     return <DirectorGuardLoading />;
   }
 
-  // Check if user is director (mr.bobb12@yahoo.com)
-  const isDirector = profile?.email?.toLowerCase().trim() === 'mr.bobb12@yahoo.com';
+  // Check if user is director based on relationship
+  const isDirector = profile?.relationship?.toLowerCase().trim() === 'director';
 
   if (!isDirector) {
     return (
