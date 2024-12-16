@@ -59,7 +59,7 @@ export const NavigationButtons = () => {
   const isDirector = profile?.relationship === 'director';
 
   return (
-    <div className="flex md:items-center gap-2 flex-col md:flex-row">
+    <div className="flex md:items-center gap-4 flex-col md:flex-row">
       <Button
         variant="ghost"
         size="sm"
