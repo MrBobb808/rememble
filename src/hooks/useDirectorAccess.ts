@@ -13,6 +13,14 @@ export const useDirectorAccess = () => {
   useEffect(() => {
     const checkAccess = async () => {
       try {
+        // In development, automatically grant director access
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Development mode: Granting director access");
+          setIsAuthorized(true);
+          setIsLoading(false);
+          return;
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
