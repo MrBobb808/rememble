@@ -4,14 +4,17 @@ import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [memorialId, setMemorialId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkToken = async () => {
@@ -28,10 +31,16 @@ const Auth = () => {
           if (tokenData) {
             setEmail(tokenData.email);
             setRole(tokenData.role);
+            setMemorialId(tokenData.memorial_id);
           }
         }
       } catch (error) {
         console.error("Error checking token:", error);
+        toast({
+          title: "Invalid invitation link",
+          description: "This invitation link is invalid or has expired.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -41,7 +50,13 @@ const Auth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         // Check if user is director
-        if (session.user.email === "mr.bobb12@yahoo.com") {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("relationship")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile?.relationship === "director") {
           navigate("/director");
           return;
         }
@@ -56,6 +71,11 @@ const Auth = () => {
         if (collaborations && collaborations.length > 0) {
           navigate(`/memorial?id=${collaborations[0].memorial_id}`);
         } else {
+          toast({
+            title: "No memorial access",
+            description: "You don't have access to any memorials. Please request an invitation.",
+            variant: "destructive",
+          });
           navigate("/");
         }
       } else {
@@ -68,7 +88,7 @@ const Auth = () => {
     } else {
       checkSession();
     }
-  }, [token, navigate]);
+  }, [token, navigate, toast]);
 
   if (isLoading) {
     return (
@@ -83,9 +103,9 @@ const Auth = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold text-center mb-6 text-memorial-blue">
           {token ? (
-            email ? `Welcome ${email}` : "Access Memorial"
+            email ? `Welcome to ${role === 'admin' ? 'your' : 'the'} Memorial` : "Access Memorial"
           ) : (
-            "Director Sign In"
+            "Funeral Director Sign In"
           )}
         </h1>
         {email && (

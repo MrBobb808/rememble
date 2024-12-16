@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -12,8 +13,14 @@ const Landing = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // If user is director, redirect to director dashboard
-        if (session.user.email === "mr.bobb12@yahoo.com") {
+        // Check if user is director
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("relationship")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile?.relationship === "director") {
           navigate("/director");
           return;
         }
@@ -46,10 +53,8 @@ const Landing = () => {
 
   // Show loading state while checking session
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="animate-pulse">
-        <div className="h-8 w-32 bg-gray-200 rounded"></div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-memorial-beige-light">
+      <Loader2 className="w-8 h-8 animate-spin text-memorial-blue" />
     </div>
   );
 };
