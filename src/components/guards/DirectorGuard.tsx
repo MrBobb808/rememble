@@ -92,14 +92,14 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
     // Run the check immediately when the component mounts
     checkAccess();
 
-    // Also set up a listener for auth state changes
-    const { data: { authSubscription } } = supabase.auth.onAuthStateChange(() => {
+    // Set up a listener for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       checkAccess();
     });
 
     // Cleanup subscription when component unmounts
     return () => {
-      authSubscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [navigate, searchParams, subscriptionData, toast]);
 
