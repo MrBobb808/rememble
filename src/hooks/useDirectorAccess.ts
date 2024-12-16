@@ -29,21 +29,37 @@ export const useDirectorAccess = () => {
           return;
         }
 
-        console.log("Current user email:", user.email);
-        
-        // Only allow specific email
+        // Check if user is the director
         if (user.email !== "mr.bobb12@yahoo.com") {
-          console.log("Unauthorized email:", user.email);
-          toast({
-            title: "Unauthorized Access",
-            description: "You don't have permission to access this page.",
-            variant: "destructive",
-          });
-          navigate("/");
+          console.log("Non-director user detected:", user.email);
+          
+          // Check if user has any memorial invitations
+          const { data: collaborations, error: collaborationError } = await supabase
+            .from("memorial_collaborators")
+            .select("memorial_id")
+            .eq("email", user.email)
+            .limit(1);
+
+          if (collaborationError) {
+            console.error("Error fetching collaborations:", collaborationError);
+            throw collaborationError;
+          }
+
+          if (collaborations && collaborations.length > 0) {
+            // Redirect to the first memorial they have access to
+            navigate(`/memorial?id=${collaborations[0].memorial_id}`);
+          } else {
+            toast({
+              title: "Access Denied",
+              description: "You don't have access to any memorials. Please request an invitation.",
+              variant: "destructive",
+            });
+            navigate("/");
+          }
           return;
         }
 
-        // Check subscription status
+        // Check subscription status for director
         const { data: subscriptionData, error: subscriptionError } = await supabase
           .from("director_subscriptions")
           .select("status")
