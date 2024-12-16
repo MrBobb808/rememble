@@ -45,10 +45,10 @@ const Navigation = () => {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[300px] sm:w-[400px] pt-12">
+      <SheetContent side="right" className="w-[300px] sm:w-[400px] pt-10">
         <div className="flex flex-col gap-4">
           <NavigationButtons />
         </div>
@@ -57,10 +57,10 @@ const Navigation = () => {
   );
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b">
-      <div className="container mx-auto py-3 px-4 flex justify-between items-center">
+    <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b h-12">
+      <div className="container mx-auto h-full px-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="text-2xl font-playfair text-gray-800">Memories</div>
+          <div className="text-xl font-playfair text-gray-800">Memories</div>
         </div>
 
         <div className="flex items-center gap-2">
