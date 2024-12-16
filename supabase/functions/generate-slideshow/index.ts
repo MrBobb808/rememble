@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,8 +15,8 @@ serve(async (req) => {
     const { photos } = await req.json()
     console.log("Received photos for slideshow generation:", photos)
 
-    // TODO: Implement actual video generation with FFmpeg
-    // For now, return a mock video URL from Supabase storage
+    // For now, we'll return a mock video URL from Supabase storage
+    // In a future iteration, we can implement actual FFmpeg video generation
     const mockVideoUrl = "https://jrnfunsgzdymrdwxztgh.supabase.co/storage/v1/object/public/memorial-photos/sample-slideshow.mp4"
 
     return new Response(

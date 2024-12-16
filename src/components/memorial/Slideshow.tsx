@@ -21,21 +21,23 @@ const Slideshow: React.FC<SlideshowProps> = ({ photos }) => {
         pagination={{ clickable: true }}
         autoplay={{ delay: 3000, disableOnInteraction: false }}
         loop={true}
-        className="w-full aspect-video rounded-lg"
+        className="w-full aspect-video rounded-lg overflow-hidden"
       >
         {photos.map((photo) => (
-          <SwiperSlide key={photo.id}>
-            <div className="relative w-full h-full">
+          <SwiperSlide key={photo.id} className="relative">
+            <div className="w-full h-full flex items-center justify-center bg-black">
               <img
                 src={photo.url}
                 alt={photo.caption}
-                className="w-full h-full object-cover"
+                className="max-w-full max-h-full object-contain"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-4 text-white">
                 <p className="text-sm">{photo.caption}</p>
-                <p className="text-xs mt-1">
-                  Shared by {photo.contributorName} ({photo.relationship})
-                </p>
+                {photo.contributorName && photo.relationship && (
+                  <p className="text-xs mt-1">
+                    Shared by {photo.contributorName} ({photo.relationship})
+                  </p>
+                )}
               </div>
             </div>
           </SwiperSlide>
