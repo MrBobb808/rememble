@@ -21,7 +21,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ photos }) => {
         pagination={{ clickable: true }}
         autoplay={{ delay: 3000, disableOnInteraction: false }}
         loop={true}
-        className="w-full aspect-video rounded-lg overflow-hidden"
+        className="w-full h-[50vh] rounded-lg overflow-hidden"
       >
         {photos.map((photo) => (
           <SwiperSlide key={photo.id} className="relative">
