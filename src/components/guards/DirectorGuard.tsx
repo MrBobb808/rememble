@@ -3,6 +3,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { DirectorGuardLoading } from "./DirectorGuardLoading";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DirectorGuardProps {
   children: ReactNode;
@@ -13,11 +14,47 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const { toast } = useToast();
   const { data: profile, isLoading, error } = useProfile();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No active session found");
+          setIsAuthorized(false);
+          navigate("/auth");
+          return;
+        }
+        setIsCheckingAuth(false);
+      } catch (error) {
+        console.error("Session check error:", error);
+        setIsAuthorized(false);
+        navigate("/auth");
+      }
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      if (event === 'SIGNED_OUT') {
+        setIsAuthorized(false);
+        navigate("/auth");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   useEffect(() => {
     const checkAuthorization = async () => {
-      // Skip if still loading
-      if (isLoading) return;
+      // Skip if still checking auth or loading profile
+      if (isCheckingAuth || isLoading) {
+        return;
+      }
 
       // Development mode bypass
       if (process.env.NODE_ENV === 'development') {
@@ -63,13 +100,12 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
     };
 
     checkAuthorization();
-  }, [profile, isLoading, error, navigate, toast]);
+  }, [profile, isLoading, error, navigate, toast, isCheckingAuth]);
 
-  if (isLoading || isAuthorized === null) {
+  if (isCheckingAuth || isLoading || isAuthorized === null) {
     return <DirectorGuardLoading />;
   }
 
-  // Render children only if authorized
   return isAuthorized ? <>{children}</> : null;
 };
 
