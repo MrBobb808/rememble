@@ -9,7 +9,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storage: localStorage // Explicitly set storage to ensure session persistence
+    storage: localStorage
   }
 });
 
