@@ -30,16 +30,23 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        console.log("No session found, redirecting to auth");
         navigate("/auth");
         return;
       }
 
       // Check if user's email matches the authorized email
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("Current user email:", user?.email);
-      console.log("Authorized email:", AUTHORIZED_EMAIL);
+      const userEmail = user?.email?.toLowerCase() || '';
+      const authorizedEmail = AUTHORIZED_EMAIL.toLowerCase();
       
-      if (!user || user.email?.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
+      console.log("Access Check:");
+      console.log("Current user email (lowercase):", userEmail);
+      console.log("Authorized email (lowercase):", authorizedEmail);
+      console.log("Email match:", userEmail === authorizedEmail);
+      
+      if (!user || userEmail !== authorizedEmail) {
+        console.log("Access denied - email mismatch");
         toast({
           title: "Access Denied",
           description: "You are not authorized to access the director dashboard.",
@@ -49,12 +56,14 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
         return;
       }
 
+      // If we get here, the email matched
+      console.log("Email authorized, proceeding with additional checks");
+
       // Check if user came from a collaborator link
       const token = searchParams.get("token");
       const memorialId = searchParams.get("id");
       
       if (token && memorialId) {
-        // Query the memorial_links table to find the associated memorial
         const { data: linkData, error: linkError } = await supabase
           .from("memorial_links")
           .select("memorial_id, type")
@@ -62,7 +71,6 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
           .single();
 
         if (!linkError && linkData) {
-          // Verify this token matches the memorial ID
           if (linkData.memorial_id === memorialId) {
             navigate(`/memorial?id=${memorialId}&token=${token}`);
             return;
@@ -81,8 +89,19 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
       }
     };
 
+    // Run the check immediately when the component mounts
     checkAccess();
-  }, [navigate, searchParams, subscription]);
+
+    // Also set up a listener for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAccess();
+    });
+
+    // Cleanup subscription when component unmounts
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, searchParams, subscription, toast]);
 
   // If not subscribed, only show settings page
   if (!subscription?.subscribed && window.location.pathname !== "/director") {
