@@ -35,9 +35,10 @@ export const useMemorialSession = (token?: string | null) => {
 
         // If no session, try to refresh
         if (!session) {
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
           
-          if (refreshError || !refreshData.session) {
+          if (refreshError || !refreshedSession) {
             console.error("Session refresh error:", refreshError);
             toast({
               title: "Session Expired",
@@ -65,9 +66,7 @@ export const useMemorialSession = (token?: string | null) => {
     checkSession();
 
     // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (process.env.NODE_ENV === 'development') {
         console.log("Auth state change:", event);
       }

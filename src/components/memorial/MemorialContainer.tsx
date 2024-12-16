@@ -21,7 +21,7 @@ const MemorialContainer = () => {
   // Check for valid access and handle session
   const { isLoading: isSessionLoading } = useMemorialSession(token);
 
-  // Fetch memorial details
+  // Fetch memorial details with error handling in meta
   const { data: memorial, error: memorialError } = useMemorialDetails(memorialId);
 
   if (process.env.NODE_ENV === 'development') {
