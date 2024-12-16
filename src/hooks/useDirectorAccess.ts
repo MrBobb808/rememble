@@ -11,18 +11,37 @@ export const useDirectorAccess = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAccess = async () => {
       try {
         // First check if we have a valid session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error("Session error:", sessionError);
           throw sessionError;
         }
 
-        if (!session) {
+        if (!sessionData.session) {
           console.log("No active session found");
+          // Clear any potentially invalid session data
+          await supabase.auth.signOut();
+          navigate("/auth");
+          return;
+        }
+
+        // Refresh session if needed
+        const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error("Session refresh error:", refreshError);
+          throw refreshError;
+        }
+
+        if (!session) {
+          console.log("Session refresh failed");
+          await supabase.auth.signOut();
           navigate("/auth");
           return;
         }
@@ -92,14 +111,18 @@ export const useDirectorAccess = () => {
           return;
         }
 
-        setIsAuthorized(true);
+        if (mounted) {
+          setIsAuthorized(true);
+        }
       } catch (error) {
         console.error("Error checking access:", error);
         // Clear any potentially invalid session data
         await supabase.auth.signOut();
         navigate("/auth");
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -115,6 +138,7 @@ export const useDirectorAccess = () => {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, searchParams, toast]);
