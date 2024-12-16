@@ -1,4 +1,4 @@
-import { Home, Printer, Download, Share2, HelpCircle } from "lucide-react";
+import { Home, Download, Share2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -48,14 +48,6 @@ export const NavigationButtons = () => {
     }
   };
 
-  const handlePrint = () => {
-    toast({
-      title: "Print started",
-      description: "The print dialog will open shortly.",
-    });
-    // TODO: Implement print functionality
-  };
-
   const handleDownload = () => {
     toast({
       title: "Download started",
@@ -75,15 +67,6 @@ export const NavigationButtons = () => {
       >
         <Home className="w-4 h-4 mr-2" />
         {isDirector ? 'Dashboard' : 'Home'}
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handlePrint}
-      >
-        <Printer className="w-4 h-4 mr-2" />
-        Print Memorial
       </Button>
 
       <Button
