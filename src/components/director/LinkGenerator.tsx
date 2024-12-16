@@ -21,13 +21,12 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
       if (!user) {
         toast({
           title: "Authentication required",
-          description: "You must be logged in to generate links.",
+          description: "Please sign in to generate links.",
           variant: "destructive",
         });
         return;
       }
 
-      // Create the link without additional permission checks
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
@@ -38,7 +37,10 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating link:', error);
+        throw error;
+      }
 
       const baseUrl = window.location.origin;
       const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
@@ -53,8 +55,8 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
           description: "The link has been copied to your clipboard.",
         });
       } catch (clipboardError) {
-        // Don't show an error toast since we're showing the manual copy dialog
         console.error('Clipboard access denied:', clipboardError);
+        // Don't show an error toast since we're showing the manual copy dialog
       }
     } catch (error: any) {
       console.error('Error generating link:', error);
@@ -112,7 +114,6 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
                     })
                     .catch((error) => {
                       console.error('Error copying to clipboard:', error);
-                      // Don't show error toast since the link is visible for manual copy
                     });
                 }
               }}
