@@ -16,6 +16,9 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
 
   useEffect(() => {
     const checkAuthorization = async () => {
+      // Skip if still loading
+      if (isLoading) return;
+
       // Development mode bypass
       if (process.env.NODE_ENV === 'development') {
         console.log("Development mode: Bypassing director guard");
@@ -36,50 +39,38 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
         return;
       }
 
-      // Skip if still loading or no profile
-      if (isLoading || !profile) {
-        return;
-      }
-
-      // Check director status
-      const isDirector = profile?.relationship?.toLowerCase().trim() === 'director';
-      
-      if (!isDirector) {
-        console.log("Access denied: User is not a director", { 
-          relationship: profile?.relationship,
-          userId: profile?.id 
-        });
+      // Check director status only when profile data is available
+      if (profile) {
+        const isDirector = profile?.relationship?.toLowerCase().trim() === 'director';
         
-        setIsAuthorized(false);
-        toast({
-          title: "Access Denied",
-          description: "You do not have permission to access this page.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-      } else {
-        console.log("Director access granted", { 
-          userId: profile?.id,
-          relationship: profile?.relationship 
-        });
-        setIsAuthorized(true);
+        if (!isDirector) {
+          console.log("Access denied: User is not a director", { 
+            relationship: profile?.relationship,
+            userId: profile?.id 
+          });
+          
+          setIsAuthorized(false);
+          toast({
+            title: "Access Denied",
+            description: "You do not have permission to access this page.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        } else {
+          setIsAuthorized(true);
+        }
       }
     };
 
     checkAuthorization();
   }, [profile, isLoading, error, navigate, toast]);
 
-  if (isLoading) {
+  if (isLoading || isAuthorized === null) {
     return <DirectorGuardLoading />;
   }
 
   // Render children only if authorized
-  if (isAuthorized) {
-    return <>{children}</>;
-  }
-
-  // Return null while authorization is pending or failed
-  return null;
+  return isAuthorized ? <>{children}</> : null;
 };
 
 export default DirectorGuard;
