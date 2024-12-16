@@ -28,7 +28,6 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
           description: "Please sign in again to continue.",
           variant: "destructive",
         });
-        // Redirect to auth page
         navigate("/auth");
         return;
       }
@@ -43,6 +42,7 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
         return;
       }
 
+      // Generate the link with proper error handling
       const { data: link, error } = await supabase
         .from('memorial_links')
         .insert({
@@ -58,12 +58,14 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
         throw error;
       }
 
+      // Use window.location.origin to ensure we get the correct base URL
       const baseUrl = window.location.origin;
       const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
       
       setGeneratedLink(fullLink);
       setShowDialog(true);
 
+      // Try to copy to clipboard with fallback
       try {
         await navigator.clipboard.writeText(fullLink);
         toast({
