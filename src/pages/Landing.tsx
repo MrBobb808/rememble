@@ -1,35 +1,54 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
 
-  return (
-    <div className="relative w-screen h-screen">
-      <div className="absolute inset-0 mt-12 pt-6 bg-black/20" />
-      <div 
-        className="absolute inset-0 mt-12 pt-6 bg-cover bg-center"
-        style={{ 
-          backgroundImage: `url(/placeholder.svg)`,
-          backgroundPosition: 'center'
-        }}
-      />
-      <div className="absolute inset-0 mt-12 pt-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       
-      <div className="absolute inset-0 mt-12 pt-6 flex flex-col items-center justify-center text-white text-center px-4">
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-playfair mb-8">
-          In Loving Memory
-        </h1>
-        <p className="text-xl md:text-2xl lg:text-3xl font-inter mb-12 max-w-2xl">
-          Create a beautiful memorial to honor your loved one
-        </p>
-        <Button 
-          onClick={() => navigate("/memorial")}
-          size="lg"
-          className="text-lg md:text-xl px-6 py-6 bg-white/20 hover:bg-white/30 backdrop-blur-sm"
-        >
-          Enter Memorial
-        </Button>
+      if (session?.user) {
+        // If user is director, redirect to director dashboard
+        if (session.user.email === "mr.bobb12@yahoo.com") {
+          navigate("/director");
+          return;
+        }
+        
+        // For regular users, check if they have access to any memorials
+        const { data: collaborations } = await supabase
+          .from("memorial_collaborators")
+          .select("memorial_id")
+          .eq("email", session.user.email)
+          .limit(1);
+
+        if (collaborations && collaborations.length > 0) {
+          navigate(`/memorial?id=${collaborations[0].memorial_id}`);
+          return;
+        }
+      }
+
+      // If there's a token, go to auth page with token
+      if (token) {
+        navigate(`/auth?token=${token}`);
+        return;
+      }
+
+      // Otherwise, go to regular auth page
+      navigate("/auth");
+    };
+
+    checkSession();
+  }, [navigate, token]);
+
+  // Show loading state while checking session
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="animate-pulse">
+        <div className="h-8 w-32 bg-gray-200 rounded"></div>
       </div>
     </div>
   );
