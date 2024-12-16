@@ -24,14 +24,8 @@ const Auth = () => {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
-          // Check if user is director
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("relationship")
-            .eq("id", session.user.id)
-            .single();
-
-          if (profile?.relationship === "director") {
+          // Check if user is director (mr.bobb12@yahoo.com)
+          if (session.user.email === 'mr.bobb12@yahoo.com') {
             navigate("/director");
             return;
           }
@@ -69,6 +63,11 @@ const Auth = () => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        // Immediately redirect director to dashboard
+        if (session.user.email === 'mr.bobb12@yahoo.com') {
+          navigate("/director");
+          return;
+        }
         checkSession();
       }
     });

@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
 
 export const UserMenu = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export const UserMenu = () => {
   const [userEmail, setUserEmail] = useState<string>('');
 
   // Get user email on component mount
-  useState(() => {
+  useEffect(() => {
     const getUserEmail = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
@@ -34,26 +34,18 @@ export const UserMenu = () => {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Clear any local storage items
-      localStorage.removeItem('memorial-auth-token');
-      localStorage.removeItem('memorial_data');
-
-      // Show success toast
+      await supabase.auth.signOut();
+      localStorage.clear();
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
-
-      // Navigate to auth page
       navigate("/auth");
-    } catch (error: any) {
-      console.error('Error signing out:', error);
+    } catch (error) {
+      console.error("Error signing out:", error);
       toast({
         title: "Error signing out",
-        description: error.message || "There was a problem signing out.",
+        description: "There was a problem signing out. Please try again.",
         variant: "destructive",
       });
     }
@@ -62,11 +54,15 @@ export const UserMenu = () => {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <User className="w-5 h-5" />
-        </Button>
+        <button className="relative h-8 w-8 rounded-full">
+          <Avatar>
+            <AvatarFallback>
+              {profile?.full_name?.[0]?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="px-2 py-1.5">
@@ -79,10 +75,14 @@ export const UserMenu = () => {
           </p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign out
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="text-red-600 cursor-pointer"
+            onClick={handleSignOut}
+          >
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
