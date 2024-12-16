@@ -11,8 +11,6 @@ import * as Sentry from "@sentry/react"
 // Lazy load route components
 const Landing = lazy(() => import("./pages/Landing"))
 const Memorial = lazy(() => import("./pages/Memorial"))
-const Auth = lazy(() => import("./pages/Auth"))
-const AuthCallback = lazy(() => import("./pages/AuthCallback"))
 const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard"))
 const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct"))
 
@@ -69,8 +67,6 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/landing" element={<Landing />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/memorial" element={<Memorial />} />
                 <Route path="/director" element={<DirectorDashboard />} />
                 <Route path="/print/:productType" element={<PrintfulProduct />} />

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useMemorialData } from "@/hooks/useMemorialData";
-import { useMemorialSession } from "@/hooks/useMemorialSession";
 import { useMemorialDetails } from "@/hooks/useMemorialDetails";
 import { MemorialContent } from "./MemorialContent";
 import UnifiedSidebar from "./UnifiedSidebar";
@@ -32,21 +31,6 @@ const MemorialContainer = () => {
 
   const { photos, handlePhotoAdd } = useMemorialData(memorialId);
   
-  // Check for valid access and handle session
-  const { isLoading: isSessionLoading, sessionError } = useMemorialSession(token);
-
-  // Handle session errors
-  useEffect(() => {
-    if (sessionError) {
-      toast({
-        title: "Session Error",
-        description: "Please sign in again to continue.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-    }
-  }, [sessionError, navigate, toast]);
-
   // Fetch memorial details with error handling
   const { data: memorial, error: memorialError } = useMemorialDetails(memorialId);
 
@@ -63,7 +47,7 @@ const MemorialContainer = () => {
     console.log("MemorialContainer - memorial:", memorial);
   }
 
-  if (isSessionLoading || isLoading) {
+  if (isLoading) {
     return <LoadingState />;
   }
 

@@ -88,7 +88,6 @@ export const useMemorialData = (memorialId: string | null) => {
         .single();
 
       if (existingPhoto) {
-        // If position is taken, show error
         toast({
           title: "Position already taken",
           description: "Please choose another position for your photo.",
