@@ -59,11 +59,12 @@ export const NavigationButtons = () => {
   const isDirector = profile?.relationship === 'director';
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex md:items-center gap-2 flex-col md:flex-row">
       <Button
         variant="ghost"
         size="sm"
         onClick={handleHomeClick}
+        className="w-full md:w-auto justify-start md:justify-center"
       >
         <Home className="w-4 h-4 mr-2" />
         {isDirector ? 'Dashboard' : 'Home'}
@@ -73,6 +74,7 @@ export const NavigationButtons = () => {
         variant="ghost"
         size="sm"
         onClick={handleDownload}
+        className="w-full md:w-auto justify-start md:justify-center"
       >
         <Download className="w-4 h-4 mr-2" />
         Download
@@ -82,6 +84,7 @@ export const NavigationButtons = () => {
         variant="ghost"
         size="sm"
         onClick={handleShare}
+        className="w-full md:w-auto justify-start md:justify-center"
       >
         <Share2 className="w-4 h-4 mr-2" />
         Share
@@ -91,6 +94,7 @@ export const NavigationButtons = () => {
         variant="ghost"
         size="sm"
         onClick={() => navigate("/help")}
+        className="w-full md:w-auto justify-start md:justify-center"
       >
         <HelpCircle className="w-4 h-4 mr-2" />
         Help
