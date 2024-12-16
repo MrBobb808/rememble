@@ -106,8 +106,8 @@ export const useDirectorAccess = () => {
     checkAccess();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === 'SIGNED_OUT') {
         navigate("/auth");
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         checkAccess();
