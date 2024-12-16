@@ -15,7 +15,7 @@ import html2pdf from 'html2pdf.js'
 interface TributeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  photos: Array<{ caption: string }>
+  photos: Array<{ caption: string; contributorName?: string }>
 }
 
 export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) => {
@@ -26,7 +26,10 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
   const generateTribute = async () => {
     setIsLoading(true)
     try {
-      const captions = photos.map(photo => photo.caption)
+      const captions = photos.map(photo => ({
+        caption: photo.caption,
+        contributor: photo.contributorName
+      }))
       
       const { data, error } = await supabase.functions.invoke('generate-tribute', {
         body: { captions }
@@ -64,13 +67,28 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
     html2pdf().set(opt).from(content).save()
   }
 
+  const formatPoem = (poem: string) => {
+    // Split the poem into stanzas (double newlines)
+    const stanzas = poem.split('\n\n')
+    return stanzas.map((stanza, index) => (
+      <div key={index} className="mb-6">
+        {/* Split each stanza into lines (single newlines) */}
+        {stanza.split('\n').map((line, lineIndex) => (
+          <p key={lineIndex} className="leading-relaxed">
+            {line}
+          </p>
+        ))}
+      </div>
+    ))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-playfair">Your Memorial Tribute is Ready</DialogTitle>
+          <DialogTitle className="text-2xl font-playfair">Your Memorial Tribute</DialogTitle>
           <DialogDescription>
-            View the personalized tribute summary and poem created from your beautiful memories.
+            A personalized tribute and poem created from your shared memories.
           </DialogDescription>
         </DialogHeader>
 
@@ -102,10 +120,10 @@ export const TributeModal = ({ open, onOpenChange, photos }: TributeModalProps) 
 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold font-playfair">Memorial Poem</h3>
-              <div className="prose max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap italic">
-                  {tribute.poem}
-                </p>
+              <div className="prose max-w-none bg-memorial-beige-light p-6 rounded-lg">
+                <div className="text-gray-700 leading-relaxed italic">
+                  {formatPoem(tribute.poem)}
+                </div>
               </div>
             </div>
 

@@ -31,11 +31,11 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are an AI assistant tasked with creating a heartfelt tribute for a completed memorial. Generate both a tribute summary and a poem based on the provided captions."
+            content: "You are an AI assistant tasked with creating a heartfelt tribute for a completed memorial. Generate both a personalized tribute summary and a structured poem based on the provided memories. The summary should reference specific contributors and their shared memories. The poem should be structured in clear stanzas."
           },
           {
             role: "user",
-            content: `Create a heartfelt tribute and poem based on these 25 memories:\n\n${captions.join('\n')}\n\nGenerate two sections:\n1. A structured, emotional tribute summary celebrating their life, including key themes about personality, relationships, passions, and legacy.\n2. A heartfelt poem (10-12 lines) capturing the essence of their life and memories.`
+            content: `Create a heartfelt tribute and poem based on these memories:\n\n${captions.map(c => c).join('\n')}\n\nGenerate two sections:\n1. A deeply personal tribute summary that references specific contributors and their memories, highlighting the impact and legacy of the loved one.\n2. A structured poem (3-4 stanzas, 4 lines each) capturing the essence of their life and the shared memories.`
           }
         ],
         temperature: 0.7,
