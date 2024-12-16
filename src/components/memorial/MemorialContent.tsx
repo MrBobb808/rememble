@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { Photo } from "@/types/photo";
 import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 
 interface MemorialContentProps {
   photos: Photo[];
@@ -29,25 +31,16 @@ export const MemorialContent = ({
   const [searchParams] = useSearchParams();
   const memorialId = searchParams.get("id");
   const [showTributeModal, setShowTributeModal] = useState(false);
+  const [showIncompleteAlert, setShowIncompleteAlert] = useState(false);
   const { toast } = useToast();
 
-  // Check if all 25 photos are filled
-  useEffect(() => {
-    if (photos.length === 25 && !showTributeModal) {
-      toast({
-        title: "Memorial Complete",
-        description: "All memories have been added. Would you like to generate a tribute?",
-        action: (
-          <button
-            onClick={() => setShowTributeModal(true)}
-            className="bg-memorial-blue text-white px-4 py-2 rounded hover:bg-memorial-blue/90"
-          >
-            Generate Tribute
-          </button>
-        ),
-      });
+  const handleGenerateClick = () => {
+    if (photos.length === 25) {
+      setShowTributeModal(true);
+    } else {
+      setShowIncompleteAlert(true);
     }
-  }, [photos.length, showTributeModal, toast]);
+  };
 
   return (
     <div className="pt-8">
@@ -57,6 +50,15 @@ export const MemorialContent = ({
         deathYear={memorial?.death_year}
         photoUrl={memorial?.banner_image_url}
       />
+
+      <div className="flex justify-end mb-4">
+        <Button 
+          onClick={handleGenerateClick}
+          className="bg-memorial-blue hover:bg-memorial-blue/90"
+        >
+          Generate Summary
+        </Button>
+      </div>
 
       <div className={cn(
         "max-w-[1400px] mx-auto",
@@ -81,6 +83,18 @@ export const MemorialContent = ({
         onOpenChange={setShowTributeModal}
         photos={photos}
       />
+
+      <AlertDialog open={showIncompleteAlert} onOpenChange={setShowIncompleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Incomplete Memorial</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please complete all 25 photo tiles before generating your memorial summary. 
+              You have added {photos.length} out of 25 photos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
