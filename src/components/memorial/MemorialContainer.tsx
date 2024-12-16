@@ -7,7 +7,7 @@ import { LoadingState } from "./LoadingState";
 import Footer from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const MemorialContainer = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const MemorialContainer = () => {
   // Check for valid access and handle session
   useEffect(() => {
     let mounted = true;
-    let sessionSubscription: { unsubscribe: () => void } | null = null;
+    let unsubscribe: (() => void) | null = null;
 
     const checkAccess = async () => {
       try {
@@ -75,7 +75,9 @@ const MemorialContainer = () => {
     checkAccess();
 
     // Set up auth state change listener
-    sessionSubscription = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (process.env.NODE_ENV === 'development') {
         console.log("Auth state change in MemorialContainer:", event, session);
       }
@@ -85,10 +87,13 @@ const MemorialContainer = () => {
       }
     });
 
+    // Store unsubscribe function
+    unsubscribe = subscription.unsubscribe;
+
     return () => {
       mounted = false;
-      if (sessionSubscription) {
-        sessionSubscription.unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
       }
     };
   }, [navigate, token, toast]);
@@ -110,12 +115,14 @@ const MemorialContainer = () => {
     },
     enabled: !!memorialId,
     retry: 2,
-    onError: (error) => {
-      toast({
-        title: "Error loading memorial",
-        description: "Unable to load memorial details. Please try again.",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error loading memorial",
+          description: "Unable to load memorial details. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
