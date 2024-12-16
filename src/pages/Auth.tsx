@@ -93,6 +93,9 @@ const Auth = () => {
                 colors: {
                   brand: '#1e40af',
                   brandAccent: '#1e3a8a',
+                },
+                space: {
+                  inputText: 'mr.bobb12@yahoo.com'
                 }
               }
             },
@@ -104,7 +107,6 @@ const Auth = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
-          defaultEmail="mr.bobb12@yahoo.com"
         />
       </div>
     </div>
