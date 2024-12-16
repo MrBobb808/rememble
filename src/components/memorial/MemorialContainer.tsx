@@ -50,8 +50,22 @@ const MemorialContainer = () => {
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError || !refreshData.session) {
+            console.error("Session refresh error:", refreshError);
             toast({
               title: "Session Expired",
+              description: "Please sign in again",
+              variant: "destructive",
+            });
+            navigate("/auth");
+            return;
+          }
+
+          // Verify the refreshed session
+          const { error: verifyError } = await supabase.auth.getUser();
+          if (verifyError) {
+            console.error("Session verification error:", verifyError);
+            toast({
+              title: "Authentication Error",
               description: "Please sign in again",
               variant: "destructive",
             });
@@ -72,18 +86,26 @@ const MemorialContainer = () => {
       }
     };
 
+    // Initial session check
     checkAccess();
 
     // Set up auth state change listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (process.env.NODE_ENV === 'development') {
         console.log("Auth state change in MemorialContainer:", event, session);
       }
       
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         navigate("/auth");
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Verify the refreshed token
+        const { error: verifyError } = await supabase.auth.getUser();
+        if (verifyError) {
+          console.error("Token verification error:", verifyError);
+          navigate("/auth");
+        }
       }
     });
 
