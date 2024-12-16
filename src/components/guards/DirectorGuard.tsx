@@ -16,7 +16,7 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
   const { toast } = useToast();
 
   // Check subscription status
-  const { data: subscription } = useQuery({
+  const { data: subscriptionData } = useQuery({
     queryKey: ['subscription'],
     queryFn: async () => {
       const { data: response, error } = await supabase.functions.invoke('check-subscription');
@@ -79,7 +79,7 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
       }
 
       // If not subscribed, show subscription prompt
-      if (!subscription?.subscribed) {
+      if (!subscriptionData?.subscribed) {
         toast({
           title: "Subscription Required",
           description: "Please subscribe to access the director dashboard.",
@@ -93,18 +93,18 @@ const DirectorGuard = ({ children }: DirectorGuardProps) => {
     checkAccess();
 
     // Also set up a listener for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const { data: { authSubscription } } = supabase.auth.onAuthStateChange(() => {
       checkAccess();
     });
 
     // Cleanup subscription when component unmounts
     return () => {
-      subscription.unsubscribe();
+      authSubscription.unsubscribe();
     };
-  }, [navigate, searchParams, subscription, toast]);
+  }, [navigate, searchParams, subscriptionData, toast]);
 
   // If not subscribed, only show settings page
-  if (!subscription?.subscribed && window.location.pathname !== "/director") {
+  if (!subscriptionData?.subscribed && window.location.pathname !== "/director") {
     return null;
   }
 
