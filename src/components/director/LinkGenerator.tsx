@@ -50,15 +50,25 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
       const baseUrl = window.location.origin;
       const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
 
-      // Copy to clipboard
-      await navigator.clipboard.writeText(fullLink);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-
-      toast({
-        title: "Link generated successfully",
-        description: "The link has been copied to your clipboard.",
-      });
+      try {
+        // Try to copy to clipboard
+        await navigator.clipboard.writeText(fullLink);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+        
+        toast({
+          title: "Link generated successfully",
+          description: "The link has been copied to your clipboard.",
+        });
+      } catch (clipboardError) {
+        // If clipboard access is denied, show the link in the toast
+        console.error('Clipboard access denied:', clipboardError);
+        toast({
+          title: "Link generated",
+          description: "Copy this link manually: " + fullLink,
+          duration: 10000, // Show for longer since user needs to copy manually
+        });
+      }
     } catch (error: any) {
       console.error('Error generating link:', error);
       toast({
