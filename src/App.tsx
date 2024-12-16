@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import { Loader2 } from "lucide-react"
 import * as Sentry from "@sentry/react"
+import DirectorGuard from "@/components/guards/DirectorGuard"
 
 // Lazy load route components
 const Landing = lazy(() => import("./pages/Landing"))
@@ -69,7 +70,14 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/auth" replace />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/memorial" element={<Memorial />} />
-                <Route path="/director" element={<DirectorDashboard />} />
+                <Route 
+                  path="/director" 
+                  element={
+                    <DirectorGuard>
+                      <DirectorDashboard />
+                    </DirectorGuard>
+                  } 
+                />
                 <Route path="/print/:productType" element={<PrintfulProduct />} />
                 <Route path="/auth" element={<Auth />} />
               </Routes>
