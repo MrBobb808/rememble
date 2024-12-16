@@ -14,6 +14,12 @@ export const useMemorialSession = (token?: string | null) => {
 
     const verifySession = async () => {
       try {
+        // In development, bypass session verification
+        if (process.env.NODE_ENV === 'development') {
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
         // If there's a token, we don't need to check authentication
         if (token) {
           if (mounted) setIsLoading(false);
@@ -54,6 +60,7 @@ export const useMemorialSession = (token?: string | null) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (process.env.NODE_ENV === 'development') {
         console.log("Auth state change:", event);
+        return; // Don't handle auth changes in development
       }
       
       if (event === 'SIGNED_OUT') {
