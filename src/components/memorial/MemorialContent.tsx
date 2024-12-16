@@ -9,8 +9,7 @@ import { Photo } from "@/types/photo";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import Slideshow from "./Slideshow";
 
@@ -97,10 +96,11 @@ export const MemorialContent = ({
 
       <Dialog open={showSlideshowDialog} onOpenChange={setShowSlideshowDialog}>
         <DialogContent className="max-w-md w-[60vw]">
-          <DialogHeader>
-            <DialogTitle>Memorial Slideshow</DialogTitle>
-          </DialogHeader>
-          <Slideshow photos={photos} />
+          <Slideshow 
+            photos={photos} 
+            memorial={memorial}
+            onClose={() => setShowSlideshowDialog(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
