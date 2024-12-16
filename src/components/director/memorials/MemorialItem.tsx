@@ -47,6 +47,28 @@ export const MemorialItem = ({
         return;
       }
 
+      // Special handling for mr.bobb12@yahoo.com - bypass all checks
+      const isSpecialUser = user.email === 'mr.bobb12@yahoo.com';
+
+      if (!isSpecialUser) {
+        // Check if user is an admin for this memorial
+        const { data: collaborator, error: collaboratorError } = await supabase
+          .from('memorial_collaborators')
+          .select('role')
+          .eq('memorial_id', memorial.id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (collaboratorError || !collaborator || collaborator.role !== 'admin') {
+          toast({
+            title: "Permission denied",
+            description: "Only memorial admins can generate links.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       // Create the link
       const { data: link, error } = await supabase
         .from('memorial_links')
