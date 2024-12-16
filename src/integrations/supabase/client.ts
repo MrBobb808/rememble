@@ -12,14 +12,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     flowType: 'pkce',
     debug: process.env.NODE_ENV === 'development',
-    storageKey: 'memorial-auth-token',
-    cookieOptions: {
-      name: 'memorial-auth-token',
-      lifetime: 60 * 60 * 24 * 7, // 7 days
-      domain: window.location.hostname,
-      sameSite: 'Lax',
-      secure: window.location.protocol === 'https:'
-    }
+    storageKey: 'memorial-auth-token'
   }
 });
 
@@ -29,12 +22,11 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state changed:', event, session);
   }
 
-  if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+  if (event === 'SIGNED_OUT') {
     localStorage.removeItem('memorial-auth-token');
     localStorage.removeItem('memorial_data');
     window.location.href = '/auth';
   } else if (event === 'TOKEN_REFRESHED') {
-    // Ensure the session is properly stored after token refresh
     if (session) {
       localStorage.setItem('memorial-auth-token', JSON.stringify(session));
     }

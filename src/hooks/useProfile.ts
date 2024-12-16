@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureQueryResult } from "@/utils/supabase-helpers";
 
 export const useProfile = () => {
   return useQuery({
@@ -27,7 +28,7 @@ export const useProfile = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return ensureQueryResult(data);
     },
     retry: false
   });
