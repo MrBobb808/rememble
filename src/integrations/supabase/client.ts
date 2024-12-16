@@ -23,6 +23,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 
   if (event === 'SIGNED_OUT') {
+    // Clear all auth-related data
     localStorage.removeItem('memorial-auth-token');
     localStorage.removeItem('memorial_data');
     window.location.href = '/auth';

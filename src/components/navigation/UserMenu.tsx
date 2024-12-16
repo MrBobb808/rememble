@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import {
@@ -21,19 +21,29 @@ export const UserMenu = () => {
   const { data: profile } = useProfile();
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      // Clear any local storage items
+      localStorage.removeItem('memorial-auth-token');
+      localStorage.removeItem('memorial_data');
+
+      // Show success toast
       toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+
+      // Navigate to auth page
+      navigate("/auth");
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error signing out",
+        description: error.message || "There was a problem signing out.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
-      navigate("/auth");
     }
   };
 
