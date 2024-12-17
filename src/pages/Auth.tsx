@@ -37,6 +37,13 @@ const Auth = () => {
 
         console.log("Session found:", session.user.id);
 
+        // Check if the user is mr.bobb12@yahoo.com
+        if (session.user.email === 'mr.bobb12@yahoo.com') {
+          console.log("Director access granted");
+          navigate("/director");
+          return;
+        }
+
         // Check user's role from profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
