@@ -20,13 +20,6 @@ const Auth = () => {
 
     const checkSession = async () => {
       try {
-        // Clear any potentially stale session data
-        const { error: signOutError } = await supabase.auth.signOut();
-        if (signOutError) {
-          console.error('Error clearing session:', signOutError);
-        }
-
-        // Check for active session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
