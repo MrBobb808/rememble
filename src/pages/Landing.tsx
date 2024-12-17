@@ -16,7 +16,6 @@ const Landing = () => {
       
       if (session?.user) {
         setUserEmail(session.user.email);
-        // Check if user is director
         const { data: profile } = await supabase
           .from("profiles")
           .select("relationship")
@@ -36,7 +35,6 @@ const Landing = () => {
     if (isDirector) {
       navigate("/director");
     } else {
-      // For regular users, check if they have access to any memorials
       const checkMemorials = async () => {
         if (!userEmail) {
           navigate("/auth");
@@ -70,12 +68,12 @@ const Landing = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
+      className="min-h-screen flex flex-col items-center justify-end pb-32 bg-cover bg-center bg-no-repeat"
       style={{ 
-        backgroundImage: 'url("/lovable-uploads/cf1d41d6-b643-49d4-8d7e-6476f4b25df7.png")',
+        backgroundImage: 'url("/lovable-uploads/684c9ddd-5c55-4d84-b783-0117ae088aaa.png")',
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         backgroundBlendMode: 'overlay',
-        backgroundSize: 'contain'
+        backgroundSize: '1920px 1080px'
       }}
     >
       <Button 
