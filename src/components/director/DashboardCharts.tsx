@@ -20,6 +20,13 @@ interface DashboardChartsProps {
 const COLORS = ['#6C91C2', '#4A6A9D', '#E6EEF7'];
 
 export const DashboardCharts = ({ barData, pieData }: DashboardChartsProps) => {
+  // Sort the bar data in ascending order (earlier dates first)
+  const sortedBarData = [...barData].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateA.getTime() - dateB.getTime();
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
       <Card className="col-span-2">
@@ -29,7 +36,7 @@ export const DashboardCharts = ({ barData, pieData }: DashboardChartsProps) => {
         <CardContent>
           <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
+              <BarChart data={sortedBarData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis allowDecimals={false} />
