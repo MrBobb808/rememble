@@ -80,6 +80,8 @@ const App = () => (
                 />
                 <Route path="/print/:productType" element={<PrintfulProduct />} />
                 <Route path="/auth" element={<Auth />} />
+                {/* Add a catch-all route for Supabase hosting */}
+                <Route path="*" element={<Navigate to="/auth" replace />} />
               </Routes>
             </Suspense>
           </BrowserRouter>
