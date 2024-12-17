@@ -58,7 +58,7 @@ export const checkSession = async () => {
 supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('Auth state changed:', event, session?.user?.id);
   
-  if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+  if (event === 'SIGNED_OUT') {
     // Clear all local storage data on sign out
     localStorage.clear();
     window.location.href = '/auth';
