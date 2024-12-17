@@ -7,7 +7,9 @@ import { PrintfulDialog } from "./memorial/PrintfulDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NavigationButtons } from "./navigation/NavigationButtons";
-import { Menu } from "lucide-react";
+import { Menu, LayoutDashboard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 import {
   Sheet,
   SheetContent,
@@ -18,8 +20,11 @@ const Navigation = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { data: profile } = useProfile();
   
   const currentMemorialId = searchParams.get("id");
+  const isDirector = profile?.relationship?.toLowerCase() === 'director';
 
   // Fetch photos for the current memorial
   const { data: photos = [] } = useQuery({
@@ -51,6 +56,16 @@ const Navigation = () => {
       <SheetContent side="right" className="w-[300px] sm:w-[400px] pt-10">
         <div className="flex flex-col gap-4">
           <NavigationButtons />
+          {isDirector && (
+            <Button
+              variant="outline"
+              onClick={() => navigate('/director')}
+              className="w-full justify-start"
+            >
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+          )}
         </div>
       </SheetContent>
     </Sheet>
@@ -64,8 +79,18 @@ const Navigation = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center gap-2">
             <NavigationButtons />
+            {isDirector && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/director')}
+              >
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+            )}
           </div>
           <MobileMenu />
           <UserMenu />
