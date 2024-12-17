@@ -70,16 +70,14 @@ const Landing = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
+      className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
       style={{ 
         backgroundImage: 'url("/lovable-uploads/cf1d41d6-b643-49d4-8d7e-6476f4b25df7.png")',
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        backgroundBlendMode: 'overlay'
+        backgroundBlendMode: 'overlay',
+        backgroundSize: 'contain'
       }}
     >
-      <h1 className="text-6xl font-playfair text-white mb-12 animate-fade-in">
-        Remememble
-      </h1>
       <Button 
         onClick={handleNavigate}
         size="lg"
