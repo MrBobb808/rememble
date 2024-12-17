@@ -9,12 +9,12 @@ import { Loader2 } from "lucide-react"
 import * as Sentry from "@sentry/react"
 import DirectorGuard from "@/components/guards/DirectorGuard"
 
-// Lazy load route components
-const Landing = lazy(() => import("./pages/Landing"))
-const Memorial = lazy(() => import("./pages/Memorial"))
-const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard"))
-const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct"))
-const Auth = lazy(() => import("./pages/Auth"))
+// Lazy load route components with explicit file extensions
+const Landing = lazy(() => import("./pages/Landing.tsx"))
+const Memorial = lazy(() => import("./pages/Memorial.tsx"))
+const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard.tsx"))
+const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct.tsx"))
+const Auth = lazy(() => import("./pages/Auth.tsx"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
