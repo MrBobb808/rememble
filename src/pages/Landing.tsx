@@ -1,15 +1,16 @@
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDirector, setIsDirector] = useState(false);
 
   useEffect(() => {
-    const checkSession = async () => {
+    const checkUserRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
@@ -20,41 +21,62 @@ const Landing = () => {
           .eq("id", session.user.id)
           .single();
 
-        if (profile?.relationship === "director") {
-          navigate("/director");
-          return;
-        }
-        
-        // For regular users, check if they have access to any memorials
+        setIsDirector(profile?.relationship === "director");
+      }
+      
+      setIsLoading(false);
+    };
+
+    checkUserRole();
+  }, []);
+
+  const handleNavigate = () => {
+    if (isDirector) {
+      navigate("/director");
+    } else {
+      // For regular users, check if they have access to any memorials
+      const checkMemorials = async () => {
         const { data: collaborations } = await supabase
           .from("memorial_collaborators")
           .select("memorial_id")
-          .eq("email", session.user.email)
+          .eq("email", session?.user?.email)
           .limit(1);
 
         if (collaborations && collaborations.length > 0) {
           navigate(`/memorial?id=${collaborations[0].memorial_id}`);
-          return;
+        } else {
+          navigate("/auth");
         }
-      }
+      };
 
-      // If there's a token, go to auth page with token
-      if (token) {
-        navigate(`/auth?token=${token}`);
-        return;
-      }
+      checkMemorials();
+    }
+  };
 
-      // Otherwise, go to regular auth page
-      navigate("/auth");
-    };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-memorial-beige-light">
+        <Loader2 className="w-8 h-8 animate-spin text-memorial-blue" />
+      </div>
+    );
+  }
 
-    checkSession();
-  }, [navigate, token]);
-
-  // Show loading state while checking session
   return (
-    <div className="min-h-screen flex items-center justify-center bg-memorial-beige-light">
-      <Loader2 className="w-8 h-8 animate-spin text-memorial-blue" />
+    <div 
+      className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      style={{ 
+        backgroundImage: 'url("/lovable-uploads/804849ce-7fe7-4774-8537-1cea1f0fd6ad.png")',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundBlend: 'overlay'
+      }}
+    >
+      <Button 
+        onClick={handleNavigate}
+        size="lg"
+        className="text-xl px-8 py-6 bg-white text-memorial-blue hover:bg-memorial-blue hover:text-white transition-colors duration-300"
+      >
+        {isDirector ? "Enter Director Dashboard" : "View Memorial"}
+      </Button>
     </div>
   );
 };
