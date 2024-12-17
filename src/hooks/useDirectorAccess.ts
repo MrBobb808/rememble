@@ -6,11 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 export const useDirectorAccess = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAccess = async () => {
       try {
         // In development, automatically grant director access
@@ -44,7 +47,9 @@ export const useDirectorAccess = () => {
         console.error("Error checking access:", error);
         navigate("/auth");
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -57,6 +62,7 @@ export const useDirectorAccess = () => {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, searchParams, toast]);
