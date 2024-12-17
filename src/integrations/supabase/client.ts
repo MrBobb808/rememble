@@ -22,13 +22,11 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 
 // Enhanced auth state change listener with error handling
 supabase.auth.onAuthStateChange(async (event, session) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Auth state changed:', event, session);
-  }
+  console.log('Auth state changed:', event, session?.user?.id);
 
   if (event === 'SIGNED_OUT') {
-    localStorage.removeItem('memorial-auth-token');
-    localStorage.removeItem('memorial_data');
+    // Clear all local storage data on sign out
+    localStorage.clear();
     window.location.href = '/auth';
   } else if (event === 'TOKEN_REFRESHED' && session) {
     localStorage.setItem('memorial-auth-token', session.access_token);
@@ -50,23 +48,6 @@ export const checkSession = async () => {
       console.warn('No valid session found');
       await handleSessionError();
       return null;
-    }
-
-    const expiresAt = session?.expires_at ? session.expires_at * 1000 : 0;
-    const timeNow = Date.now();
-    const timeUntilExpiry = expiresAt - timeNow;
-    
-    if (timeUntilExpiry < 60 * 1000) {
-      const { data: { session: refreshedSession }, error: refreshError } = 
-        await supabase.auth.refreshSession();
-      
-      if (refreshError) {
-        console.error('Session refresh failed:', refreshError.message);
-        await handleSessionError();
-        return null;
-      }
-      
-      return refreshedSession;
     }
 
     return session;

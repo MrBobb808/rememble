@@ -20,9 +20,19 @@ const Auth = () => {
 
     const checkSession = async () => {
       try {
+        // Clear any potentially stale session data
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) {
+          console.error('Error clearing session:', signOutError);
+        }
+
+        // Check for active session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw sessionError;
+        }
 
         if (session?.user) {
           // Check if user is director
@@ -78,8 +88,12 @@ const Auth = () => {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
       if (event === 'SIGNED_IN' && session) {
         checkSession();
+      } else if (event === 'SIGNED_OUT') {
+        if (mounted) setIsLoading(false);
       }
     });
 
