@@ -20,7 +20,7 @@ const Auth = () => {
 
     const checkSession = async () => {
       try {
-        // Get current session
+        console.log("Checking session...");
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -29,7 +29,6 @@ const Auth = () => {
           return;
         }
 
-        // If no session, stop here
         if (!session?.user) {
           console.log("No active session");
           if (mounted) setIsLoading(false);
@@ -38,59 +37,54 @@ const Auth = () => {
 
         console.log("Session found:", session.user.id);
 
-        try {
-          // Check user's role from profiles table
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('relationship')
-            .eq('id', session.user.id)
-            .single();
+        // Check user's role from profiles table
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('relationship')
+          .eq('id', session.user.id)
+          .single();
 
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            if (mounted) setIsLoading(false);
-            return;
-          }
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          if (mounted) setIsLoading(false);
+          return;
+        }
 
-          // Handle role-based navigation
-          if (profile?.relationship?.toLowerCase() === 'director') {
+        // Handle role-based navigation
+        if (profile?.relationship?.toLowerCase() === 'director') {
+          navigate("/landing");
+          return;
+        }
+
+        // For regular users, check memorial access
+        const { data: collaborations, error: collabError } = await supabase
+          .from("memorial_collaborators")
+          .select("memorial_id, role")
+          .eq("email", session.user.email)
+          .limit(1);
+
+        if (collabError) {
+          console.error('Error fetching collaborations:', collabError);
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
+        if (collaborations && collaborations.length > 0) {
+          const collaboration = collaborations[0];
+          if (collaboration.role === 'admin') {
             navigate("/landing");
-            return;
-          }
-
-          // For regular users, check memorial access
-          const { data: collaborations, error: collabError } = await supabase
-            .from("memorial_collaborators")
-            .select("memorial_id, role")
-            .eq("email", session.user.email)
-            .limit(1);
-
-          if (collabError) {
-            console.error('Error fetching collaborations:', collabError);
-            if (mounted) setIsLoading(false);
-            return;
-          }
-
-          if (collaborations && collaborations.length > 0) {
-            const collaboration = collaborations[0];
-            // If user is an admin, redirect to landing page first
-            if (collaboration.role === 'admin') {
-              navigate("/landing");
-            } else {
-              // For regular users, redirect to their memorial
-              navigate(`/memorial?id=${collaboration.memorial_id}`);
-            }
           } else {
+            navigate(`/memorial?id=${collaboration.memorial_id}`);
+          }
+        } else {
+          if (mounted) {
             toast({
               title: "No memorial access",
               description: "You don't have access to any memorials. Please request an invitation.",
               variant: "destructive",
             });
-            if (mounted) setIsLoading(false);
+            setIsLoading(false);
           }
-        } catch (error) {
-          console.error('Error during role check:', error);
-          if (mounted) setIsLoading(false);
         }
       } catch (error) {
         console.error('Session check error:', error);
@@ -103,7 +97,7 @@ const Auth = () => {
       console.log('Auth state changed:', event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        checkSession();
+        await checkSession();
       } else if (event === 'SIGNED_OUT') {
         if (mounted) setIsLoading(false);
       }
@@ -112,7 +106,6 @@ const Auth = () => {
     // Initial session check
     checkSession();
 
-    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -161,7 +154,7 @@ const Auth = () => {
             }
           }}
           providers={[]}
-          redirectTo={window.location.origin}
+          redirectTo={window.location.origin + '/auth'}
           {...(email ? { defaultEmail: email } : {})}
         />
       </div>
