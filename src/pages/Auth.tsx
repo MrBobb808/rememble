@@ -52,7 +52,7 @@ const Auth = () => {
 
         // Handle role-based navigation
         if (profile?.relationship?.toLowerCase() === 'director') {
-          navigate("/landing");
+          navigate("/director");
           return;
         }
 
@@ -72,7 +72,7 @@ const Auth = () => {
         if (collaborations && collaborations.length > 0) {
           const collaboration = collaborations[0];
           if (collaboration.role === 'admin') {
-            navigate("/landing");
+            navigate("/memorial");
           } else {
             navigate(`/memorial?id=${collaboration.memorial_id}`);
           }
@@ -154,7 +154,7 @@ const Auth = () => {
             }
           }}
           providers={[]}
-          redirectTo={window.location.origin + '/auth'}
+          redirectTo={`${window.location.origin}/auth`}
           {...(email ? { defaultEmail: email } : {})}
         />
       </div>
