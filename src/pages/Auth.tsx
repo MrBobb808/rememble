@@ -20,14 +20,25 @@ const Auth = () => {
 
     const checkSession = async () => {
       try {
+        // Get current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error('Session error:', sessionError);
-          throw sessionError;
+          if (mounted) setIsLoading(false);
+          return;
         }
 
-        if (session?.user) {
+        // If no session, stop here
+        if (!session?.user) {
+          console.log("No active session");
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
+        console.log("Session found:", session.user.id);
+
+        try {
           // Check user's role from profiles table
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -43,7 +54,7 @@ const Auth = () => {
 
           // Handle role-based navigation
           if (profile?.relationship?.toLowerCase() === 'director') {
-            navigate("/director");
+            navigate("/landing");
             return;
           }
 
@@ -77,10 +88,11 @@ const Auth = () => {
             });
             if (mounted) setIsLoading(false);
           }
-        } else {
+        } catch (error) {
+          console.error('Error during role check:', error);
           if (mounted) setIsLoading(false);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Session check error:', error);
         if (mounted) setIsLoading(false);
       }
