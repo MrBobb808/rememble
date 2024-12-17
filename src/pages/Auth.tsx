@@ -28,7 +28,7 @@ const Auth = () => {
         }
 
         if (session?.user) {
-          // Check if user is director
+          // Check user's role from profiles table
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('relationship')
@@ -41,7 +41,7 @@ const Auth = () => {
             return;
           }
 
-          // If user is director, redirect to director dashboard
+          // Handle role-based navigation
           if (profile?.relationship?.toLowerCase() === 'director') {
             navigate("/director");
             return;
@@ -50,7 +50,7 @@ const Auth = () => {
           // For regular users, check memorial access
           const { data: collaborations, error: collabError } = await supabase
             .from("memorial_collaborators")
-            .select("memorial_id")
+            .select("memorial_id, role")
             .eq("email", session.user.email)
             .limit(1);
 
@@ -61,7 +61,14 @@ const Auth = () => {
           }
 
           if (collaborations && collaborations.length > 0) {
-            navigate(`/memorial?id=${collaborations[0].memorial_id}`);
+            const collaboration = collaborations[0];
+            // If user is an admin, redirect to landing page first
+            if (collaboration.role === 'admin') {
+              navigate("/landing");
+            } else {
+              // For regular users, redirect to their memorial
+              navigate(`/memorial?id=${collaboration.memorial_id}`);
+            }
           } else {
             toast({
               title: "No memorial access",
