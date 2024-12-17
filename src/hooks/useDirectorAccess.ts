@@ -19,8 +19,11 @@ export const useDirectorAccess = () => {
         // In development, automatically grant director access
         if (process.env.NODE_ENV === 'development') {
           console.log("Development mode: Granting director access");
-          setIsAuthorized(true);
-          setIsLoading(false);
+          if (mounted) {
+            setIsAuthorized(true);
+            setIsLoading(false);
+            setIsCheckingAuth(false);
+          }
           return;
         }
 
@@ -35,6 +38,7 @@ export const useDirectorAccess = () => {
           console.log("No active session found");
           if (mounted) {
             setIsAuthorized(false);
+            setIsCheckingAuth(false);
             navigate("/auth");
           }
           return;
@@ -42,10 +46,15 @@ export const useDirectorAccess = () => {
 
         if (mounted) {
           setIsCheckingAuth(false);
+          setIsAuthorized(true);
         }
       } catch (error) {
         console.error("Error checking access:", error);
-        navigate("/auth");
+        if (mounted) {
+          setIsAuthorized(false);
+          setIsCheckingAuth(false);
+          navigate("/auth");
+        }
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -67,5 +76,5 @@ export const useDirectorAccess = () => {
     };
   }, [navigate, searchParams, toast]);
 
-  return { isLoading, isAuthorized };
+  return { isLoading, isAuthorized, isCheckingAuth };
 };
