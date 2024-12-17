@@ -8,12 +8,14 @@ const Landing = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isDirector, setIsDirector] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUserRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
+        setUserEmail(session.user.email);
         // Check if user is director
         const { data: profile } = await supabase
           .from("profiles")
@@ -36,10 +38,15 @@ const Landing = () => {
     } else {
       // For regular users, check if they have access to any memorials
       const checkMemorials = async () => {
+        if (!userEmail) {
+          navigate("/auth");
+          return;
+        }
+
         const { data: collaborations } = await supabase
           .from("memorial_collaborators")
           .select("memorial_id")
-          .eq("email", session?.user?.email)
+          .eq("email", userEmail)
           .limit(1);
 
         if (collaborations && collaborations.length > 0) {
@@ -67,7 +74,7 @@ const Landing = () => {
       style={{ 
         backgroundImage: 'url("/lovable-uploads/804849ce-7fe7-4774-8537-1cea1f0fd6ad.png")',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        backgroundBlend: 'overlay'
+        backgroundBlendMode: 'overlay'
       }}
     >
       <Button 
