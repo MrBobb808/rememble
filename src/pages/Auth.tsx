@@ -14,9 +14,10 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
-  const [memorialId, setMemorialId] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -24,22 +25,37 @@ const Auth = () => {
         if (sessionError) throw sessionError;
 
         if (session?.user) {
-          // Normalize the email addresses for comparison
-          const userEmail = session.user.email?.toLowerCase().trim();
-          const directorEmail = 'mr.bobb12@yahoo.com'.toLowerCase().trim();
+          // Check if user is director
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('relationship')
+            .eq('id', session.user.id)
+            .single();
 
-          // Check if user is director (mr.bobb12@yahoo.com)
-          if (userEmail === directorEmail) {
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            if (mounted) setIsLoading(false);
+            return;
+          }
+
+          // If user is director, redirect to director dashboard
+          if (profile?.relationship?.toLowerCase() === 'director') {
             navigate("/director");
             return;
           }
 
           // For regular users, check memorial access
-          const { data: collaborations } = await supabase
+          const { data: collaborations, error: collabError } = await supabase
             .from("memorial_collaborators")
             .select("memorial_id")
             .eq("email", session.user.email)
             .limit(1);
+
+          if (collabError) {
+            console.error('Error fetching collaborations:', collabError);
+            if (mounted) setIsLoading(false);
+            return;
+          }
 
           if (collaborations && collaborations.length > 0) {
             navigate(`/memorial?id=${collaborations[0].memorial_id}`);
@@ -49,33 +65,20 @@ const Auth = () => {
               description: "You don't have access to any memorials. Please request an invitation.",
               variant: "destructive",
             });
-            navigate("/");
+            if (mounted) setIsLoading(false);
           }
+        } else {
+          if (mounted) setIsLoading(false);
         }
       } catch (error: any) {
-        console.error("Session check error:", error);
-        toast({
-          title: "Authentication Error",
-          description: error.message || "Please sign in again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+        console.error('Session check error:', error);
+        if (mounted) setIsLoading(false);
       }
     };
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Normalize email addresses for comparison
-        const userEmail = session.user.email?.toLowerCase().trim();
-        const directorEmail = 'mr.bobb12@yahoo.com'.toLowerCase().trim();
-
-        // Immediately redirect director to dashboard
-        if (userEmail === directorEmail) {
-          navigate("/director");
-          return;
-        }
         checkSession();
       }
     });
@@ -83,8 +86,9 @@ const Auth = () => {
     // Initial session check
     checkSession();
 
-    // Cleanup subscription
+    // Cleanup
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
