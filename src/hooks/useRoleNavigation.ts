@@ -8,6 +8,13 @@ export const useRoleNavigation = (setIsLoading: (value: boolean) => void) => {
 
   const handleNavigation = async (session: any) => {
     try {
+      // In development mode, allow access to all routes
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Development mode: Allowing access to all routes");
+        setIsLoading(false);
+        return;
+      }
+
       // Check if the user is mr.bobb12@yahoo.com
       if (session.user.email === 'mr.bobb12@yahoo.com') {
         console.log("Director access granted");

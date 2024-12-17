@@ -16,6 +16,7 @@ export const useMemorialSession = (token?: string | null) => {
       try {
         // In development, bypass session verification
         if (process.env.NODE_ENV === 'development') {
+          console.log("Development mode: Bypassing session verification");
           if (mounted) setIsLoading(false);
           return;
         }
@@ -53,14 +54,12 @@ export const useMemorialSession = (token?: string | null) => {
       }
     };
 
-    // Initial session verification
     verifySession();
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log("Auth state change:", event);
-        return; // Don't handle auth changes in development
+        console.log("Development mode: Ignoring auth changes");
+        return;
       }
       
       if (event === 'SIGNED_OUT') {

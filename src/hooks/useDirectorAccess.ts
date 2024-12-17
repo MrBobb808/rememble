@@ -21,78 +21,25 @@ export const useDirectorAccess = () => {
           return;
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          throw sessionError;
+        }
+
         if (!session) {
           console.log("No active session found");
-          navigate("/auth");
-          return;
-        }
-
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          console.log("No user found");
-          navigate("/auth");
-          return;
-        }
-
-        // Normalize email addresses for case-insensitive comparison
-        const userEmail = user.email?.toLowerCase().trim();
-        const directorEmail = "mr.bobb12@yahoo.com".toLowerCase().trim();
-
-        // Check if user is the director
-        if (userEmail !== directorEmail) {
-          console.log("Non-director user detected:", userEmail);
-          
-          // Check if user has any memorial invitations
-          const { data: collaborations, error: collaborationError } = await supabase
-            .from("memorial_collaborators")
-            .select("memorial_id")
-            .eq("email", user.email)
-            .limit(1);
-
-          if (collaborationError) {
-            console.error("Error fetching collaborations:", collaborationError);
-            throw collaborationError;
-          }
-
-          if (collaborations && collaborations.length > 0) {
-            // Redirect to the first memorial they have access to
-            navigate(`/memorial?id=${collaborations[0].memorial_id}`);
-          } else {
-            toast({
-              title: "Access Denied",
-              description: "You don't have access to any memorials. Please request an invitation.",
-              variant: "destructive",
-            });
-            navigate("/");
+          if (mounted) {
+            setIsAuthorized(false);
+            navigate("/auth");
           }
           return;
         }
 
-        // Check subscription status for director
-        const { data: subscriptionData, error: subscriptionError } = await supabase
-          .from("director_subscriptions")
-          .select("status")
-          .eq("user_id", user.id)
-          .single();
-
-        if (subscriptionError) {
-          console.error("Error fetching subscription:", subscriptionError);
+        if (mounted) {
+          setIsCheckingAuth(false);
         }
-
-        if (!subscriptionData || subscriptionData.status !== "active") {
-          const redirectUrl = searchParams.get("redirect_url");
-          if (redirectUrl) {
-            navigate(redirectUrl);
-          } else {
-            navigate("/");
-          }
-          return;
-        }
-
-        setIsAuthorized(true);
       } catch (error) {
         console.error("Error checking access:", error);
         navigate("/auth");
@@ -101,15 +48,14 @@ export const useDirectorAccess = () => {
       }
     };
 
-    // Run the check immediately when the component mounts
     checkAccess();
 
-    // Set up a listener for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkAccess();
+      if (process.env.NODE_ENV !== 'development') {
+        checkAccess();
+      }
     });
 
-    // Cleanup subscription when component unmounts
     return () => {
       subscription.unsubscribe();
     };
