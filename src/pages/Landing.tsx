@@ -70,7 +70,7 @@ const Landing = () => {
     <div 
       className="min-h-screen flex flex-col items-center justify-end pb-32 bg-cover bg-center bg-no-repeat"
       style={{ 
-        backgroundImage: 'url("/lovable-uploads/684c9ddd-5c55-4d84-b783-0117ae088aaa.png")',
+        backgroundImage: 'url("/lovable-uploads/03b9f4bf-4199-49eb-bcc8-fb481edd0cc4.png")',
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         backgroundBlendMode: 'overlay',
         backgroundSize: 'cover',
