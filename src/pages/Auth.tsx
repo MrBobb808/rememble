@@ -16,6 +16,37 @@ const Auth = () => {
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
+    // Add connection verification
+    const verifyConnection = async () => {
+      try {
+        console.log("Verifying Supabase connection...");
+        console.log("Project URL:", supabase.supabaseUrl);
+        
+        // Test the connection with a simple query
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .limit(1);
+          
+        if (error) {
+          console.error("Supabase connection error:", error);
+          toast({
+            title: "Connection Error",
+            description: "Unable to connect to the database. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          console.log("Supabase connection successful!");
+        }
+      } catch (error) {
+        console.error("Unexpected error during connection verification:", error);
+      }
+    };
+
+    verifyConnection();
+  }, [toast]);
+
+  useEffect(() => {
     let mounted = true;
 
     const checkSession = async () => {
