@@ -73,7 +73,8 @@ const Landing = () => {
         backgroundImage: 'url("/lovable-uploads/684c9ddd-5c55-4d84-b783-0117ae088aaa.png")',
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         backgroundBlendMode: 'overlay',
-        backgroundSize: '1920px 1080px'
+        backgroundSize: '80% auto',
+        backgroundPosition: 'center 40%'
       }}
     >
       <Button 
