@@ -368,6 +368,54 @@ export type Database = {
           },
         ]
       }
+      memorial_surveys: {
+        Row: {
+          created_at: string
+          family_messages: string | null
+          id: string
+          key_memories: string | null
+          memorial_id: string
+          name: string
+          personality_traits: string | null
+          preferred_tone: string | null
+        }
+        Insert: {
+          created_at?: string
+          family_messages?: string | null
+          id?: string
+          key_memories?: string | null
+          memorial_id: string
+          name: string
+          personality_traits?: string | null
+          preferred_tone?: string | null
+        }
+        Update: {
+          created_at?: string
+          family_messages?: string | null
+          id?: string
+          key_memories?: string | null
+          memorial_id?: string
+          name?: string
+          personality_traits?: string | null
+          preferred_tone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_memorial"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memorial_surveys_memorial_id_fkey"
+            columns: ["memorial_id"]
+            isOneToOne: false
+            referencedRelation: "memorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memorials: {
         Row: {
           banner_image_url: string | null

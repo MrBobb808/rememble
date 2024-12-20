@@ -7,37 +7,63 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { imageUrl, caption } = await req.json()
-    console.log("Received request with caption:", caption)
-    console.log("Image URL:", imageUrl)
+    const { caption, imageContext, memorialId } = await req.json()
+    console.log("Generating reflection for memorial:", memorialId)
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured')
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Fetch survey data if available
+    const { data: surveyData } = await supabaseClient
+      .from('memorial_surveys')
+      .select('*')
+      .eq('memorial_id', memorialId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    // Construct prompt based on available data
+    let promptContext = `Generate a thoughtful and meaningful reflection about this memorial photo.`
+    
+    if (surveyData) {
+      promptContext += `\n\nContext about ${surveyData.name}:
+      - Key Memories: ${surveyData.key_memories || 'Not provided'}
+      - Family Messages: ${surveyData.family_messages || 'Not provided'}
+      - Personality Traits: ${surveyData.personality_traits || 'Not provided'}`
+
+      if (surveyData.preferred_tone) {
+        promptContext += `\n\nPlease maintain a ${surveyData.preferred_tone} tone in the reflection.`
+      }
     }
+
+    promptContext += `\n\nPhoto Context:
+    - Caption: "${caption}"
+    ${imageContext ? `- Visual Context: ${imageContext}` : ''}`
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are a compassionate AI assistant helping to enhance memorial photos with thoughtful reflections. Generate a brief, meaningful reflection that complements the provided caption without changing its original sentiment."
+            content: "You are a compassionate AI assistant helping to enhance memorial photos with thoughtful reflections. Generate meaningful additions that complement the provided information while maintaining a respectful and empathetic tone."
           },
           {
             role: "user",
-            content: `Please provide a thoughtful and empathetic reflection about this memorial photo. Consider the caption: "${caption}". Your reflection should be personal and touching, about 2-3 sentences long.`
+            content: promptContext
           }
         ],
         max_tokens: 300,
@@ -56,24 +82,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ reflection }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error in generate-reflection function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
