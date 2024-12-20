@@ -15,11 +15,12 @@ import {
 interface DashboardChartsProps {
   barData: Array<{ date: string; count: number }>;
   pieData: Array<{ name: string; value: number }>;
+  surveyData: Array<{ name: string; completed: number; pending: number }>;
 }
 
 const COLORS = ['#6C91C2', '#4A6A9D', '#E6EEF7'];
 
-export const DashboardCharts = ({ barData, pieData }: DashboardChartsProps) => {
+export const DashboardCharts = ({ barData, pieData, surveyData }: DashboardChartsProps) => {
   // Sort the bar data in ascending order (earlier dates first)
   const sortedBarData = [...barData].sort((a, b) => {
     const dateA = new Date(a.date);
@@ -71,6 +72,26 @@ export const DashboardCharts = ({ barData, pieData }: DashboardChartsProps) => {
                 </Pie>
                 <Tooltip />
               </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-3">
+        <CardHeader>
+          <CardTitle>Survey Completion Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={surveyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="completed" fill="#4CAF50" name="Completed" />
+                <Bar dataKey="pending" fill="#FFA726" name="Pending" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>

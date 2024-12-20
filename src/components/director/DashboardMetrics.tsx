@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calendar, FileText, Settings, TrendingUp, AlertCircle } from "lucide-react";
+import { Users, Calendar, FileText, Settings, TrendingUp, AlertCircle, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +15,8 @@ interface DashboardMetricsProps {
   activeMemorials: number;
   completedMemorials: number;
   newMemorialsToday: number;
+  surveysCompleted: number;
+  pendingSurveys: number;
 }
 
 export const DashboardMetrics = ({
@@ -22,6 +24,8 @@ export const DashboardMetrics = ({
   activeMemorials,
   completedMemorials,
   newMemorialsToday,
+  surveysCompleted,
+  pendingSurveys,
 }: DashboardMetricsProps) => {
   const [showSettings, setShowSettings] = useState(false);
 
@@ -72,17 +76,15 @@ export const DashboardMetrics = ({
         
         <Card className="bg-white/80 backdrop-blur-sm hover:bg-white transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Settings</CardTitle>
-            <Settings className="h-4 w-4 text-memorial-blue" />
+            <CardTitle className="text-sm font-medium">Survey Status</CardTitle>
+            <ClipboardCheck className="h-4 w-4 text-memorial-blue" />
           </CardHeader>
           <CardContent>
-            <Button 
-              variant="outline" 
-              className="w-full text-sm"
-              onClick={() => setShowSettings(true)}
-            >
-              Manage Preferences
-            </Button>
+            <div className="text-2xl font-bold">{surveysCompleted}</div>
+            <div className="text-xs text-gray-500 flex items-center mt-1">
+              <AlertCircle className="w-3 h-3 mr-1 text-yellow-500" />
+              <span>{pendingSurveys} pending responses</span>
+            </div>
           </CardContent>
         </Card>
       </div>

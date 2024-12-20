@@ -28,15 +28,14 @@ const DirectorDashboard = () => {
     }
   });
 
-  // Fetch activity logs
-  const { data: activityLogs = [] } = useQuery({
-    queryKey: ['activity_logs'],
+  // Fetch surveys data
+  const { data: surveys = [] } = useQuery({
+    queryKey: ['surveys'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('memorial_activity_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .from('memorial_surveys')
+        .select('*, memorials(name)')
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data || [];
@@ -56,7 +55,9 @@ const DirectorDashboard = () => {
         createdAt.getMonth() === today.getMonth() &&
         createdAt.getFullYear() === today.getFullYear()
       );
-    }).length
+    }).length,
+    surveysCompleted: surveys.length,
+    pendingSurveys: memorials.length - surveys.length
   };
 
   // Prepare chart data from real data
@@ -77,6 +78,13 @@ const DirectorDashboard = () => {
     { name: 'Active', value: metrics.activeMemorials },
     { name: 'Completed', value: metrics.completedMemorials }
   ];
+
+  // Prepare survey data
+  const surveyData = memorials.slice(0, 5).map(memorial => ({
+    name: memorial.name,
+    completed: surveys.filter(s => s.memorial_id === memorial.id).length,
+    pending: 1 - surveys.filter(s => s.memorial_id === memorial.id).length
+  }));
 
   const handleDelete = async (id: string) => {
     try {
@@ -105,14 +113,6 @@ const DirectorDashboard = () => {
     }
   };
 
-  if (isMemorialsError) {
-    toast({
-      title: "Error loading dashboard",
-      description: "There was a problem loading the dashboard data. Please try again.",
-      variant: "destructive",
-    });
-  }
-
   return (
     <DirectorGuard>
       <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
@@ -139,7 +139,11 @@ const DirectorDashboard = () => {
                 </div>
 
                 <DashboardMetrics {...metrics} />
-                <DashboardCharts barData={barData} pieData={pieData} />
+                <DashboardCharts 
+                  barData={barData} 
+                  pieData={pieData} 
+                  surveyData={surveyData}
+                />
                 <MemorialsList memorials={memorials} onDelete={handleDelete} />
               </div>
             </TabsContent>
