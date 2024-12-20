@@ -14,7 +14,6 @@ const Landing = lazy(() => import("./pages/Landing.tsx"))
 const Memorial = lazy(() => import("./pages/Memorial.tsx"))
 const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard.tsx"))
 const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct.tsx"))
-const Auth = lazy(() => import("./pages/Auth.tsx"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,7 +66,7 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                <Route path="/" element={<Navigate to="/auth" replace />} />
+                <Route path="/" element={<Navigate to="/director" replace />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/memorial" element={<Memorial />} />
                 <Route 
@@ -79,9 +78,8 @@ const App = () => (
                   } 
                 />
                 <Route path="/print/:productType" element={<PrintfulProduct />} />
-                <Route path="/auth" element={<Auth />} />
-                {/* Add a catch-all route for Supabase hosting */}
-                <Route path="*" element={<Navigate to="/auth" replace />} />
+                {/* Redirect all other routes to director dashboard */}
+                <Route path="*" element={<Navigate to="/director" replace />} />
               </Routes>
             </Suspense>
           </BrowserRouter>
