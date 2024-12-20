@@ -30,7 +30,7 @@ const DirectorDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('memorial_surveys')
-        .select('*, memorials(name)')
+        .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
