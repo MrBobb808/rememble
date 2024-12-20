@@ -1,21 +1,18 @@
-import { DashboardMetrics } from "@/components/director/DashboardMetrics";
-import { DashboardCharts } from "@/components/director/DashboardCharts";
-import { MemorialsList } from "@/components/director/MemorialsList";
-import DirectorSettings from "@/components/director/settings/DirectorSettings";
-import Navigation from "@/components/Navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DirectorGuard from "@/components/guards/DirectorGuard";
+import Navigation from "@/components/Navigation";
+import DirectorSettings from "@/components/director/settings/DirectorSettings";
+import { DashboardContent } from "@/components/director/DashboardContent";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch memorials with real-time updates
-  const { data: memorials = [], isError: isMemorialsError } = useQuery({
+  const { data: memorials = [] } = useQuery({
     queryKey: ['memorials'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,7 +25,6 @@ const DirectorDashboard = () => {
     }
   });
 
-  // Fetch surveys data
   const { data: surveys = [] } = useQuery({
     queryKey: ['surveys'],
     queryFn: async () => {
@@ -42,7 +38,7 @@ const DirectorDashboard = () => {
     }
   });
 
-  // Calculate metrics from real data
+  // Calculate metrics
   const metrics = {
     totalMemorials: memorials.length,
     activeMemorials: memorials.filter(m => !m.is_complete).length,
@@ -60,7 +56,7 @@ const DirectorDashboard = () => {
     pendingSurveys: memorials.length - surveys.length
   };
 
-  // Prepare chart data from real data
+  // Prepare chart data
   const barData = memorials.reduce((acc: any[], memorial) => {
     const date = new Date(memorial.created_at).toLocaleDateString();
     const existingEntry = acc.find(entry => entry.date === date);
@@ -72,14 +68,13 @@ const DirectorDashboard = () => {
     }
     
     return acc;
-  }, []).slice(-7); // Last 7 days
+  }, []).slice(-7);
 
   const pieData = [
     { name: 'Active', value: metrics.activeMemorials },
     { name: 'Completed', value: metrics.completedMemorials }
   ];
 
-  // Prepare survey data
   const surveyData = memorials.slice(0, 5).map(memorial => ({
     name: memorial.name,
     completed: surveys.filter(s => s.memorial_id === memorial.id).length,
@@ -95,7 +90,6 @@ const DirectorDashboard = () => {
       
       if (error) throw error;
 
-      // Invalidate and refetch queries
       await queryClient.invalidateQueries({ queryKey: ['memorials'] });
       await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
       
@@ -131,21 +125,14 @@ const DirectorDashboard = () => {
             </TabsList>
 
             <TabsContent value="dashboard">
-              <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                  <h1 className="text-3xl font-playfair text-gray-800">
-                    Funeral Director Dashboard
-                  </h1>
-                </div>
-
-                <DashboardMetrics {...metrics} />
-                <DashboardCharts 
-                  barData={barData} 
-                  pieData={pieData} 
-                  surveyData={surveyData}
-                />
-                <MemorialsList memorials={memorials} onDelete={handleDelete} />
-              </div>
+              <DashboardContent 
+                metrics={metrics}
+                barData={barData}
+                pieData={pieData}
+                surveyData={surveyData}
+                memorials={memorials}
+                onDelete={handleDelete}
+              />
             </TabsContent>
 
             <TabsContent value="settings">
