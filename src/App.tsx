@@ -7,13 +7,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import { Loader2 } from "lucide-react"
 import * as Sentry from "@sentry/react"
-import DirectorGuard from "@/components/guards/DirectorGuard"
 
-// Lazy load route components with explicit file extensions
+// Lazy load route components
 const Landing = lazy(() => import("./pages/Landing.tsx"))
 const Memorial = lazy(() => import("./pages/Memorial.tsx"))
 const DirectorDashboard = lazy(() => import("./pages/DirectorDashboard.tsx"))
 const PrintfulProduct = lazy(() => import("./pages/PrintfulProduct.tsx"))
+const Auth = lazy(() => import("./pages/Auth.tsx"))
+const AuthCallback = lazy(() => import("./pages/AuthCallback.tsx"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,7 +27,6 @@ const queryClient = new QueryClient({
   },
 })
 
-// Loading fallback component
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
     <Loader2 className="w-8 h-8 animate-spin text-memorial-blue" />
@@ -66,20 +66,14 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                <Route path="/" element={<Navigate to="/director" replace />} />
+                <Route path="/" element={<Navigate to="/auth" replace />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/landing" element={<Landing />} />
                 <Route path="/memorial" element={<Memorial />} />
-                <Route 
-                  path="/director" 
-                  element={
-                    <DirectorGuard>
-                      <DirectorDashboard />
-                    </DirectorGuard>
-                  } 
-                />
+                <Route path="/director" element={<DirectorDashboard />} />
                 <Route path="/print/:productType" element={<PrintfulProduct />} />
-                {/* Redirect all other routes to director dashboard */}
-                <Route path="*" element={<Navigate to="/director" replace />} />
+                <Route path="*" element={<Navigate to="/auth" replace />} />
               </Routes>
             </Suspense>
           </BrowserRouter>

@@ -1,6 +1,8 @@
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
+import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export const AuthForm = () => {
   return (
@@ -9,7 +11,15 @@ export const AuthForm = () => {
         <h1 className="text-2xl font-bold text-center mb-6 text-memorial-blue">
           Sign In
         </h1>
-        <SupabaseAuth
+        
+        <Alert variant="info" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Director access is limited to authorized accounts only.
+          </AlertDescription>
+        </Alert>
+
+        <Auth
           supabaseClient={supabase}
           appearance={{
             theme: ThemeSupa,
@@ -28,7 +38,7 @@ export const AuthForm = () => {
             }
           }}
           providers={[]}
-          redirectTo={`${window.location.origin}/auth`}
+          redirectTo={`${window.location.origin}/auth/callback`}
         />
       </div>
     </div>

@@ -2,12 +2,13 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthForm } from "./AuthForm";
 import { AuthLoading } from "./AuthLoading";
-import { useSessionCheck } from "@/hooks/useSessionCheck";
-import { useRoleNavigation } from "@/hooks/useRoleNavigation";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 export const AuthContainer = () => {
-  const { isLoading, setIsLoading } = useSessionCheck();
-  const { handleNavigation } = useRoleNavigation(setIsLoading);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -15,11 +16,24 @@ export const AuthContainer = () => {
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user && mounted) {
-          await handleNavigation(session);
+        
+        if (session?.user) {
+          // Check if the user is mr.bobb12@yahoo.com
+          if (session.user.email === 'mr.bobb12@yahoo.com') {
+            navigate('/director');
+          } else {
+            // Sign out non-director users
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "Only authorized director accounts can access this application.",
+              variant: "destructive",
+            });
+          }
         }
       } catch (error) {
         console.error('Session check error:', error);
+      } finally {
         if (mounted) setIsLoading(false);
       }
     };
@@ -29,7 +43,19 @@ export const AuthContainer = () => {
       console.log('Auth state changed:', event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        await handleNavigation(session);
+        if (session.user.email === 'mr.bobb12@yahoo.com') {
+          navigate('/director');
+        } else {
+          // Sign out non-director users
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "Only authorized director accounts can access this application.",
+            variant: "destructive",
+          });
+        }
+      } else if (event === 'SIGNED_OUT') {
+        navigate('/auth');
       }
     });
 
@@ -40,7 +66,7 @@ export const AuthContainer = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [handleNavigation, setIsLoading]);
+  }, [navigate, toast]);
 
   if (isLoading) {
     return <AuthLoading />;
