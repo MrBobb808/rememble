@@ -18,47 +18,65 @@ const Navigation = () => {
   const { data: memorial } = useQuery({
     queryKey: ['memorial', currentMemorialId],
     queryFn: async () => {
-      if (!currentMemorialId) return null;
-      
-      const { data, error } = await supabase
-        .from('memorials')
-        .select('*')
-        .eq('id', currentMemorialId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching memorial:', error);
-        throw error;
+      if (!currentMemorialId) {
+        console.log('No memorial ID provided');
+        return null;
       }
       
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('memorials')
+          .select('*')
+          .eq('id', currentMemorialId)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching memorial:', error);
+          throw error;
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch memorial:', error);
+        throw error;
+      }
     },
-    enabled: !!currentMemorialId
+    enabled: !!currentMemorialId,
+    retry: 1
   });
 
   // Fetch photos for PrintfulDialog
   const { data: photos = [] } = useQuery({
     queryKey: ['memorial-photos', currentMemorialId],
     queryFn: async () => {
-      if (!currentMemorialId) return [];
-      
-      const { data, error } = await supabase
-        .from('memorial_photos')
-        .select('*')
-        .eq('memorial_id', currentMemorialId)
-        .order('position', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching photos:', error);
-        throw error;
+      if (!currentMemorialId) {
+        console.log('No memorial ID provided for photos');
+        return [];
       }
       
-      return data.map(photo => ({
-        url: photo.image_url,
-        caption: photo.caption
-      }));
+      try {
+        const { data, error } = await supabase
+          .from('memorial_photos')
+          .select('*')
+          .eq('memorial_id', currentMemorialId)
+          .order('position', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching photos:', error);
+          throw error;
+        }
+        
+        return data.map(photo => ({
+          url: photo.image_url,
+          caption: photo.caption
+        }));
+      } catch (error) {
+        console.error('Failed to fetch photos:', error);
+        return [];
+      }
     },
-    enabled: !!currentMemorialId
+    enabled: !!currentMemorialId,
+    retry: 1
   });
 
   return (
