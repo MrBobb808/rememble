@@ -18,8 +18,14 @@ export const AuthContainer = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Check if the user is mr.bobb12@yahoo.com
-          if (session.user.email === 'mr.bobb12@yahoo.com') {
+          // Get the user's profile to check if they're a director
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('relationship')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile?.relationship === 'director') {
             navigate('/director');
           } else {
             // Sign out non-director users
@@ -43,7 +49,14 @@ export const AuthContainer = () => {
       console.log('Auth state changed:', event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        if (session.user.email === 'mr.bobb12@yahoo.com') {
+        // Check if the user is a director by querying their profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('relationship')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.relationship === 'director') {
           navigate('/director');
         } else {
           // Sign out non-director users
