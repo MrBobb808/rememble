@@ -36,6 +36,31 @@ const Navigation = () => {
     enabled: !!currentMemorialId
   });
 
+  // Fetch photos for PrintfulDialog
+  const { data: photos = [] } = useQuery({
+    queryKey: ['memorial-photos', currentMemorialId],
+    queryFn: async () => {
+      if (!currentMemorialId) return [];
+      
+      const { data, error } = await supabase
+        .from('memorial_photos')
+        .select('*')
+        .eq('memorial_id', currentMemorialId)
+        .order('position', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching photos:', error);
+        throw error;
+      }
+      
+      return data.map(photo => ({
+        url: photo.image_url,
+        caption: photo.caption
+      }));
+    },
+    enabled: !!currentMemorialId
+  });
+
   return (
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b h-12">
       <div className="container mx-auto h-full px-4 flex justify-between items-center">
@@ -50,13 +75,15 @@ const Navigation = () => {
         </div>
 
         <HelpDialog 
-          open={isHelpOpen} 
+          isOpen={isHelpOpen} 
           onOpenChange={setIsHelpOpen}
         />
         
         <PrintfulDialog
           open={isPrintDialogOpen}
           onOpenChange={setIsPrintDialogOpen}
+          memorialId={currentMemorialId || ''}
+          photos={photos}
         />
       </div>
     </div>
