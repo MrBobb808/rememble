@@ -12,7 +12,7 @@ export const AuthForm = () => {
           Sign In
         </h1>
         
-        <Alert variant="info" className="mb-6">
+        <Alert className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Director access is limited to authorized accounts only.
