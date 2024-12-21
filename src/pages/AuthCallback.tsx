@@ -36,8 +36,19 @@ const AuthCallback = () => {
             return;
           }
 
-          // Check if user is the director
-          if (session.user.email === 'mr.bobb12@yahoo.com') {
+          // Check if user is a director
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('relationship')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            throw profileError;
+          }
+
+          if (profile?.relationship === 'director') {
             toast({
               title: "Email verified",
               description: "Your account has been verified successfully.",
@@ -47,7 +58,7 @@ const AuthCallback = () => {
             await supabase.auth.signOut();
             toast({
               title: "Access Denied",
-              description: "Only authorized director accounts can access this application.",
+              description: "Director access is limited to authorized accounts only.",
               variant: "destructive",
             });
             navigate("/auth");
