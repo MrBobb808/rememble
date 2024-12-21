@@ -15,22 +15,23 @@ const Navigation = () => {
   
   const currentMemorialId = searchParams.get("id");
 
-  // Fetch photos for the current memorial
-  const { data: photos = [] } = useQuery({
-    queryKey: ['memorial-photos', currentMemorialId],
+  const { data: memorial } = useQuery({
+    queryKey: ['memorial', currentMemorialId],
     queryFn: async () => {
-      if (!currentMemorialId) return [];
-      const { data, error } = await supabase
-        .from('memorial_photos')
-        .select('*')
-        .eq('memorial_id', currentMemorialId)
-        .order('position', { ascending: true });
+      if (!currentMemorialId) return null;
       
-      if (error) throw error;
-      return data.map(photo => ({
-        url: photo.image_url,
-        caption: photo.caption
-      }));
+      const { data, error } = await supabase
+        .from('memorials')
+        .select('*')
+        .eq('id', currentMemorialId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching memorial:', error);
+        throw error;
+      }
+      
+      return data;
     },
     enabled: !!currentMemorialId
   });
@@ -39,7 +40,7 @@ const Navigation = () => {
     <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm z-50 border-b h-12">
       <div className="container mx-auto h-full px-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="text-xl font-playfair text-gray-800">Memories</div>
+          {memorial?.name && <span className="text-sm font-medium">{memorial.name}</span>}
         </div>
 
         <div className="flex items-center gap-2">
@@ -47,15 +48,17 @@ const Navigation = () => {
           <UserMenu />
           <MobileMenu />
         </div>
-      </div>
 
-      <HelpDialog isOpen={isHelpOpen} onOpenChange={setIsHelpOpen} />
-      <PrintfulDialog 
-        open={isPrintDialogOpen} 
-        onOpenChange={setIsPrintDialogOpen}
-        memorialId={currentMemorialId || ''}
-        photos={photos}
-      />
+        <HelpDialog 
+          open={isHelpOpen} 
+          onOpenChange={setIsHelpOpen}
+        />
+        
+        <PrintfulDialog
+          open={isPrintDialogOpen}
+          onOpenChange={setIsPrintDialogOpen}
+        />
+      </div>
     </div>
   );
 };
