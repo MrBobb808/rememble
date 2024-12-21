@@ -19,11 +19,17 @@ export const AuthContainer = () => {
         
         if (session?.user) {
           // Get the user's profile to check if they're a director
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('relationship')
             .eq('id', session.user.id)
             .single();
+
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            if (mounted) setIsLoading(false);
+            return;
+          }
 
           if (profile?.relationship === 'director') {
             navigate('/director');
@@ -32,7 +38,7 @@ export const AuthContainer = () => {
             await supabase.auth.signOut();
             toast({
               title: "Access Denied",
-              description: "Only authorized director accounts can access this application.",
+              description: "Director access is limited to authorized accounts only.",
               variant: "destructive",
             });
           }
@@ -50,11 +56,16 @@ export const AuthContainer = () => {
       
       if (event === 'SIGNED_IN' && session) {
         // Check if the user is a director by querying their profile
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('relationship')
           .eq('id', session.user.id)
           .single();
+
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          return;
+        }
 
         if (profile?.relationship === 'director') {
           navigate('/director');
@@ -63,7 +74,7 @@ export const AuthContainer = () => {
           await supabase.auth.signOut();
           toast({
             title: "Access Denied",
-            description: "Only authorized director accounts can access this application.",
+            description: "Director access is limited to authorized accounts only.",
             variant: "destructive",
           });
         }

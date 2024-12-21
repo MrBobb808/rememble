@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NavigationButtons } from "./navigation/NavigationButtons";
 import { Menu, LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { UserMenu } from "./UserMenu";
 import {
   Sheet,
   SheetContent,
@@ -84,6 +85,7 @@ const Navigation = () => {
               Dashboard
             </Button>
           </div>
+          <UserMenu />
           <MobileMenu />
         </div>
       </div>
