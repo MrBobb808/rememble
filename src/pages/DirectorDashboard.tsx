@@ -7,10 +7,23 @@ import DirectorGuard from "@/components/guards/DirectorGuard";
 import Navigation from "@/components/Navigation";
 import DirectorSettings from "@/components/director/settings/DirectorSettings";
 import { DashboardContent } from "@/components/director/DashboardContent";
+import { useEffect, useState } from "react";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check auth state once on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const { data: memorials = [] } = useQuery({
     queryKey: ['memorials'],
@@ -22,7 +35,8 @@ const DirectorDashboard = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: !isLoading // Only fetch when auth check is complete
   });
 
   const { data: surveys = [] } = useQuery({
@@ -35,7 +49,8 @@ const DirectorDashboard = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: !isLoading // Only fetch when auth check is complete
   });
 
   // Calculate metrics
@@ -106,6 +121,10 @@ const DirectorDashboard = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <DirectorGuard>
