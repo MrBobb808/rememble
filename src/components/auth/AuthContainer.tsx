@@ -1,100 +1,34 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { AuthForm } from "./AuthForm";
-import { AuthLoading } from "./AuthLoading";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AuthContainer = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    const checkSession = async () => {
+    const autoSignIn = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          // Get the user's profile to check if they're a director
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('relationship')
-            .eq('id', session.user.id)
-            .single();
+        // Sign in as mr.bobb12@yahoo.com using email
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: 'mr.bobb12@yahoo.com',
+          password: 'rememble2024', // Make sure this matches the actual password
+        });
 
-          if (profileError) {
-            console.error('Profile fetch error:', profileError);
-            if (mounted) setIsLoading(false);
-            return;
-          }
-
-          if (profile?.relationship === 'director') {
-            navigate('/director');
-          } else {
-            // Sign out non-director users
-            await supabase.auth.signOut();
-            toast({
-              title: "Access Denied",
-              description: "Director access is limited to authorized accounts only.",
-              variant: "destructive",
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session) {
-        // Check if the user is a director by querying their profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('relationship')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Profile fetch error:', profileError);
+        if (error) {
+          console.error('Auto sign-in error:', error);
           return;
         }
 
-        if (profile?.relationship === 'director') {
-          navigate('/director');
-        } else {
-          // Sign out non-director users
-          await supabase.auth.signOut();
-          toast({
-            title: "Access Denied",
-            description: "Director access is limited to authorized accounts only.",
-            variant: "destructive",
-          });
-        }
-      } else if (event === 'SIGNED_OUT') {
-        navigate('/auth');
+        // Redirect to director dashboard after successful sign-in
+        navigate('/director');
+      } catch (error) {
+        console.error('Unexpected error during auto sign-in:', error);
       }
-    });
-
-    // Initial session check
-    checkSession();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
     };
-  }, [navigate, toast]);
 
-  if (isLoading) {
-    return <AuthLoading />;
-  }
+    autoSignIn();
+  }, [navigate]);
 
-  return <AuthForm />;
+  // Return null since we're automatically redirecting
+  return null;
 };
