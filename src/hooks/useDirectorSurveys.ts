@@ -7,14 +7,14 @@ interface Survey {
   id: string;
   memorial_id: string;
   name: string;
-  key_memories?: string;
-  family_messages?: string;
-  personality_traits?: string;
-  preferred_tone?: string;
+  key_memories?: string | null;
+  family_messages?: string | null;
+  personality_traits?: string | null;
+  preferred_tone?: string | null;
   created_at: string;
-  memorials: {
+  memorial: {
     name: string;
-  };
+  } | null;
 }
 
 export const useDirectorSurveys = (userId: string | null) => {
@@ -56,7 +56,7 @@ export const useDirectorSurveys = (userId: string | null) => {
             personality_traits,
             preferred_tone,
             created_at,
-            memorials:memorial_id (
+            memorial:memorials!memorial_surveys_memorial_id_fkey (
               name
             )
           `)
@@ -73,7 +73,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         }
 
         console.log('Fetched surveys:', data);
-        return data as Survey[];
+        return (data || []) as Survey[];
       } catch (error: any) {
         console.error('Network error fetching surveys:', error);
         toast({
