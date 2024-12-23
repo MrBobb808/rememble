@@ -26,7 +26,6 @@ export const useDirectorMemorials = (userId: string | null) => {
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      // Only proceed if we have a valid UUID
       if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
         return [];
@@ -35,9 +34,31 @@ export const useDirectorMemorials = (userId: string | null) => {
       console.log('Fetching memorials for user:', userId);
       
       try {
+        // First check if the user is a director
+        const { data: isDirector, error: directorCheckError } = await supabase
+          .rpc('is_director', { user_id: userId });
+
+        if (directorCheckError) {
+          throw directorCheckError;
+        }
+
+        if (!isDirector) {
+          console.log('User is not a director');
+          return [];
+        }
+
+        // Fetch memorials with collaborator information
         const { data, error } = await supabase
           .from('memorials')
-          .select('*, memorial_collaborators(*)')
+          .select(`
+            *,
+            memorial_collaborators (
+              id,
+              user_id,
+              email,
+              role
+            )
+          `)
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -52,7 +73,7 @@ export const useDirectorMemorials = (userId: string | null) => {
 
         console.log('Fetched memorials:', data);
         return (data || []) as Memorial[];
-      } catch (error) {
+      } catch (error: any) {
         console.error('Network error fetching memorials:', error);
         toast({
           title: "Network Error",
@@ -62,7 +83,7 @@ export const useDirectorMemorials = (userId: string | null) => {
         return [];
       }
     },
-    enabled: !!userId,
+    enabled: !!userId && validateUUID(userId),
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,

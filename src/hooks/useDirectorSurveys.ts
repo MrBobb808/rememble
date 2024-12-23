@@ -23,7 +23,6 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      // Only proceed if we have a valid UUID
       if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
         return [];
@@ -32,9 +31,28 @@ export const useDirectorSurveys = (userId: string | null) => {
       console.log('Fetching surveys for user:', userId);
       
       try {
+        // First check if the user is a director
+        const { data: isDirector, error: directorCheckError } = await supabase
+          .rpc('is_director', { user_id: userId });
+
+        if (directorCheckError) {
+          throw directorCheckError;
+        }
+
+        if (!isDirector) {
+          console.log('User is not a director');
+          return [];
+        }
+
+        // Fetch surveys with memorial information
         const { data, error } = await supabase
           .from('memorial_surveys')
-          .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
+          .select(`
+            *,
+            memorials (
+              name
+            )
+          `)
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -49,7 +67,7 @@ export const useDirectorSurveys = (userId: string | null) => {
 
         console.log('Fetched surveys:', data);
         return (data || []) as Survey[];
-      } catch (error) {
+      } catch (error: any) {
         console.error('Network error fetching surveys:', error);
         toast({
           title: "Network Error",
@@ -59,7 +77,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: !!userId,
+    enabled: !!userId && validateUUID(userId),
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
