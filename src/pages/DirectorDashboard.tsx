@@ -13,12 +13,14 @@ const DirectorDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Check auth state once on mount
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      if (session?.user?.id) {
+        setUserId(session.user.id);
         setIsLoading(false);
       }
     };
@@ -28,6 +30,8 @@ const DirectorDashboard = () => {
   const { data: memorials = [] } = useQuery({
     queryKey: ['memorials'],
     queryFn: async () => {
+      if (!userId) return [];
+      
       const { data, error } = await supabase
         .from('memorials')
         .select('*, memorial_collaborators(*)')
@@ -36,12 +40,14 @@ const DirectorDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !isLoading
+    enabled: !isLoading && !!userId
   });
 
   const { data: surveys = [] } = useQuery({
     queryKey: ['surveys'],
     queryFn: async () => {
+      if (!userId) return [];
+      
       const { data, error } = await supabase
         .from('memorial_surveys')
         .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
@@ -50,7 +56,7 @@ const DirectorDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !isLoading
+    enabled: !isLoading && !!userId
   });
 
   // Calculate metrics
