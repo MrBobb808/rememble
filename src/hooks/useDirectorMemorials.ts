@@ -6,7 +6,7 @@ import { validateUUID } from "@/utils/validation";
 interface Collaborator {
   id: string;
   memorial_id: string;
-  user_id: string;
+  user_id: string | null;
   email: string;
   role: 'admin' | 'contributor' | 'viewer';
 }
@@ -16,10 +16,10 @@ interface Memorial {
   name: string;
   created_at: string;
   is_complete: boolean;
-  birth_year?: string | null;
-  death_year?: string | null;
-  banner_image_url?: string | null;
-  summary?: string | null;
+  birth_year: string | null;
+  death_year: string | null;
+  banner_image_url: string | null;
+  summary: string | null;
   memorial_collaborators: Collaborator[];
 }
 

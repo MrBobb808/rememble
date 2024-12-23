@@ -7,10 +7,10 @@ interface Survey {
   id: string;
   memorial_id: string;
   name: string;
-  key_memories?: string | null;
-  family_messages?: string | null;
-  personality_traits?: string | null;
-  preferred_tone?: string | null;
+  key_memories: string | null;
+  family_messages: string | null;
+  personality_traits: string | null;
+  preferred_tone: string | null;
   created_at: string;
   memorial: {
     name: string;
