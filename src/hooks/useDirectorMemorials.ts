@@ -3,6 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { validateUUID } from "@/utils/validation";
 
+interface Collaborator {
+  id: string;
+  memorial_id: string;
+  user_id: string;
+  email: string;
+  role: 'admin' | 'contributor' | 'viewer';
+}
+
 interface Memorial {
   id: string;
   name: string;
@@ -11,13 +19,8 @@ interface Memorial {
   birth_year?: string;
   death_year?: string;
   banner_image_url?: string;
-  memorial_collaborators?: Array<{
-    id: string;
-    memorial_id: string;
-    user_id: string;
-    email: string;
-    role: string;
-  }>;
+  summary?: string;
+  memorial_collaborators: Collaborator[];
 }
 
 export const useDirectorMemorials = (userId: string | null) => {
@@ -47,13 +50,21 @@ export const useDirectorMemorials = (userId: string | null) => {
           return [];
         }
 
-        // Fetch memorials with collaborator information
+        // Fetch memorials with collaborator information using the correct foreign key
         const { data, error } = await supabase
           .from('memorials')
           .select(`
-            *,
+            id,
+            name,
+            created_at,
+            is_complete,
+            birth_year,
+            death_year,
+            banner_image_url,
+            summary,
             memorial_collaborators (
               id,
+              memorial_id,
               user_id,
               email,
               role
@@ -72,7 +83,7 @@ export const useDirectorMemorials = (userId: string | null) => {
         }
 
         console.log('Fetched memorials:', data);
-        return (data || []) as Memorial[];
+        return data as Memorial[];
       } catch (error: any) {
         console.error('Network error fetching memorials:', error);
         toast({

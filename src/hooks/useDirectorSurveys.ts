@@ -12,7 +12,7 @@ interface Survey {
   personality_traits?: string;
   preferred_tone?: string;
   created_at: string;
-  memorials?: {
+  memorials: {
     name: string;
   };
 }
@@ -44,12 +44,19 @@ export const useDirectorSurveys = (userId: string | null) => {
           return [];
         }
 
-        // Fetch surveys with memorial information
+        // Fetch surveys with memorial information using the correct join syntax
         const { data, error } = await supabase
           .from('memorial_surveys')
           .select(`
-            *,
-            memorials (
+            id,
+            memorial_id,
+            name,
+            key_memories,
+            family_messages,
+            personality_traits,
+            preferred_tone,
+            created_at,
+            memorials:memorial_id (
               name
             )
           `)
@@ -66,7 +73,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         }
 
         console.log('Fetched surveys:', data);
-        return (data || []) as Survey[];
+        return data as Survey[];
       } catch (error: any) {
         console.error('Network error fetching surveys:', error);
         toast({
