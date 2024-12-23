@@ -44,7 +44,7 @@ export const useDirectorSurveys = (userId: string | null) => {
           return [];
         }
 
-        // Fetch surveys with memorial information using the correct join syntax
+        // Fetch surveys with memorial information using the correct foreign key hint
         const { data, error } = await supabase
           .from('memorial_surveys')
           .select(`
@@ -56,7 +56,7 @@ export const useDirectorSurveys = (userId: string | null) => {
             personality_traits,
             preferred_tone,
             created_at,
-            memorial:memorials!memorial_surveys_memorial_id_fkey (
+            memorial:memorials!fk_memorial (
               name
             )
           `)

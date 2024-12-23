@@ -16,10 +16,10 @@ interface Memorial {
   name: string;
   created_at: string;
   is_complete: boolean;
-  birth_year?: string;
-  death_year?: string;
-  banner_image_url?: string;
-  summary?: string;
+  birth_year?: string | null;
+  death_year?: string | null;
+  banner_image_url?: string | null;
+  summary?: string | null;
   memorial_collaborators: Collaborator[];
 }
 
@@ -50,7 +50,7 @@ export const useDirectorMemorials = (userId: string | null) => {
           return [];
         }
 
-        // Fetch memorials with collaborator information using the correct foreign key
+        // Fetch memorials with collaborator information
         const { data, error } = await supabase
           .from('memorials')
           .select(`
@@ -83,7 +83,7 @@ export const useDirectorMemorials = (userId: string | null) => {
         }
 
         console.log('Fetched memorials:', data);
-        return data as Memorial[];
+        return (data || []) as Memorial[];
       } catch (error: any) {
         console.error('Network error fetching memorials:', error);
         toast({
