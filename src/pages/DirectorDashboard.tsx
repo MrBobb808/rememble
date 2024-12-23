@@ -1,5 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -7,11 +6,14 @@ import DirectorGuard from "@/components/guards/DirectorGuard";
 import Navigation from "@/components/Navigation";
 import DirectorSettings from "@/components/director/settings/DirectorSettings";
 import { DashboardContent } from "@/components/director/DashboardContent";
-import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useDirectorMemorials } from "@/hooks/useDirectorMemorials";
+import { useDirectorSurveys } from "@/hooks/useDirectorSurveys";
+import { useDirectorMetrics } from "@/hooks/useDirectorMetrics";
+import { useMemorialDelete } from "@/hooks/useMemorialDelete";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -57,96 +59,11 @@ const DirectorDashboard = () => {
     };
   }, [toast]);
 
-  const { data: memorials = [], isLoading: isMemorialsLoading } = useQuery({
-    queryKey: ['memorials', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      
-      const { data, error } = await supabase
-        .from('memorials')
-        .select('*, memorial_collaborators(*)')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!userId && !isLoading
-  });
+  const { data: memorials = [], isLoading: isMemorialsLoading } = useDirectorMemorials(userId);
+  const { data: surveys = [], isLoading: isSurveysLoading } = useDirectorSurveys(userId);
+  const metrics = useDirectorMetrics(memorials, surveys);
+  const { deleteMemorial } = useMemorialDelete();
 
-  const { data: surveys = [], isLoading: isSurveysLoading } = useQuery({
-    queryKey: ['surveys', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      
-      const { data, error } = await supabase
-        .from('memorial_surveys')
-        .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!userId && !isLoading
-  });
-
-  const handleDelete = async (id: string) => {
-    try {
-      // First, delete all photos associated with the memorial
-      const { error: photosError } = await supabase
-        .from('memorial_photos')
-        .delete()
-        .eq('memorial_id', id);
-      
-      if (photosError) throw photosError;
-
-      // Then delete the memorial itself
-      const { error: memorialError } = await supabase
-        .from('memorials')
-        .delete()
-        .eq('id', id);
-      
-      if (memorialError) throw memorialError;
-
-      await queryClient.invalidateQueries({ queryKey: ['memorials'] });
-      await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
-      
-      toast({
-        title: "Memorial deleted",
-        description: "The memorial and all associated photos have been successfully deleted.",
-      });
-    } catch (error: any) {
-      console.error('Error deleting memorial:', error);
-      toast({
-        title: "Error deleting memorial",
-        description: error.message || "There was a problem deleting the memorial.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isLoading || isMemorialsLoading || isSurveysLoading) {
-    return <div>Loading...</div>;
-  }
-
-  // Calculate metrics
-  const metrics = {
-    totalMemorials: memorials.length,
-    activeMemorials: memorials.filter(m => !m.is_complete).length,
-    completedMemorials: memorials.filter(m => m.is_complete).length,
-    newMemorialsToday: memorials.filter(m => {
-      const today = new Date();
-      const createdAt = new Date(m.created_at);
-      return (
-        createdAt.getDate() === today.getDate() &&
-        createdAt.getMonth() === today.getMonth() &&
-        createdAt.getFullYear() === today.getFullYear()
-      );
-    }).length,
-    surveysCompleted: surveys.length,
-    pendingSurveys: memorials.length - surveys.length
-  };
-
-  // Prepare chart data
   const barData = memorials.reduce((acc: any[], memorial) => {
     const date = new Date(memorial.created_at).toLocaleDateString();
     const existingEntry = acc.find(entry => entry.date === date);
@@ -170,6 +87,10 @@ const DirectorDashboard = () => {
     completed: surveys.filter(s => s.memorial_id === memorial.id).length,
     pending: 1 - surveys.filter(s => s.memorial_id === memorial.id).length
   }));
+
+  if (isLoading || isMemorialsLoading || isSurveysLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <DirectorGuard>
@@ -195,7 +116,7 @@ const DirectorDashboard = () => {
                 pieData={pieData}
                 surveyData={surveyData}
                 memorials={memorials}
-                onDelete={handleDelete}
+                onDelete={deleteMemorial}
               />
             </TabsContent>
 
