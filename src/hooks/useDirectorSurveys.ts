@@ -22,40 +22,45 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId) {
-        throw new Error('No user ID provided');
+      // Check for valid UUID format
+      if (!userId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log('Invalid or missing user ID:', userId);
+        return [];
       }
 
       console.log('Fetching surveys for user:', userId);
       
-      const { data, error } = await supabase
-        .from('memorial_surveys')
-        .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching surveys:', error);
+      try {
+        const { data, error } = await supabase
+          .from('memorial_surveys')
+          .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching surveys:', error);
+          toast({
+            title: "Error fetching surveys",
+            description: error.message,
+            variant: "destructive",
+          });
+          return [];
+        }
+
+        console.log('Fetched surveys:', data);
+        return (data || []) as Survey[];
+      } catch (error) {
+        console.error('Network error fetching surveys:', error);
         toast({
-          title: "Error fetching surveys",
-          description: error.message,
+          title: "Network Error",
+          description: "Unable to connect to the server. Please check your connection.",
           variant: "destructive",
         });
-        throw error;
+        return [];
       }
-
-      console.log('Fetched surveys:', data);
-      return (data || []) as Survey[];
     },
     enabled: !!userId,
-    meta: {
-      errorHandler: (error: Error) => {
-        console.error('Query error:', error);
-        toast({
-          title: "Error loading surveys",
-          description: "Unable to load surveys. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30000,
   });
 };

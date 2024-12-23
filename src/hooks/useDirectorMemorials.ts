@@ -25,40 +25,45 @@ export const useDirectorMemorials = (userId: string | null) => {
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      if (!userId) {
-        throw new Error('No user ID provided');
+      // Check for valid UUID format
+      if (!userId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.log('Invalid or missing user ID:', userId);
+        return [];
       }
 
       console.log('Fetching memorials for user:', userId);
       
-      const { data, error } = await supabase
-        .from('memorials')
-        .select('*, memorial_collaborators(*)')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching memorials:', error);
+      try {
+        const { data, error } = await supabase
+          .from('memorials')
+          .select('*, memorial_collaborators(*)')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching memorials:', error);
+          toast({
+            title: "Error fetching memorials",
+            description: error.message,
+            variant: "destructive",
+          });
+          return [];
+        }
+
+        console.log('Fetched memorials:', data);
+        return (data || []) as Memorial[];
+      } catch (error) {
+        console.error('Network error fetching memorials:', error);
         toast({
-          title: "Error fetching memorials",
-          description: error.message,
+          title: "Network Error",
+          description: "Unable to connect to the server. Please check your connection.",
           variant: "destructive",
         });
-        throw error;
+        return [];
       }
-
-      console.log('Fetched memorials:', data);
-      return (data || []) as Memorial[];
     },
     enabled: !!userId,
-    meta: {
-      errorHandler: (error: Error) => {
-        console.error('Query error:', error);
-        toast({
-          title: "Error loading memorials",
-          description: "Unable to load memorials. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30000,
   });
 };
