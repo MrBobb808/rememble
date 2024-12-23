@@ -12,6 +12,25 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
   const { toast } = useToast();
   const { generatedLink, showDialog, setShowDialog, generateLink } = useMemorialLink(memorialId);
 
+  const handleCopyLink = async () => {
+    if (generatedLink) {
+      try {
+        await navigator.clipboard.writeText(generatedLink);
+        toast({
+          title: "Link copied!",
+          description: "The link has been copied to your clipboard.",
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          title: "Error copying link",
+          description: "Please try copying the link manually.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -47,20 +66,7 @@ export const LinkGenerator = ({ memorialId }: LinkGeneratorProps) => {
             </div>
             <Button 
               className="w-full"
-              onClick={() => {
-                if (generatedLink) {
-                  navigator.clipboard.writeText(generatedLink)
-                    .then(() => {
-                      toast({
-                        title: "Link copied!",
-                        description: "The link has been copied to your clipboard.",
-                      });
-                    })
-                    .catch((error) => {
-                      console.error('Error copying to clipboard:', error);
-                    });
-                }
-              }}
+              onClick={handleCopyLink}
             >
               Copy Link
             </Button>
