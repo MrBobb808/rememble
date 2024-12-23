@@ -23,6 +23,12 @@ const DirectorDashboard = () => {
         
         if (session?.user?.id) {
           setUserId(session.user.id);
+        } else {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to access the dashboard.",
+            variant: "destructive",
+          });
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -35,10 +41,23 @@ const DirectorDashboard = () => {
         setIsLoading(false);
       }
     };
+
     checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN') {
+        setUserId(session?.user?.id || null);
+      } else if (event === 'SIGNED_OUT') {
+        setUserId(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
-  const { data: memorials = [] } = useQuery({
+  const { data: memorials = [], isLoading: isMemorialsLoading } = useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -51,10 +70,10 @@ const DirectorDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !isLoading && !!userId
+    enabled: !!userId && !isLoading
   });
 
-  const { data: surveys = [] } = useQuery({
+  const { data: surveys = [], isLoading: isSurveysLoading } = useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -67,8 +86,47 @@ const DirectorDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !isLoading && !!userId
+    enabled: !!userId && !isLoading
   });
+
+  const handleDelete = async (id: string) => {
+    try {
+      // First, delete all photos associated with the memorial
+      const { error: photosError } = await supabase
+        .from('memorial_photos')
+        .delete()
+        .eq('memorial_id', id);
+      
+      if (photosError) throw photosError;
+
+      // Then delete the memorial itself
+      const { error: memorialError } = await supabase
+        .from('memorials')
+        .delete()
+        .eq('id', id);
+      
+      if (memorialError) throw memorialError;
+
+      await queryClient.invalidateQueries({ queryKey: ['memorials'] });
+      await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
+      
+      toast({
+        title: "Memorial deleted",
+        description: "The memorial and all associated photos have been successfully deleted.",
+      });
+    } catch (error: any) {
+      console.error('Error deleting memorial:', error);
+      toast({
+        title: "Error deleting memorial",
+        description: error.message || "There was a problem deleting the memorial.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading || isMemorialsLoading || isSurveysLoading) {
+    return <div>Loading...</div>;
+  }
 
   // Calculate metrics
   const metrics = {
@@ -112,45 +170,6 @@ const DirectorDashboard = () => {
     completed: surveys.filter(s => s.memorial_id === memorial.id).length,
     pending: 1 - surveys.filter(s => s.memorial_id === memorial.id).length
   }));
-
-  const handleDelete = async (id: string) => {
-    try {
-      // First, delete all photos associated with the memorial
-      const { error: photosError } = await supabase
-        .from('memorial_photos')
-        .delete()
-        .eq('memorial_id', id);
-      
-      if (photosError) throw photosError;
-
-      // Then delete the memorial itself
-      const { error: memorialError } = await supabase
-        .from('memorials')
-        .delete()
-        .eq('id', id);
-      
-      if (memorialError) throw memorialError;
-
-      await queryClient.invalidateQueries({ queryKey: ['memorials'] });
-      await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
-      
-      toast({
-        title: "Memorial deleted",
-        description: "The memorial and all associated photos have been successfully deleted.",
-      });
-    } catch (error: any) {
-      console.error('Error deleting memorial:', error);
-      toast({
-        title: "Error deleting memorial",
-        description: error.message || "There was a problem deleting the memorial.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <DirectorGuard>
