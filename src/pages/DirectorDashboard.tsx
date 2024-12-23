@@ -36,7 +36,7 @@ const DirectorDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !isLoading // Only fetch when auth check is complete
+    enabled: !isLoading
   });
 
   const { data: surveys = [] } = useQuery({
@@ -50,7 +50,7 @@ const DirectorDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !isLoading // Only fetch when auth check is complete
+    enabled: !isLoading
   });
 
   // Calculate metrics
@@ -98,19 +98,28 @@ const DirectorDashboard = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
+      // First, delete all photos associated with the memorial
+      const { error: photosError } = await supabase
+        .from('memorial_photos')
+        .delete()
+        .eq('memorial_id', id);
+      
+      if (photosError) throw photosError;
+
+      // Then delete the memorial itself
+      const { error: memorialError } = await supabase
         .from('memorials')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (memorialError) throw memorialError;
 
       await queryClient.invalidateQueries({ queryKey: ['memorials'] });
       await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
       
       toast({
         title: "Memorial deleted",
-        description: "The memorial has been successfully deleted.",
+        description: "The memorial and all associated photos have been successfully deleted.",
       });
     } catch (error: any) {
       console.error('Error deleting memorial:', error);
