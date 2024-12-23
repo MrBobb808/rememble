@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { validateUUID } from "@/utils/validation";
 
 interface Survey {
   id: string;
@@ -22,8 +23,8 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      // Check for valid UUID format
-      if (!userId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      // Only proceed if we have a valid UUID
+      if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
         return [];
       }

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { validateUUID } from "@/utils/validation";
 
 interface Memorial {
   id: string;
@@ -25,8 +26,8 @@ export const useDirectorMemorials = (userId: string | null) => {
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      // Check for valid UUID format
-      if (!userId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      // Only proceed if we have a valid UUID
+      if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
         return [];
       }
