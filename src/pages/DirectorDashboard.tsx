@@ -15,20 +15,31 @@ const DirectorDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Check auth state once on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        setUserId(session.user.id);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (session?.user?.id) {
+          setUserId(session.user.id);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try signing in again.",
+          variant: "destructive",
+        });
+      } finally {
         setIsLoading(false);
       }
     };
     checkAuth();
-  }, []);
+  }, [toast]);
 
   const { data: memorials = [] } = useQuery({
-    queryKey: ['memorials'],
+    queryKey: ['memorials', userId],
     queryFn: async () => {
       if (!userId) return [];
       
@@ -44,7 +55,7 @@ const DirectorDashboard = () => {
   });
 
   const { data: surveys = [] } = useQuery({
-    queryKey: ['surveys'],
+    queryKey: ['surveys', userId],
     queryFn: async () => {
       if (!userId) return [];
       
