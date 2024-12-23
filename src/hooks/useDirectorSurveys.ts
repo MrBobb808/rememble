@@ -23,8 +23,13 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId || !validateUUID(userId)) {
+      if (!userId) {
         console.log('Invalid or missing user ID:', userId);
+        return [];
+      }
+
+      if (!validateUUID(userId)) {
+        console.error('Invalid UUID format for user ID:', userId);
         return [];
       }
 
@@ -72,7 +77,6 @@ export const useDirectorSurveys = (userId: string | null) => {
           return [];
         }
 
-        console.log('Fetched surveys:', data);
         return (data || []) as Survey[];
       } catch (error: any) {
         console.error('Network error fetching surveys:', error);
@@ -84,7 +88,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: !!userId && validateUUID(userId),
+    enabled: !!userId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
