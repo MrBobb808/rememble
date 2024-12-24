@@ -11,6 +11,7 @@ import { useDirectorMemorials } from "@/hooks/useDirectorMemorials";
 import { useDirectorSurveys } from "@/hooks/useDirectorSurveys";
 import { useDirectorMetrics } from "@/hooks/useDirectorMetrics";
 import { useMemorialDelete } from "@/hooks/useMemorialDelete";
+import { validateUUID } from "@/utils/validation";
 
 const DirectorDashboard = () => {
   const { toast } = useToast();
@@ -23,14 +24,17 @@ const DirectorDashboard = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
-        if (session?.user?.id) {
-          setUserId(session.user.id);
+        const currentUserId = session?.user?.id;
+        if (currentUserId && validateUUID(currentUserId)) {
+          setUserId(currentUserId);
         } else {
+          console.log("Invalid or missing user ID:", currentUserId);
           toast({
             title: "Authentication Required",
             description: "Please sign in to access the dashboard.",
             variant: "destructive",
           });
+          setUserId(null);
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -39,6 +43,7 @@ const DirectorDashboard = () => {
           description: "Please try signing in again.",
           variant: "destructive",
         });
+        setUserId(null);
       } finally {
         setIsLoading(false);
       }
@@ -47,8 +52,9 @@ const DirectorDashboard = () => {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
-        setUserId(session?.user?.id || null);
+      const newUserId = session?.user?.id;
+      if (event === 'SIGNED_IN' && newUserId && validateUUID(newUserId)) {
+        setUserId(newUserId);
       } else if (event === 'SIGNED_OUT') {
         setUserId(null);
       }
