@@ -28,22 +28,24 @@ const DirectorDashboard = () => {
           console.log("Setting valid user ID:", user.id);
           setUserId(user.id);
         } else {
-          console.log("Invalid or missing user ID");
-          toast({
-            title: "Authentication Required",
-            description: "Please sign in to access the dashboard.",
-            variant: "destructive",
-          });
+          console.error("Invalid or missing user ID from auth");
           setUserId(null);
+          if (!user?.id) {
+            toast({
+              title: "Authentication Required",
+              description: "Please sign in to access the dashboard.",
+              variant: "destructive",
+            });
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Auth check error:', error);
+        setUserId(null);
         toast({
           title: "Authentication Error",
           description: "Please try signing in again.",
           variant: "destructive",
         });
-        setUserId(null);
       } finally {
         setIsLoading(false);
       }
@@ -52,10 +54,14 @@ const DirectorDashboard = () => {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const newUserId = session?.user?.id;
-      if (event === 'SIGNED_IN' && newUserId && validateUUID(newUserId)) {
-        console.log("Auth state change - valid user ID:", newUserId);
-        setUserId(newUserId);
+      if (event === 'SIGNED_IN' && session?.user?.id) {
+        if (validateUUID(session.user.id)) {
+          console.log("Auth state change - valid user ID:", session.user.id);
+          setUserId(session.user.id);
+        } else {
+          console.error("Invalid user ID from auth state change");
+          setUserId(null);
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log("Auth state change - signed out");
         setUserId(null);
