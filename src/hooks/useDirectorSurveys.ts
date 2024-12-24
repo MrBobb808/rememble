@@ -28,7 +28,7 @@ export const useDirectorSurveys = (userId: string | null) => {
     queryKey: ['surveys', userId],
     queryFn: async () => {
       if (!userId || !validateUUID(userId)) {
-        console.log('Invalid or missing user ID:', userId);
+        console.error('Invalid or missing user ID:', userId);
         return [];
       }
 
@@ -38,11 +38,21 @@ export const useDirectorSurveys = (userId: string | null) => {
 
         if (directorCheckError) {
           console.error('Director check error:', directorCheckError);
+          toast({
+            title: "Access Error",
+            description: "Unable to verify director access.",
+            variant: "destructive",
+          });
           return [];
         }
 
         if (!isDirector) {
           console.log('User is not a director');
+          toast({
+            title: "Access Denied",
+            description: "You must be a director to view this content.",
+            variant: "destructive",
+          });
           return [];
         }
 
@@ -66,8 +76,8 @@ export const useDirectorSurveys = (userId: string | null) => {
         if (error) {
           console.error('Error fetching surveys:', error);
           toast({
-            title: "Error fetching surveys",
-            description: error.message,
+            title: "Error",
+            description: "Unable to fetch surveys. Please try again.",
             variant: "destructive",
           });
           return [];
