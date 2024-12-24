@@ -34,12 +34,12 @@ export const useDirectorSurveys = (userId: string | null) => {
       }
 
       try {
-        // First check if the user is a director
         const { data: isDirector, error: directorCheckError } = await supabase
           .rpc('is_director', { user_id: userId });
 
         if (directorCheckError) {
-          throw directorCheckError;
+          console.error('Director check error:', directorCheckError);
+          return [];
         }
 
         if (!isDirector) {
@@ -47,7 +47,6 @@ export const useDirectorSurveys = (userId: string | null) => {
           return [];
         }
 
-        // Fetch surveys with memorial information
         const { data, error } = await supabase
           .from('memorial_surveys')
           .select(`
