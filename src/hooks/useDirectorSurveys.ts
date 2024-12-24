@@ -19,18 +19,20 @@ interface Survey {
 
 export const useDirectorSurveys = (userId: string | null) => {
   const { toast } = useToast();
-  const isValidUserId = userId && validateUUID(userId);
+  
+  // Ensure this evaluates to a strict boolean
+  const isEnabled = !!userId && validateUUID(userId);
+  
+  console.log('Surveys Query Enabled:', typeof isEnabled, isEnabled);
 
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!isValidUserId) {
+      if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
         return [];
       }
 
-      console.log('Fetching surveys for user:', userId);
-      
       try {
         // First check if the user is a director
         const { data: isDirector, error: directorCheckError } = await supabase
@@ -84,7 +86,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: isValidUserId,
+    enabled: isEnabled,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
