@@ -25,12 +25,13 @@ interface Memorial {
 
 export const useDirectorMemorials = (userId: string | null) => {
   const { toast } = useToast();
+  const isValidUserId = userId && validateUUID(userId);
 
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      if (!userId) {
-        console.log('No user ID provided');
+      if (!isValidUserId) {
+        console.log('Invalid or missing user ID:', userId);
         return [];
       }
 
@@ -93,7 +94,7 @@ export const useDirectorMemorials = (userId: string | null) => {
         return [];
       }
     },
-    enabled: Boolean(userId) && validateUUID(userId || ''),
+    enabled: isValidUserId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
