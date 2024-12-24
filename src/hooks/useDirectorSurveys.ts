@@ -23,13 +23,8 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId) {
+      if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
-        return [];
-      }
-
-      if (!validateUUID(userId)) {
-        console.error('Invalid UUID format for user ID:', userId);
         return [];
       }
 
@@ -88,7 +83,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: !!userId,
+    enabled: Boolean(userId) && validateUUID(userId),
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 30000,
