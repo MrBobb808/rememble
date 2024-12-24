@@ -26,7 +26,6 @@ interface Memorial {
 export const useDirectorMemorials = (userId: string | null) => {
   const { toast } = useToast();
   
-  // Ensure this evaluates to a strict boolean
   const isEnabled = Boolean(userId && validateUUID(userId));
   
   console.log('Memorials Query Enabled:', typeof isEnabled, isEnabled);
@@ -98,8 +97,7 @@ export const useDirectorMemorials = (userId: string | null) => {
       }
     },
     enabled: isEnabled,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: false,
     staleTime: 30000,
   });
 };
