@@ -22,8 +22,7 @@ export const useDirectorSurveys = (userId: string | null) => {
   
   const isEnabled = Boolean(userId && validateUUID(userId));
   
-  console.log('Surveys Query Enabled:', typeof isEnabled, isEnabled);
-  console.log('Current userId for surveys:', userId);
+  console.log('Surveys Query Enabled:', isEnabled, 'Current userId:', userId);
 
   return useQuery({
     queryKey: ['surveys', userId],
