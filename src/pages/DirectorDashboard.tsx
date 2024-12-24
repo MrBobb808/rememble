@@ -21,14 +21,14 @@ const DirectorDashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { user }, error } = await supabase.auth.getUser();
         if (error) throw error;
         
-        const currentUserId = session?.user?.id;
-        if (currentUserId && validateUUID(currentUserId)) {
-          setUserId(currentUserId);
+        if (user?.id && validateUUID(user.id)) {
+          console.log("Setting valid user ID:", user.id);
+          setUserId(user.id);
         } else {
-          console.log("Invalid or missing user ID:", currentUserId);
+          console.log("Invalid or missing user ID");
           toast({
             title: "Authentication Required",
             description: "Please sign in to access the dashboard.",
@@ -54,8 +54,10 @@ const DirectorDashboard = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const newUserId = session?.user?.id;
       if (event === 'SIGNED_IN' && newUserId && validateUUID(newUserId)) {
+        console.log("Auth state change - valid user ID:", newUserId);
         setUserId(newUserId);
       } else if (event === 'SIGNED_OUT') {
+        console.log("Auth state change - signed out");
         setUserId(null);
       }
     });

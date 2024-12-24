@@ -30,6 +30,7 @@ export const useDirectorMemorials = (userId: string | null) => {
   const isEnabled = Boolean(userId && validateUUID(userId));
   
   console.log('Memorials Query Enabled:', typeof isEnabled, isEnabled);
+  console.log('Current userId:', userId);
 
   return useQuery({
     queryKey: ['memorials', userId],
