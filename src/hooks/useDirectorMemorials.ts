@@ -26,8 +26,8 @@ interface Memorial {
 export const useDirectorMemorials = (userId: string | null) => {
   const { toast } = useToast();
   
-  // Ensure this evaluates to a strict boolean
-  const isEnabled = !!userId && validateUUID(userId);
+  // Ensure this evaluates to a strict boolean and userId is valid
+  const isEnabled = Boolean(userId && validateUUID(userId));
   
   console.log('Memorials Query Enabled:', typeof isEnabled, isEnabled);
 

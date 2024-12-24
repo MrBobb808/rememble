@@ -20,8 +20,8 @@ interface Survey {
 export const useDirectorSurveys = (userId: string | null) => {
   const { toast } = useToast();
   
-  // Ensure this evaluates to a strict boolean
-  const isEnabled = !!userId && validateUUID(userId);
+  // Ensure this evaluates to a strict boolean and userId is valid
+  const isEnabled = Boolean(userId && validateUUID(userId));
   
   console.log('Surveys Query Enabled:', typeof isEnabled, isEnabled);
 
