@@ -20,15 +20,11 @@ interface Survey {
 export const useDirectorSurveys = (userId: string | null) => {
   const { toast } = useToast();
   
-  const isEnabled = Boolean(userId && validateUUID(userId));
-  
-  console.log('Surveys Query Enabled:', isEnabled, 'Current userId:', userId);
-
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId || !validateUUID(userId)) {
-        console.error('Invalid or missing user ID:', userId);
+      if (!userId) {
+        console.error('No user ID provided to useDirectorSurveys');
         return [];
       }
 
@@ -94,7 +90,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: isEnabled,
+    enabled: Boolean(userId && validateUUID(userId)),
     retry: false,
     staleTime: 30000,
   });

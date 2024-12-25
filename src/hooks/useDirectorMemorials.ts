@@ -26,15 +26,11 @@ interface Memorial {
 export const useDirectorMemorials = (userId: string | null) => {
   const { toast } = useToast();
   
-  const isEnabled = Boolean(userId && validateUUID(userId));
-  
-  console.log('Memorials Query Enabled:', isEnabled, 'Current userId:', userId);
-
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      if (!userId || !validateUUID(userId)) {
-        console.error('Invalid or missing user ID:', userId);
+      if (!userId) {
+        console.error('No user ID provided to useDirectorMemorials');
         return [];
       }
 
@@ -104,7 +100,7 @@ export const useDirectorMemorials = (userId: string | null) => {
         return [];
       }
     },
-    enabled: isEnabled,
+    enabled: Boolean(userId && validateUUID(userId)),
     retry: false,
     staleTime: 30000,
   });
