@@ -19,10 +19,19 @@ const DirectorDashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeAuth = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) throw error;
+        if (error) {
+          console.error('Auth check error:', error);
+          toast({
+            title: "Authentication Error",
+            description: "Please try signing in again.",
+            variant: "destructive",
+          });
+          setUserId(null);
+          return;
+        }
         
         if (user?.id && validateUUID(user.id)) {
           console.log("Setting valid user ID:", user.id);
@@ -30,30 +39,18 @@ const DirectorDashboard = () => {
         } else {
           console.error("Invalid or missing user ID from auth");
           setUserId(null);
-          if (!user?.id) {
-            toast({
-              title: "Authentication Required",
-              description: "Please sign in to access the dashboard.",
-              variant: "destructive",
-            });
-          }
         }
       } catch (error: any) {
-        console.error('Auth check error:', error);
+        console.error('Auth initialization error:', error);
         setUserId(null);
-        toast({
-          title: "Authentication Error",
-          description: "Please try signing in again.",
-          variant: "destructive",
-        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
+    initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user?.id) {
         if (validateUUID(session.user.id)) {
           console.log("Auth state change - valid user ID:", session.user.id);
@@ -103,7 +100,14 @@ const DirectorDashboard = () => {
   }));
 
   if (isLoading || isMemorialsLoading || isSurveysLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-memorial-blue mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
