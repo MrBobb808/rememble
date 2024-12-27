@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { createNewMemorial } from "@/services/memorialService";
 
 export const CreateMemorialButton = () => {
@@ -12,7 +12,33 @@ export const CreateMemorialButton = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      await createNewMemorial(user.id);
+      const memorial = await createNewMemorial(user.id);
+      
+      // Generate a viewer link for the new memorial
+      const { data: link, error: linkError } = await supabase
+        .from('memorial_links')
+        .insert({
+          memorial_id: memorial.id,
+          type: 'viewer',
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (linkError) throw linkError;
+
+      // Create the full link
+      const baseUrl = window.location.origin;
+      const fullLink = `${baseUrl}/memorial?id=${memorial.id}&token=${link.token}`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(fullLink);
+
+      toast({
+        title: "Memorial created!",
+        description: "The memorial link has been copied to your clipboard.",
+      });
+
       window.location.reload();
     } catch (error: any) {
       toast({
