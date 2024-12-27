@@ -29,19 +29,18 @@ export const useDirectorMemorials = (userId: string | null) => {
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      console.log('Fetching memorials for user:', userId);
-      
       if (!userId) {
-        console.log('No user ID provided');
+        console.log('No user ID provided to useDirectorMemorials');
         return [];
       }
 
       if (!validateUUID(userId)) {
-        console.log('Invalid user ID format:', userId);
+        console.log('Invalid user ID format in useDirectorMemorials:', userId);
         return [];
       }
 
       try {
+        // First check if user is a director
         const { data: isDirector, error: directorCheckError } = await supabase
           .rpc('is_director', { user_id: userId });
 
@@ -65,6 +64,7 @@ export const useDirectorMemorials = (userId: string | null) => {
           return [];
         }
 
+        // Fetch memorials if user is a director
         const { data, error } = await supabase
           .from('memorials')
           .select(`
@@ -110,6 +110,6 @@ export const useDirectorMemorials = (userId: string | null) => {
     },
     enabled: Boolean(userId),
     retry: false,
-    staleTime: 30000,
+    staleTime: 30000, // Cache data for 30 seconds
   });
 };

@@ -26,12 +26,12 @@ export const useDirectorSurveys = (userId: string | null) => {
       console.log('Fetching surveys for user:', userId);
       
       if (!userId) {
-        console.log('No user ID provided');
+        console.log('No user ID provided to useDirectorSurveys');
         return [];
       }
 
       if (!validateUUID(userId)) {
-        console.log('Invalid user ID format:', userId);
+        console.log('Invalid user ID format in useDirectorSurveys:', userId);
         return [];
       }
 
@@ -100,6 +100,6 @@ export const useDirectorSurveys = (userId: string | null) => {
     },
     enabled: Boolean(userId),
     retry: false,
-    staleTime: 30000,
+    staleTime: 30000, // Cache data for 30 seconds
   });
 };
