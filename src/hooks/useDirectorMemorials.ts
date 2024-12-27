@@ -31,13 +31,8 @@ export const useDirectorMemorials = (userId: string | null) => {
     queryFn: async () => {
       console.log('Fetching memorials for user:', userId);
       
-      if (!userId) {
-        console.log('No user ID provided to useDirectorMemorials');
-        return [];
-      }
-
-      if (!validateUUID(userId)) {
-        console.log('Invalid user ID format in useDirectorMemorials:', userId);
+      if (!userId || !validateUUID(userId)) {
+        console.log('Invalid or missing user ID:', userId);
         return [];
       }
 

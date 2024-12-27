@@ -25,13 +25,8 @@ export const useDirectorSurveys = (userId: string | null) => {
     queryFn: async () => {
       console.log('Fetching surveys for user:', userId);
       
-      if (!userId) {
-        console.log('No user ID provided to useDirectorSurveys');
-        return [];
-      }
-
-      if (!validateUUID(userId)) {
-        console.log('Invalid user ID format in useDirectorSurveys:', userId);
+      if (!userId || !validateUUID(userId)) {
+        console.log('Invalid or missing user ID:', userId);
         return [];
       }
 
