@@ -29,8 +29,8 @@ export const useDirectorMemorials = (userId: string | null) => {
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      if (!userId) {
-        console.error('No user ID provided to useDirectorMemorials');
+      if (!userId || !validateUUID(userId)) {
+        console.log('Invalid or missing user ID:', userId);
         return [];
       }
 

@@ -23,8 +23,8 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId) {
-        console.error('No user ID provided to useDirectorSurveys');
+      if (!userId || !validateUUID(userId)) {
+        console.log('Invalid or missing user ID:', userId);
         return [];
       }
 
