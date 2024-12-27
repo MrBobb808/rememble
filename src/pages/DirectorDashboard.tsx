@@ -110,6 +110,16 @@ const DirectorDashboard = () => {
     );
   }
 
+  if (!userId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Please sign in to access the dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DirectorGuard>
       <div className="min-h-screen bg-gradient-to-b from-memorial-beige-light to-white">
