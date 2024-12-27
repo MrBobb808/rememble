@@ -29,8 +29,15 @@ export const useDirectorMemorials = (userId: string | null) => {
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      if (!userId || !validateUUID(userId)) {
-        console.log('Invalid or missing user ID:', userId);
+      console.log('Fetching memorials for user:', userId);
+      
+      if (!userId) {
+        console.log('No user ID provided');
+        return [];
+      }
+
+      if (!validateUUID(userId)) {
+        console.log('Invalid user ID format:', userId);
         return [];
       }
 
@@ -89,6 +96,7 @@ export const useDirectorMemorials = (userId: string | null) => {
           return [];
         }
 
+        console.log('Successfully fetched memorials:', data?.length);
         return (data || []) as Memorial[];
       } catch (error: any) {
         console.error('Network error fetching memorials:', error);
@@ -100,7 +108,7 @@ export const useDirectorMemorials = (userId: string | null) => {
         return [];
       }
     },
-    enabled: Boolean(userId && validateUUID(userId)),
+    enabled: Boolean(userId),
     retry: false,
     staleTime: 30000,
   });
