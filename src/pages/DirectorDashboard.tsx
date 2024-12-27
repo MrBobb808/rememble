@@ -22,6 +22,7 @@ const DirectorDashboard = () => {
     const initializeAuth = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
+        
         if (error) {
           console.error('Auth check error:', error);
           toast({
