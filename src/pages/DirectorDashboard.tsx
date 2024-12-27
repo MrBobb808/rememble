@@ -21,7 +21,7 @@ const DirectorDashboard = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Auth check error:', error);
@@ -34,9 +34,9 @@ const DirectorDashboard = () => {
           return;
         }
         
-        if (user?.id && validateUUID(user.id)) {
-          console.log("Setting valid user ID:", user.id);
-          setUserId(user.id);
+        if (session?.user?.id && validateUUID(session.user.id)) {
+          console.log("Setting valid user ID:", session.user.id);
+          setUserId(session.user.id);
         } else {
           console.error("Invalid or missing user ID from auth");
           setUserId(null);
