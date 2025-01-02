@@ -23,18 +23,8 @@ export const useDirectorSurveys = (userId: string | null) => {
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId) {
-        console.log('No user ID provided');
-        return [];
-      }
-
-      if (!validateUUID(userId)) {
-        console.error('Invalid user ID format:', userId);
-        toast({
-          title: "Authentication Error",
-          description: "Invalid user credentials. Please try signing in again.",
-          variant: "destructive",
-        });
+      if (!userId || !validateUUID(userId)) {
+        console.log('Invalid or missing user ID:', userId);
         return [];
       }
 
