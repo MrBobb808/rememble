@@ -31,6 +31,11 @@ export const useDirectorMemorials = (userId: string | null) => {
     queryFn: async () => {
       if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
+        toast({
+          title: "Invalid User ID",
+          description: "Unable to fetch memorials due to invalid user ID.",
+          variant: "destructive",
+        });
         return [];
       }
 

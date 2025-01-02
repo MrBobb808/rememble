@@ -6,6 +6,7 @@ import { MemorialItem } from "./memorials/MemorialItem";
 import { CreateMemorialButton } from "./memorials/CreateMemorialButton";
 import { MemorialManagement } from "./memorials/MemorialManagement";
 import { supabase } from "@/integrations/supabase/client";
+import { validateUUID } from "@/utils/validation";
 
 interface Memorial {
   id: string;
@@ -29,6 +30,15 @@ export const MemorialsList = ({ memorials, onDelete }: MemorialsListProps) => {
 
   const handleGenerateLink = async (memorialId: string, type: 'collaborator' | 'viewer') => {
     try {
+      if (!validateUUID(memorialId)) {
+        toast({
+          title: "Invalid Memorial ID",
+          description: "Unable to generate link due to invalid memorial ID.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) {
