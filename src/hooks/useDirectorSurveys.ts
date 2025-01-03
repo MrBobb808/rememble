@@ -3,14 +3,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateUUID } from "@/utils/validation";
 
+interface Survey {
+  id: string;
+  memorial_id: string;
+  name: string;
+  key_memories: string | null;
+  family_messages: string | null;
+  personality_traits: string | null;
+  preferred_tone: string | null;
+  created_at: string;
+  memorial: {
+    name: string;
+  } | null;
+}
+
 export const useDirectorSurveys = (userId: string | null) => {
   const { toast } = useToast();
   
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      if (!userId || !validateUUID(userId)) {
-        console.log('Invalid or missing user ID:', userId);
+      if (!userId) {
+        console.log('Missing user ID');
+        return [];
+      }
+
+      if (!validateUUID(userId)) {
+        console.log('Invalid UUID format:', userId);
         return [];
       }
 
@@ -65,7 +84,7 @@ export const useDirectorSurveys = (userId: string | null) => {
           return [];
         }
 
-        return data || [];
+        return data as Survey[];
       } catch (error: any) {
         console.error('Network error fetching surveys:', error);
         toast({
