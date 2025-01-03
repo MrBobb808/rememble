@@ -78,7 +78,7 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: Boolean(userId),
+    enabled: Boolean(userId) && validateUUID(userId),
     retry: false,
     staleTime: 30000, // Cache data for 30 seconds
   });
