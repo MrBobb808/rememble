@@ -1,8 +1,4 @@
-# Project ID from the Supabase project settings
 project_id = "jrnfunsgzdymrdwxztgh"
 
-[functions.create-checkout]
-verify_jwt = true
-
-[functions.check-subscription]
+[functions.get-memorial-surveys]
 verify_jwt = true
