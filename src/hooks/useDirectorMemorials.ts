@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { validateUUID } from "@/utils/validation";
+import { validateUUID, ensureValidUUID } from "@/utils/validation";
 import { Memorial } from "@/types/director";
 
 export const useDirectorMemorials = (userId: string | null, authInitialized: boolean) => {
@@ -10,15 +10,12 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
   return useQuery({
     queryKey: ['memorials', userId],
     queryFn: async () => {
-      // Early return if no userId or invalid UUID
-      if (!userId || !validateUUID(userId)) {
-        console.log('Invalid or missing user ID:', userId);
-        return [];
-      }
-
       try {
+        // Validate user ID before proceeding
+        const validUserId = ensureValidUUID(userId, 'user ID');
+
         const { data: isDirector, error: directorCheckError } = await supabase
-          .rpc('is_director', { user_id: userId });
+          .rpc('is_director', { user_id: validUserId });
 
         if (directorCheckError) {
           console.error('Director check error:', directorCheckError);
@@ -71,12 +68,22 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           return [];
         }
 
-        return data as Memorial[];
+        // Validate UUIDs in the response
+        return data.map(memorial => ({
+          ...memorial,
+          id: ensureValidUUID(memorial.id, 'memorial ID'),
+          memorial_collaborators: memorial.memorial_collaborators.map(collab => ({
+            ...collab,
+            id: ensureValidUUID(collab.id, 'collaborator ID'),
+            memorial_id: ensureValidUUID(collab.memorial_id, 'memorial ID'),
+            user_id: collab.user_id ? ensureValidUUID(collab.user_id, 'user ID') : null,
+          }))
+        })) as Memorial[];
       } catch (error: any) {
-        console.error('Network error fetching memorials:', error);
+        console.error('Error in useDirectorMemorials:', error);
         toast({
-          title: "Network Error",
-          description: "Unable to connect to the server. Please check your connection.",
+          title: "Error",
+          description: error.message || "An unexpected error occurred.",
           variant: "destructive",
         });
         return [];
@@ -84,6 +91,6 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     retry: 1,
-    staleTime: 30000, // Cache data for 30 seconds
+    staleTime: 30000,
   });
 };

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { validateUUID } from "@/utils/validation";
+import { validateUUID, ensureValidUUID } from "@/utils/validation";
 import { Survey } from "@/types/director";
 
 interface SurveyResponse {
@@ -24,15 +24,12 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
   return useQuery({
     queryKey: ['surveys', userId],
     queryFn: async () => {
-      // Early return if no userId or invalid UUID
-      if (!userId || !validateUUID(userId)) {
-        console.log('Invalid or missing user ID:', userId);
-        return [];
-      }
-
       try {
+        // Validate user ID before proceeding
+        const validUserId = ensureValidUUID(userId, 'user ID');
+
         const { data: isDirector, error: directorCheckError } = await supabase
-          .rpc('is_director', { user_id: userId });
+          .rpc('is_director', { user_id: validUserId });
 
         if (directorCheckError) {
           console.error('Director check error:', directorCheckError);
@@ -54,7 +51,6 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           return [];
         }
 
-        // First fetch surveys
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
           .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
@@ -70,10 +66,9 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           return [];
         }
 
-        // Transform the data to match the Survey type
         const transformedSurveys = (surveys as SurveyResponse[]).map(survey => ({
-          id: survey.id,
-          memorial_id: survey.memorial_id,
+          id: ensureValidUUID(survey.id, 'survey ID'),
+          memorial_id: ensureValidUUID(survey.memorial_id, 'memorial ID'),
           name: survey.name,
           key_memories: survey.key_memories,
           family_messages: survey.family_messages,
@@ -87,10 +82,10 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
 
         return transformedSurveys as Survey[];
       } catch (error: any) {
-        console.error('Network error fetching surveys:', error);
+        console.error('Error in useDirectorSurveys:', error);
         toast({
-          title: "Network Error",
-          description: "Unable to connect to the server. Please check your connection.",
+          title: "Error",
+          description: error.message || "An unexpected error occurred.",
           variant: "destructive",
         });
         return [];
@@ -98,6 +93,6 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     retry: 1,
-    staleTime: 30000, // Cache data for 30 seconds
+    staleTime: 30000,
   });
 };
