@@ -2,26 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateUUID } from "@/utils/validation";
-
-interface Collaborator {
-  id: string;
-  memorial_id: string;
-  user_id: string | null;
-  email: string;
-  role: 'admin' | 'contributor' | 'viewer';
-}
-
-interface Memorial {
-  id: string;
-  name: string;
-  created_at: string;
-  is_complete: boolean;
-  birth_year: string | null;
-  death_year: string | null;
-  banner_image_url: string | null;
-  summary: string | null;
-  memorial_collaborators: Collaborator[];
-}
+import { Memorial } from "@/types/director";
 
 export const useDirectorMemorials = (userId: string | null) => {
   const { toast } = useToast();
