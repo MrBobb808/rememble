@@ -522,6 +522,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_uuid: {
+        Args: {
+          str: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       link_type: "collaborator" | "viewer"

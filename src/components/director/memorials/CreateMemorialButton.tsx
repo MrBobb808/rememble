@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { createNewMemorial } from "@/services/memorialService";
+import { ensureValidUUID } from "@/utils/validation";
 
 export const CreateMemorialButton = () => {
   const { toast } = useToast();
@@ -12,15 +13,17 @@ export const CreateMemorialButton = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      const memorial = await createNewMemorial(user.id);
+      const userId = ensureValidUUID(user.id, 'user ID');
+      const memorial = await createNewMemorial(userId);
+      const memorialId = ensureValidUUID(memorial.id, 'memorial ID');
       
       // Generate a viewer link for the new memorial
       const { data: link, error: linkError } = await supabase
         .from('memorial_links')
         .insert({
-          memorial_id: memorial.id,
+          memorial_id: memorialId,
           type: 'viewer',
-          created_by: user.id,
+          created_by: userId,
         })
         .select()
         .single();
@@ -29,7 +32,7 @@ export const CreateMemorialButton = () => {
 
       // Create the full link
       const baseUrl = window.location.origin;
-      const fullLink = `${baseUrl}/memorial?id=${memorial.id}&token=${link.token}`;
+      const fullLink = `${baseUrl}/memorial?id=${memorialId}&token=${link.token}`;
 
       // Copy to clipboard
       await navigator.clipboard.writeText(fullLink);
