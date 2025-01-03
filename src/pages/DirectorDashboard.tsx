@@ -17,6 +17,7 @@ const DirectorDashboard = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -50,6 +51,7 @@ const DirectorDashboard = () => {
         console.error('Auth initialization error:', error);
         setUserId(null);
       } finally {
+        setAuthInitialized(true);
         setIsLoading(false);
       }
     };
@@ -81,8 +83,8 @@ const DirectorDashboard = () => {
     };
   }, [toast]);
 
-  const { data: memorials = [], isLoading: isMemorialsLoading } = useDirectorMemorials(userId);
-  const { data: surveys = [], isLoading: isSurveysLoading } = useDirectorSurveys(userId);
+  const { data: memorials = [], isLoading: isMemorialsLoading } = useDirectorMemorials(userId, authInitialized);
+  const { data: surveys = [], isLoading: isSurveysLoading } = useDirectorSurveys(userId, authInitialized);
   const metrics = useDirectorMetrics(memorials, surveys);
   const { deleteMemorial } = useMemorialDelete();
 
@@ -110,7 +112,7 @@ const DirectorDashboard = () => {
     pending: 1 - surveys.filter(s => s.memorial_id === memorial.id).length
   }));
 
-  if (isLoading || isMemorialsLoading || isSurveysLoading) {
+  if (!authInitialized || isLoading || isMemorialsLoading || isSurveysLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

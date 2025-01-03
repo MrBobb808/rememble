@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { validateUUID } from "@/utils/validation";
 import { Survey } from "@/types/director";
 
-export const useDirectorSurveys = (userId: string | null) => {
+export const useDirectorSurveys = (userId: string | null, authInitialized: boolean) => {
   const { toast } = useToast();
   
   return useQuery({
@@ -78,8 +78,8 @@ export const useDirectorSurveys = (userId: string | null) => {
         return [];
       }
     },
-    enabled: Boolean(userId) && validateUUID(userId),
-    retry: false,
+    enabled: authInitialized && Boolean(userId) && validateUUID(userId),
+    retry: 1,
     staleTime: 30000, // Cache data for 30 seconds
   });
 };
