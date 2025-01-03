@@ -4,6 +4,20 @@ import { useToast } from "@/hooks/use-toast";
 import { validateUUID } from "@/utils/validation";
 import { Survey } from "@/types/director";
 
+interface SurveyResponse {
+  id: string;
+  memorial_id: string;
+  name: string;
+  key_memories: string | null;
+  family_messages: string | null;
+  personality_traits: string | null;
+  preferred_tone: string | null;
+  created_at: string;
+  memorials: {
+    name: string;
+  } | null;
+}
+
 export const useDirectorSurveys = (userId: string | null, authInitialized: boolean) => {
   const { toast } = useToast();
   
@@ -43,7 +57,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         // First fetch surveys
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
-          .select('*, memorials(name)')
+          .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
           .order('created_at', { ascending: false });
         
         if (surveysError) {
@@ -57,7 +71,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         }
 
         // Transform the data to match the Survey type
-        const transformedSurveys = surveys.map(survey => ({
+        const transformedSurveys = (surveys as SurveyResponse[]).map(survey => ({
           id: survey.id,
           memorial_id: survey.memorial_id,
           name: survey.name,
@@ -67,7 +81,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           preferred_tone: survey.preferred_tone,
           created_at: survey.created_at,
           memorial: {
-            name: survey.memorials?.name
+            name: survey.memorials?.name ?? ''
           }
         }));
 
