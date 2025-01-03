@@ -40,25 +40,14 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           return [];
         }
 
-        const { data, error } = await supabase
+        // First fetch surveys
+        const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
-          .select(`
-            id,
-            memorial_id,
-            name,
-            key_memories,
-            family_messages,
-            personality_traits,
-            preferred_tone,
-            created_at,
-            memorial:memorials!fk_memorial (
-              name
-            )
-          `)
+          .select('*, memorials(name)')
           .order('created_at', { ascending: false });
         
-        if (error) {
-          console.error('Error fetching surveys:', error);
+        if (surveysError) {
+          console.error('Error fetching surveys:', surveysError);
           toast({
             title: "Error",
             description: "Unable to fetch surveys. Please try again.",
@@ -67,7 +56,22 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           return [];
         }
 
-        return data as Survey[];
+        // Transform the data to match the Survey type
+        const transformedSurveys = surveys.map(survey => ({
+          id: survey.id,
+          memorial_id: survey.memorial_id,
+          name: survey.name,
+          key_memories: survey.key_memories,
+          family_messages: survey.family_messages,
+          personality_traits: survey.personality_traits,
+          preferred_tone: survey.preferred_tone,
+          created_at: survey.created_at,
+          memorial: {
+            name: survey.memorials?.name
+          }
+        }));
+
+        return transformedSurveys as Survey[];
       } catch (error: any) {
         console.error('Network error fetching surveys:', error);
         toast({
