@@ -3,20 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateUUID } from "@/utils/validation";
 
-interface Survey {
-  id: string;
-  memorial_id: string;
-  name: string;
-  key_memories: string | null;
-  family_messages: string | null;
-  personality_traits: string | null;
-  preferred_tone: string | null;
-  created_at: string;
-  memorial: {
-    name: string;
-  } | null;
-}
-
 export const useDirectorSurveys = (userId: string | null) => {
   const { toast } = useToast();
   
@@ -79,7 +65,7 @@ export const useDirectorSurveys = (userId: string | null) => {
           return [];
         }
 
-        return (data || []) as Survey[];
+        return data || [];
       } catch (error: any) {
         console.error('Network error fetching surveys:', error);
         toast({

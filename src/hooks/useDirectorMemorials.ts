@@ -3,26 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateUUID } from "@/utils/validation";
 
-interface Collaborator {
-  id: string;
-  memorial_id: string;
-  user_id: string | null;
-  email: string;
-  role: 'admin' | 'contributor' | 'viewer';
-}
-
-interface Memorial {
-  id: string;
-  name: string;
-  created_at: string;
-  is_complete: boolean;
-  birth_year: string | null;
-  death_year: string | null;
-  banner_image_url: string | null;
-  summary: string | null;
-  memorial_collaborators: Collaborator[];
-}
-
 export const useDirectorMemorials = (userId: string | null) => {
   const { toast } = useToast();
   
@@ -31,11 +11,6 @@ export const useDirectorMemorials = (userId: string | null) => {
     queryFn: async () => {
       if (!userId || !validateUUID(userId)) {
         console.log('Invalid or missing user ID:', userId);
-        toast({
-          title: "Invalid User ID",
-          description: "Unable to fetch memorials due to invalid user ID.",
-          variant: "destructive",
-        });
         return [];
       }
 
@@ -94,7 +69,7 @@ export const useDirectorMemorials = (userId: string | null) => {
           return [];
         }
 
-        return (data || []) as Memorial[];
+        return data || [];
       } catch (error: any) {
         console.error('Network error fetching memorials:', error);
         toast({

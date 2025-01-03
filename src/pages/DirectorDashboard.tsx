@@ -39,6 +39,11 @@ const DirectorDashboard = () => {
           setUserId(session.user.id);
         } else {
           console.error("Invalid or missing user ID from auth");
+          toast({
+            title: "Authentication Error",
+            description: "Invalid user session. Please sign in again.",
+            variant: "destructive",
+          });
           setUserId(null);
         }
       } catch (error: any) {
@@ -58,6 +63,11 @@ const DirectorDashboard = () => {
           setUserId(session.user.id);
         } else {
           console.error("Invalid user ID from auth state change");
+          toast({
+            title: "Authentication Error",
+            description: "Invalid user session. Please sign in again.",
+            variant: "destructive",
+          });
           setUserId(null);
         }
       } else if (event === 'SIGNED_OUT') {
