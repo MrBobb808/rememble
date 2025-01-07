@@ -17,31 +17,23 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('Validated user ID:', validUserId);
 
+        // Check director status in a single query
         const { data: isDirector, error: directorCheckError } = await supabase
           .rpc('is_director', { user_id: validUserId });
 
         if (directorCheckError) {
           console.error('Director check error:', directorCheckError);
-          toast({
-            title: "Access Error",
-            description: "Unable to verify director access.",
-            variant: "destructive",
-          });
-          return [];
+          throw directorCheckError;
         }
 
         console.log('Director check result:', isDirector);
 
         if (!isDirector) {
           console.log('User is not a director');
-          toast({
-            title: "Access Denied",
-            description: "You must be a director to view this content.",
-            variant: "destructive",
-          });
-          return [];
+          throw new Error('Access denied: User is not a director');
         }
 
+        // Fetch memorials data in a single query with all related data
         console.log('Fetching memorials data...');
         const { data, error } = await supabase
           .from('memorials')
@@ -66,17 +58,12 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
 
         if (error) {
           console.error('Error fetching memorials:', error);
-          toast({
-            title: "Error",
-            description: "Unable to fetch memorials. Please try again.",
-            variant: "destructive",
-          });
-          return [];
+          throw error;
         }
 
         console.log('Successfully fetched memorials:', data?.length);
 
-        // Validate UUIDs in the response
+        // Process and validate the data
         return data.map(memorial => ({
           ...memorial,
           id: ensureValidUUID(memorial.id, 'memorial ID'),
@@ -94,7 +81,7 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           description: error.message || "An unexpected error occurred.",
           variant: "destructive",
         });
-        return [];
+        throw error; // Re-throw to let React Query handle the error state
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),

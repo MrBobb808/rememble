@@ -31,31 +31,23 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('Validated user ID:', validUserId);
 
+        // Check director status in a single query
         const { data: isDirector, error: directorCheckError } = await supabase
           .rpc('is_director', { user_id: validUserId });
 
         if (directorCheckError) {
           console.error('Director check error:', directorCheckError);
-          toast({
-            title: "Access Error",
-            description: "Unable to verify director access.",
-            variant: "destructive",
-          });
-          return [];
+          throw directorCheckError;
         }
 
         console.log('Director check result:', isDirector);
 
         if (!isDirector) {
           console.log('User is not a director');
-          toast({
-            title: "Access Denied",
-            description: "You must be a director to view this content.",
-            variant: "destructive",
-          });
-          return [];
+          throw new Error('Access denied: User is not a director');
         }
 
+        // Fetch surveys data in a single query
         console.log('Fetching surveys data...');
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
@@ -64,16 +56,12 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         
         if (surveysError) {
           console.error('Error fetching surveys:', surveysError);
-          toast({
-            title: "Error",
-            description: "Unable to fetch surveys. Please try again.",
-            variant: "destructive",
-          });
-          return [];
+          throw surveysError;
         }
 
         console.log('Successfully fetched surveys:', surveys?.length);
 
+        // Transform and validate the data
         const transformedSurveys = (surveys as SurveyResponse[]).map(survey => ({
           id: ensureValidUUID(survey.id, 'survey ID'),
           memorial_id: ensureValidUUID(survey.memorial_id, 'memorial ID'),
@@ -96,7 +84,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           description: error.message || "An unexpected error occurred.",
           variant: "destructive",
         });
-        return [];
+        throw error; // Re-throw to let React Query handle the error state
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
