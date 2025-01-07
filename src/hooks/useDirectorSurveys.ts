@@ -25,8 +25,11 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
     queryKey: ['surveys', userId],
     queryFn: async () => {
       try {
+        console.log('Starting surveys fetch for user:', userId);
+        
         // Validate user ID before proceeding
         const validUserId = ensureValidUUID(userId, 'user ID');
+        console.log('Validated user ID:', validUserId);
 
         const { data: isDirector, error: directorCheckError } = await supabase
           .rpc('is_director', { user_id: validUserId });
@@ -41,6 +44,8 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           return [];
         }
 
+        console.log('Director check result:', isDirector);
+
         if (!isDirector) {
           console.log('User is not a director');
           toast({
@@ -51,6 +56,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           return [];
         }
 
+        console.log('Fetching surveys data...');
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
           .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
@@ -65,6 +71,8 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           });
           return [];
         }
+
+        console.log('Successfully fetched surveys:', surveys?.length);
 
         const transformedSurveys = (surveys as SurveyResponse[]).map(survey => ({
           id: ensureValidUUID(survey.id, 'survey ID'),
@@ -94,5 +102,6 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     retry: 1,
     staleTime: 30000,
+    gcTime: 300000, // 5 minutes
   });
 };

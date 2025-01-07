@@ -11,8 +11,11 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
     queryKey: ['memorials', userId],
     queryFn: async () => {
       try {
+        console.log('Starting memorials fetch for user:', userId);
+        
         // Validate user ID before proceeding
         const validUserId = ensureValidUUID(userId, 'user ID');
+        console.log('Validated user ID:', validUserId);
 
         const { data: isDirector, error: directorCheckError } = await supabase
           .rpc('is_director', { user_id: validUserId });
@@ -27,6 +30,8 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           return [];
         }
 
+        console.log('Director check result:', isDirector);
+
         if (!isDirector) {
           console.log('User is not a director');
           toast({
@@ -37,6 +42,7 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           return [];
         }
 
+        console.log('Fetching memorials data...');
         const { data, error } = await supabase
           .from('memorials')
           .select(`
@@ -68,6 +74,8 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           return [];
         }
 
+        console.log('Successfully fetched memorials:', data?.length);
+
         // Validate UUIDs in the response
         return data.map(memorial => ({
           ...memorial,
@@ -92,5 +100,6 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     retry: 1,
     staleTime: 30000,
+    gcTime: 300000, // 5 minutes
   });
 };
