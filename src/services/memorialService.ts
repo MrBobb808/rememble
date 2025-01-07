@@ -6,6 +6,8 @@ export const createNewMemorial = async (userId: string) => {
   }
 
   try {
+    console.log("Creating new memorial for user:", userId);
+    
     // Create a new memorial
     const { data: memorialData, error: memorialError } = await supabase
       .from("memorials")
@@ -17,12 +19,14 @@ export const createNewMemorial = async (userId: string) => {
 
     if (memorialError) {
       console.error("Error creating memorial:", memorialError);
-      throw new Error(memorialError.message);
+      throw memorialError;
     }
 
     if (!memorialData) {
       throw new Error("No memorial data returned");
     }
+
+    console.log("Memorial created successfully:", memorialData.id);
 
     // Add the creator as an admin collaborator
     const { error: collaboratorError } = await supabase
@@ -39,13 +43,13 @@ export const createNewMemorial = async (userId: string) => {
       console.error("Error creating collaborator:", collaboratorError);
       // Clean up the memorial if collaborator creation fails
       await supabase.from("memorials").delete().eq("id", memorialData.id);
-      throw new Error(collaboratorError.message);
+      throw collaboratorError;
     }
 
-    console.log("Memorial and admin collaborator created successfully");
+    console.log("Admin collaborator created successfully");
     return memorialData;
   } catch (error: any) {
     console.error("Error in createNewMemorial:", error);
-    throw new Error(error.message || "Failed to create memorial");
+    throw error;
   }
 };
