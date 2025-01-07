@@ -13,11 +13,10 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
       try {
         console.log('Starting memorials fetch for user:', userId);
         
-        // Validate user ID before proceeding
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('Validated user ID:', validUserId);
 
-        // Check director status and fetch memorials in a single query
+        // Single query to fetch memorials with all related data
         const { data, error } = await supabase
           .from('memorials')
           .select(`
@@ -51,7 +50,7 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
 
         console.log('Successfully fetched memorials:', data.length);
 
-        // Process and validate the data
+        // Transform and validate the data in a single pass
         return data.map(memorial => ({
           ...memorial,
           id: ensureValidUUID(memorial.id, 'memorial ID'),
@@ -64,11 +63,11 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         })) as Memorial[];
       } catch (error: any) {
         console.error('Error in useDirectorMemorials:', error);
-        throw error; // Let React Query handle the error state
+        throw error;
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
-    staleTime: 30000, // 30 seconds
-    gcTime: 300000, // 5 minutes
+    staleTime: 30000,
+    gcTime: 300000,
   });
 };

@@ -27,11 +27,10 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
       try {
         console.log('Starting surveys fetch for user:', userId);
         
-        // Validate user ID before proceeding
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('Validated user ID:', validUserId);
 
-        // Fetch surveys data in a single query
+        // Single query to fetch surveys with memorial data
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
           .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
@@ -49,7 +48,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
 
         console.log('Successfully fetched surveys:', surveys.length);
 
-        // Transform and validate the data
+        // Transform and validate the data in a single pass
         return (surveys as SurveyResponse[]).map(survey => ({
           id: ensureValidUUID(survey.id, 'survey ID'),
           memorial_id: ensureValidUUID(survey.memorial_id, 'memorial ID'),
@@ -65,11 +64,11 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         })) as Survey[];
       } catch (error: any) {
         console.error('Error in useDirectorSurveys:', error);
-        throw error; // Let React Query handle the error state
+        throw error;
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
-    staleTime: 30000, // 30 seconds
-    gcTime: 300000, // 5 minutes
+    staleTime: 30000,
+    gcTime: 300000,
   });
 };
