@@ -31,24 +31,7 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('Validated user ID:', validUserId);
 
-        // Check director status in a single query
-        const { data: isDirector, error: directorCheckError } = await supabase
-          .rpc('is_director', { user_id: validUserId });
-
-        if (directorCheckError) {
-          console.error('Director check error:', directorCheckError);
-          throw directorCheckError;
-        }
-
-        console.log('Director check result:', isDirector);
-
-        if (!isDirector) {
-          console.log('User is not a director');
-          throw new Error('Access denied: User is not a director');
-        }
-
         // Fetch surveys data in a single query
-        console.log('Fetching surveys data...');
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
           .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
@@ -59,10 +42,15 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           throw surveysError;
         }
 
-        console.log('Successfully fetched surveys:', surveys?.length);
+        if (!surveys) {
+          console.log('No surveys data returned');
+          return [];
+        }
+
+        console.log('Successfully fetched surveys:', surveys.length);
 
         // Transform and validate the data
-        const transformedSurveys = (surveys as SurveyResponse[]).map(survey => ({
+        return (surveys as SurveyResponse[]).map(survey => ({
           id: ensureValidUUID(survey.id, 'survey ID'),
           memorial_id: ensureValidUUID(survey.memorial_id, 'memorial ID'),
           name: survey.name,
@@ -74,22 +62,14 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
           memorial: {
             name: survey.memorials?.name ?? ''
           }
-        }));
-
-        return transformedSurveys as Survey[];
+        })) as Survey[];
       } catch (error: any) {
         console.error('Error in useDirectorSurveys:', error);
-        toast({
-          title: "Error",
-          description: error.message || "An unexpected error occurred.",
-          variant: "destructive",
-        });
-        throw error; // Re-throw to let React Query handle the error state
+        throw error; // Let React Query handle the error state
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
-    retry: 1,
-    staleTime: 30000,
+    staleTime: 30000, // 30 seconds
     gcTime: 300000, // 5 minutes
   });
 };

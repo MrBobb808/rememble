@@ -17,24 +17,7 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('Validated user ID:', validUserId);
 
-        // Check director status in a single query
-        const { data: isDirector, error: directorCheckError } = await supabase
-          .rpc('is_director', { user_id: validUserId });
-
-        if (directorCheckError) {
-          console.error('Director check error:', directorCheckError);
-          throw directorCheckError;
-        }
-
-        console.log('Director check result:', isDirector);
-
-        if (!isDirector) {
-          console.log('User is not a director');
-          throw new Error('Access denied: User is not a director');
-        }
-
-        // Fetch memorials data in a single query with all related data
-        console.log('Fetching memorials data...');
+        // Check director status and fetch memorials in a single query
         const { data, error } = await supabase
           .from('memorials')
           .select(`
@@ -61,7 +44,12 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           throw error;
         }
 
-        console.log('Successfully fetched memorials:', data?.length);
+        if (!data) {
+          console.log('No memorials data returned');
+          return [];
+        }
+
+        console.log('Successfully fetched memorials:', data.length);
 
         // Process and validate the data
         return data.map(memorial => ({
@@ -76,17 +64,11 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         })) as Memorial[];
       } catch (error: any) {
         console.error('Error in useDirectorMemorials:', error);
-        toast({
-          title: "Error",
-          description: error.message || "An unexpected error occurred.",
-          variant: "destructive",
-        });
-        throw error; // Re-throw to let React Query handle the error state
+        throw error; // Let React Query handle the error state
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
-    retry: 1,
-    staleTime: 30000,
+    staleTime: 30000, // 30 seconds
     gcTime: 300000, // 5 minutes
   });
 };
