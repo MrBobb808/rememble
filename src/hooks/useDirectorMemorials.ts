@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { validateUUID, ensureValidUUID } from "@/utils/validation";
 import { Memorial } from "@/types/director";
 import { requestQueue } from "@/utils/request-queue";
+import { PostgrestResponse } from "@supabase/supabase-js";
 
 export const useDirectorMemorials = (userId: string | null, authInitialized: boolean) => {
   const { toast } = useToast();
@@ -19,7 +20,7 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         console.log('[useDirectorMemorials] Validated user ID:', validUserId);
 
         console.log('[useDirectorMemorials] Enqueueing Supabase query');
-        const { data, error } = await requestQueue.enqueue(() => 
+        const response: PostgrestResponse<Memorial[]> = await requestQueue.enqueue(() => 
           supabase
             .from('memorials')
             .select(`
@@ -42,19 +43,19 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
             .order('created_at', { ascending: false })
         );
 
-        if (error) {
-          console.error('[useDirectorMemorials] Supabase error:', error);
-          throw error;
+        if (response.error) {
+          console.error('[useDirectorMemorials] Supabase error:', response.error);
+          throw response.error;
         }
 
-        if (!data) {
+        if (!response.data) {
           console.log('[useDirectorMemorials] No data returned');
           return [];
         }
 
-        console.log('[useDirectorMemorials] Data received:', data.length, 'records');
+        console.log('[useDirectorMemorials] Data received:', response.data.length, 'records');
 
-        const transformedData = data.map(memorial => ({
+        const transformedData = response.data.map(memorial => ({
           ...memorial,
           id: ensureValidUUID(memorial.id, 'memorial ID'),
           memorial_collaborators: memorial.memorial_collaborators.map(collab => ({
