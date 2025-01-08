@@ -25,31 +25,31 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
     queryKey: ['surveys', userId],
     queryFn: async () => {
       try {
-        console.log('Starting surveys fetch for user:', userId);
+        console.log('[useDirectorSurveys] Starting query execution');
+        console.log('[useDirectorSurveys] User ID:', userId);
         
         const validUserId = ensureValidUUID(userId, 'user ID');
-        console.log('Validated user ID:', validUserId);
+        console.log('[useDirectorSurveys] Validated user ID:', validUserId);
 
-        // Single query to fetch surveys with memorial data
+        console.log('[useDirectorSurveys] Executing Supabase query');
         const { data: surveys, error: surveysError } = await supabase
           .from('memorial_surveys')
           .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
           .order('created_at', { ascending: false });
         
         if (surveysError) {
-          console.error('Error fetching surveys:', surveysError);
+          console.error('[useDirectorSurveys] Supabase error:', surveysError);
           throw surveysError;
         }
 
         if (!surveys) {
-          console.log('No surveys data returned');
+          console.log('[useDirectorSurveys] No surveys data returned');
           return [];
         }
 
-        console.log('Successfully fetched surveys:', surveys.length);
+        console.log('[useDirectorSurveys] Data received:', surveys.length, 'records');
 
-        // Transform and validate the data in a single pass
-        return (surveys as SurveyResponse[]).map(survey => ({
+        const transformedData = (surveys as SurveyResponse[]).map(survey => ({
           id: ensureValidUUID(survey.id, 'survey ID'),
           memorial_id: ensureValidUUID(survey.memorial_id, 'memorial ID'),
           name: survey.name,
@@ -62,13 +62,17 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
             name: survey.memorials?.name ?? ''
           }
         })) as Survey[];
+
+        console.log('[useDirectorSurveys] Data transformation complete');
+        return transformedData;
       } catch (error: any) {
-        console.error('Error in useDirectorSurveys:', error);
+        console.error('[useDirectorSurveys] Error in query:', error);
         throw error;
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     staleTime: 30000,
     gcTime: 300000,
+    retry: false // Disable retries to better track the error
   });
 };

@@ -11,12 +11,13 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
     queryKey: ['memorials', userId],
     queryFn: async () => {
       try {
-        console.log('Starting memorials fetch for user:', userId);
+        console.log('[useDirectorMemorials] Starting query execution');
+        console.log('[useDirectorMemorials] User ID:', userId);
         
         const validUserId = ensureValidUUID(userId, 'user ID');
-        console.log('Validated user ID:', validUserId);
+        console.log('[useDirectorMemorials] Validated user ID:', validUserId);
 
-        // Single query to fetch memorials with all related data
+        console.log('[useDirectorMemorials] Executing Supabase query');
         const { data, error } = await supabase
           .from('memorials')
           .select(`
@@ -39,19 +40,18 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching memorials:', error);
+          console.error('[useDirectorMemorials] Supabase error:', error);
           throw error;
         }
 
         if (!data) {
-          console.log('No memorials data returned');
+          console.log('[useDirectorMemorials] No data returned');
           return [];
         }
 
-        console.log('Successfully fetched memorials:', data.length);
+        console.log('[useDirectorMemorials] Data received:', data.length, 'records');
 
-        // Transform and validate the data in a single pass
-        return data.map(memorial => ({
+        const transformedData = data.map(memorial => ({
           ...memorial,
           id: ensureValidUUID(memorial.id, 'memorial ID'),
           memorial_collaborators: memorial.memorial_collaborators.map(collab => ({
@@ -61,13 +61,17 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
             user_id: collab.user_id ? ensureValidUUID(collab.user_id, 'user ID') : null,
           }))
         })) as Memorial[];
+
+        console.log('[useDirectorMemorials] Data transformation complete');
+        return transformedData;
       } catch (error: any) {
-        console.error('Error in useDirectorMemorials:', error);
+        console.error('[useDirectorMemorials] Error in query:', error);
         throw error;
       }
     },
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     staleTime: 30000,
     gcTime: 300000,
+    retry: false // Disable retries to better track the error
   });
 };
