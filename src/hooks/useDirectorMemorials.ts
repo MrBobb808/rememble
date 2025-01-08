@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateUUID, ensureValidUUID } from "@/utils/validation";
 import { Memorial } from "@/types/director";
+import { requestQueue } from "@/utils/request-queue";
 
 export const useDirectorMemorials = (userId: string | null, authInitialized: boolean) => {
   const { toast } = useToast();
@@ -17,27 +18,29 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         const validUserId = ensureValidUUID(userId, 'user ID');
         console.log('[useDirectorMemorials] Validated user ID:', validUserId);
 
-        console.log('[useDirectorMemorials] Executing Supabase query');
-        const { data, error } = await supabase
-          .from('memorials')
-          .select(`
-            id,
-            name,
-            created_at,
-            is_complete,
-            birth_year,
-            death_year,
-            banner_image_url,
-            summary,
-            memorial_collaborators!memorial_collaborators_memorial_id_fkey (
+        console.log('[useDirectorMemorials] Enqueueing Supabase query');
+        const { data, error } = await requestQueue.enqueue(() => 
+          supabase
+            .from('memorials')
+            .select(`
               id,
-              memorial_id,
-              user_id,
-              email,
-              role
-            )
-          `)
-          .order('created_at', { ascending: false });
+              name,
+              created_at,
+              is_complete,
+              birth_year,
+              death_year,
+              banner_image_url,
+              summary,
+              memorial_collaborators!memorial_collaborators_memorial_id_fkey (
+                id,
+                memorial_id,
+                user_id,
+                email,
+                role
+              )
+            `)
+            .order('created_at', { ascending: false })
+        );
 
         if (error) {
           console.error('[useDirectorMemorials] Supabase error:', error);
@@ -72,6 +75,6 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
     enabled: authInitialized && Boolean(userId) && validateUUID(userId),
     staleTime: 30000,
     gcTime: 300000,
-    retry: false // Disable retries to better track the error
+    retry: false
   });
 };
