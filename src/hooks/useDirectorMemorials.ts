@@ -20,8 +20,8 @@ export const useDirectorMemorials = (userId: string | null, authInitialized: boo
         console.log('[useDirectorMemorials] Validated user ID:', validUserId);
 
         console.log('[useDirectorMemorials] Enqueueing Supabase query');
-        const response: PostgrestResponse<Memorial[]> = await requestQueue.enqueue(() => 
-          supabase
+        const response: PostgrestResponse<Memorial[]> = await requestQueue.enqueue(async () => 
+          await supabase
             .from('memorials')
             .select(`
               id,

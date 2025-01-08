@@ -34,8 +34,8 @@ export const useDirectorSurveys = (userId: string | null, authInitialized: boole
         console.log('[useDirectorSurveys] Validated user ID:', validUserId);
 
         console.log('[useDirectorSurveys] Enqueueing Supabase query');
-        const response: PostgrestResponse<SurveyResponse> = await requestQueue.enqueue(() =>
-          supabase
+        const response: PostgrestResponse<SurveyResponse> = await requestQueue.enqueue(async () =>
+          await supabase
             .from('memorial_surveys')
             .select('*, memorials!memorial_surveys_memorial_id_fkey(name)')
             .order('created_at', { ascending: false })
